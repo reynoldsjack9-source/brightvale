@@ -870,6 +870,7 @@ function drawNPC(c,x,y){
   c.save(); c.translate(x,y);
   c.fillStyle='rgba(0,0,0,.15)'; ell(c,0,1,16,4); c.fill();
   const b=Math.sin(clock*2)*1;
+  if(SPR.chef&&SPR.chef.idle) drawSheet(c,SPR.chef.idle,Math.floor(clock*5),false); else {
   rr(c,-11,-34+b,22,30,9); fs(c,'#ffd23f');
   rr(c,-7,-6,6,6,2); fs(c,'#7a4a2a',2); rr(c,1,-6,6,6,2); fs(c,'#7a4a2a',2);
   ell(c,0,-46+b,14,13); fs(c,'#f6d2b0');
@@ -877,6 +878,7 @@ function drawNPC(c,x,y){
   ell(c,0,-62+b,6,6); fs(c,'#ffffff',2);
   c.fillStyle=OUT; ell(c,-4,-45+b,1.8,2.6); c.fill(); ell(c,4,-45+b,1.8,2.6); c.fill();
   c.fillStyle='rgba(255,120,140,.5)'; ell(c,-8,-40+b,3,2); c.fill(); ell(c,8,-40+b,3,2); c.fill();
+  }
   c.restore();
   // nametag
   tag(c,x,y+14,'Chef Poppy','#ffd23f');
@@ -908,9 +910,13 @@ function drawPortal(c){
 // Each sheet is one row of 256x256 frames. At load we find the feet line and the body's center
 // so frames sit on the ground without jitter, and scale the art to the game's size.
 const SPRITE_SET={
-  warrior:{target:{h:74},sheets:{idle:['art/vanguard-idle.png',4],walk:['art/vanguard-walk.png',6],attack:['art/vanguard-attack.png',4]}},
-  mage:{target:{h:82},sheets:{idle:['art/arcanist-idle.png',4],walk:['art/arcanist-walk.png',6],attack:['art/arcanist-attack.png',4]}},
-  archer:{target:{h:74},sheets:{idle:['art/ranger-idle.png',4],walk:['art/ranger-walk.png',6],attack:['art/ranger-attack.png',4]}},
+  warrior:{target:{h:74},sheets:{idle:['art/vanguard-idle.png',4],walk:['art/vanguard-walk.png',6],attack:['art/vanguard-attack.png',4],climb:['art/vanguard-climb.png',4]}},
+  mage:{target:{h:82},sheets:{idle:['art/arcanist-idle.png',4],walk:['art/arcanist-walk.png',6],attack:['art/arcanist-attack.png',4],climb:['art/arcanist-climb.png',4]}},
+  archer:{target:{h:74},sheets:{idle:['art/ranger-idle.png',4],walk:['art/ranger-walk.png',6],attack:['art/ranger-attack.png',4],climb:['art/ranger-climb.png',4]}},
+  chef:{target:{h:72},sheets:{idle:['art/npc-cook-idle.png',4]}},
+  item_coin:{target:{w:17},center:true,sheets:{idle:['art/item-coin.png',6]}},
+  item_hp:{target:{h:22},center:true,sheets:{idle:['art/item-hp-potion.png',1]}},
+  item_mp:{target:{h:22},center:true,sheets:{idle:['art/item-mp-potion.png',1]}},
   beetle:{target:{w:64},sheets:{idle:['art/beetle-idle.png',4],move:['art/beetle-move.png',6],hit:['art/beetle-hit.png',2]}},
   wisp:{target:{w:48},center:true,sheets:{idle:['art/wisp-idle.png',4],move:['art/wisp-move.png',6],hit:['art/wisp-hit.png',2],shoot:['art/wisp-shoot.png',4]}},
   tent:{target:{h:120},sheets:{idle:['art/prop-tent.png',1]}},
@@ -994,7 +1000,8 @@ function drawSheet(c,sh,frame,flash){
   if(flash){ c.save(); c.globalCompositeOperation='lighter'; c.globalAlpha*=.6; c.drawImage(...args); c.restore(); }
 }
 function drawHeroSprite(c,cls,s){
-  const sp=SPR[cls]; if(!sp||!sp.idle||s.climb) return false;
+  const sp=SPR[cls]; if(!sp||!sp.idle) return false;
+  if(s.climb){ if(!sp.climb) return false; drawSheet(c,sp.climb,Math.floor((s.climbPh||0)*8),false); return true; }
   let sh=sp.idle, fr=Math.floor(s.t*6);
   if(s.swing>=0&&sp.attack){ sh=sp.attack; fr=Math.min(sh.frames-1,Math.floor(s.swing*sh.frames)); }
   else if(s.air&&sp.walk){ sh=sp.walk; fr=1; }
@@ -1251,11 +1258,16 @@ function drawDrops(c){
   for(const d of world.drops){
     const bob=d.landed?Math.sin(clock*4+d.id)*2.5-3:0, x=d.x, y=d.y+bob-6;
     const blink=d.life<5&&Math.floor(clock*8)%2; if(blink) continue;
-    if(d.kind==='gold'){ c.save(); c.translate(x,y); c.scale(Math.cos(clock*5+d.id)*.4+.8,1); ell(c,0,0,8,8); fs(c,'#ffd23f',2); c.fillStyle='#fff3a8'; ell(c,-2,-2,3,3); c.fill(); c.restore(); }
+    const coin=SPR.item_coin&&SPR.item_coin.idle;
+    if(d.kind==='gold'&&coin){ c.save(); c.translate(x,y); drawSheet(c,coin,Math.floor(clock*10+d.id),false); c.restore(); }
+    else if(d.kind==='gold'){ c.save(); c.translate(x,y); c.scale(Math.cos(clock*5+d.id)*.4+.8,1); ell(c,0,0,8,8); fs(c,'#ffd23f',2); c.fillStyle='#fff3a8'; ell(c,-2,-2,3,3); c.fill(); c.restore(); }
     else potion(c,x,y,d.kind==='hp'?'#ff5d6c':'#4aa3ff',1);
   }
 }
-function potion(c,x,y,col,s){ c.save(); c.translate(x,y); c.scale(s,s); rr(c,-3,-13,6,5,1.5); fs(c,'#e9d8a6',1.6); ell(c,0,0,8,9); fs(c,col,2); c.fillStyle='rgba(255,255,255,.6)'; ell(c,-3,-3,2.4,3); c.fill(); c.restore(); }
+function potion(c,x,y,col,s){
+  const ps=SPR[col==='#ff5d6c'?'item_hp':'item_mp'];
+  if(ps&&ps.idle){ c.save(); c.translate(x,y); c.scale(s,s); drawSheet(c,ps.idle,0,false); c.restore(); return; }
+  c.save(); c.translate(x,y); c.scale(s,s); rr(c,-3,-13,6,5,1.5); fs(c,'#e9d8a6',1.6); ell(c,0,0,8,9); fs(c,col,2); c.fillStyle='rgba(255,255,255,.6)'; ell(c,-3,-3,2.4,3); c.fill(); c.restore(); }
 
 function drawEffects(c,dt){
   for(const e of effects){
