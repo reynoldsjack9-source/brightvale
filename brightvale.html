@@ -625,14 +625,15 @@ function drainEvents(){
     switch(e.type){
       case 'dmg':
         numbers.push({x:e.x+rand(-4,4),y:e.y,n:e.n,crit:e.crit,who:e.who,t:-e.stack*.08,stack:e.stack});
-        if(e.who==='mob'){ burst(e.x,e.y+12,e.crit?10:6,['#fff7c2','#ffd34d','#ffffff'],e.crit?260:180); if(e.crit) shake=Math.max(shake,4); }
+        if(e.who==='mob'&&spriteFx('hit',{x:e.x,y:e.y+14,dur:.3,facing:Math.random()<.5?-1:1})){ if(e.crit) shake=Math.max(shake,4); }
+        else if(e.who==='mob'){ burst(e.x,e.y+12,e.crit?10:6,['#fff7c2','#ffd34d','#ffffff'],e.crit?260:180); if(e.crit) shake=Math.max(shake,4); }
         else shake=Math.max(shake,6);
         break;
       case 'kill': effects.push({k:'poof',x:e.x,y:e.y,t:0,d:.6,mob:e.mob}); burst(e.x,e.y,14,mobColors(e.mob),240); break;
       case 'cast': castFx(e); break;
-      case 'bolt': effects.push({k:'bolt',pts:e.pts,t:0,d:.32,seed:Math.random()*100}); shake=Math.max(shake,3); break;
-      case 'explode': effects.push({k:'explode',x:e.x,y:e.y,r:e.r,t:0,d:.45}); burst(e.x,e.y,18,['#ffe27a','#ff9f43','#ff6b3d'],320); shake=Math.max(shake,5); break;
-      case 'blink': effects.push({k:'blink',x:e.from,y:e.y,t:0,d:.45},{k:'blink',x:e.to,y:e.y,t:0,d:.45}); burst(e.to,e.y-28,10,['#d9b8ff','#ffffff','#9d7bff'],160); break;
+      case 'bolt': e.pts.slice(1).forEach(q=>spriteFx('shock',{x:q.x,y:q.y,dur:.35})); effects.push({k:'bolt',pts:e.pts,t:0,d:.32,seed:Math.random()*100}); shake=Math.max(shake,3); break;
+      case 'explode': if(spriteFx('fireburst',{x:e.x,y:e.y,dur:.45})){ shake=Math.max(shake,5); break; } effects.push({k:'explode',x:e.x,y:e.y,r:e.r,t:0,d:.45}); burst(e.x,e.y,18,['#ffe27a','#ff9f43','#ff6b3d'],320); shake=Math.max(shake,5); break;
+      case 'blink': if(spriteFx('blink',{x:e.from,y:e.y-28,dur:.45})){ spriteFx('blink',{x:e.to,y:e.y-28,dur:.45}); break; } effects.push({k:'blink',x:e.from,y:e.y,t:0,d:.45},{k:'blink',x:e.to,y:e.y,t:0,d:.45}); burst(e.to,e.y-28,10,['#d9b8ff','#ffffff','#9d7bff'],160); break;
       case 'djump': effects.push({k:'ring',x:e.x,y:e.y,t:0,d:.35,c:'#ffffff'}); break;
       case 'levelup': if(mine){ effects.push({k:'level',pid:e.pid,t:0,d:2.2}); toast(`Level ${e.level}!`,'big'); logs.push({text:`You reached level ${e.level}`,t:0}); writeSave(); } break;
       case 'log': if(mine) logs.push({text:e.text,t:0}); break;
@@ -648,6 +649,13 @@ function drainEvents(){
 }
 function castFx(e){
   const sk=CLASSES[e.cls].skills[e.key];
+  const f=e.facing;
+  if(e.kind==='melee'&&spriteFx(e.key==='a'?'cleave':'slash',{pid:e.pid,ox:e.key==='a'?56:40,oy:-32,facing:f,dur:e.key==='a'?.36:.28})) return;
+  if(e.kind==='slam'&&spriteFx('earthsplitter',{x:e.x,y:e.y,dur:.6})){ shake=Math.max(shake,9); return; }
+  if(e.kind==='buff'&&spriteFx('warcry',{pid:e.pid,oy:-30,dur:.8})) return;
+  if(e.kind==='dash'&&spriteFx('charge',{pid:e.pid,ox:-36,oy:-28,facing:f,dur:.35})) return;
+  if(e.kind==='nova'&&spriteFx('frostnova',{x:e.x,y:e.y-28,dur:.55})) return;
+  if(e.kind==='vault'&&spriteFx('dust',{x:e.x,y:e.y,dur:.4,facing:f})) return;
   if(e.kind==='melee') effects.push({k:'slash',pid:e.pid,t:0,d:.28,r:sk.range*.75,wide:e.key==='a',facing:e.facing});
   else if(e.kind==='slam'){ effects.push({k:'slam',x:e.x,y:e.y,t:0,d:.6,r:sk.radius}); shake=Math.max(shake,9); burst(e.x,e.y,22,['#c98a4f','#8f5a2f','#f3d29b'],360,true); }
   else if(e.kind==='buff') effects.push({k:'cry',pid:e.pid,t:0,d:.8});
@@ -911,7 +919,33 @@ const SPRITE_SET={
   portal:{target:{h:124},center:true,sheets:{idle:['art/prop-portal.png',4]}},
   boar:{target:{w:88},sheets:{idle:['art/boar-idle.png',4],move:['art/boar-move.png',6],hit:['art/boar-hit.png',2],windup:['art/boar-windup.png',4],charge:['art/boar-charge.png',6]}},
 };
+// Skill effects: file, frame count, size in game units, and whether the art sits on the ground (else it's centered).
+const FX_DEFS={
+  slash:['fx-slash',6,{h:90}], cleave:['fx-cleave',6,{h:130}], earthsplitter:['fx-earthsplitter',6,{w:420},true],
+  warcry:['fx-war-cry',6,{h:150}], charge:['fx-charge',4,{h:64}], spark:['fx-spark',4,{h:26}],
+  fireorb:['fx-fire-orb',4,{h:40}], fireburst:['fx-fire-burst',6,{h:170}], shock:['fx-shock',6,{h:70}],
+  frostnova:['fx-frost-nova',6,{w:350}], blink:['fx-blink',6,{h:110}], arrow:['fx-arrow',1,{w:36}],
+  piercearrow:['fx-pierce-arrow',1,{w:66}], dust:['fx-dust',6,{h:46},true], hit:['fx-hit',5,{h:54}],
+};
+for(const [k,[f,n,target,feet]] of Object.entries(FX_DEFS)) SPRITE_SET['fx_'+k]={target,center:!feet,sheets:{idle:['art/'+f+'.png',n]}};
+// Skill icon sheets: one row of 5 icons per class, in X, A, S, D, F order.
+const ICON_FILES={warrior:'icons-vanguard',mage:'icons-arcanist',archer:'icons-ranger'}, ICONS={}, ICON_POS={};
+for(const [cls,f] of Object.entries(ICON_FILES)){
+  SKILL_KEYS.forEach((k,i)=>{ ICON_POS[CLASSES[cls].skills[k].icon]={cls,i}; });
+  const img=new Image(); img.onload=()=>{ ICONS[cls]=img; }; img.src='art/'+f+'.png';
+}
 const SPR={};
+const fxs=[];
+function spriteFx(name,o){ const sp=SPR['fx_'+name]; if(!sp||!sp.idle) return false; fxs.push(Object.assign({sh:sp.idle,t:0,dur:.4,facing:1},o)); return true; }
+function drawSpriteFx(c,dt){
+  for(const f of fxs){
+    f.t+=dt; const p=f.pid?world.players[f.pid]:null;
+    const x=p?p.x+(f.ox||0)*f.facing:f.x, y=p?p.y+(f.oy||0):f.y;
+    const fr=Math.min(f.sh.frames-1,Math.floor(f.t/f.dur*f.sh.frames));
+    c.save(); c.translate(x,y); c.scale(f.facing,1); drawSheet(c,f.sh,fr,false); c.restore();
+  }
+  for(let i=fxs.length-1;i>=0;i--) if(fxs[i].t>=fxs[i].dur) fxs.splice(i,1);
+}
 function analyzeSheet(img,frames){
   const fw=Math.round(img.width/frames), fh=img.height;
   const out={img,frames,fw,fh,ax:fw/2,fy:fh*.96,h:fh*.85,w:fw*.6};
@@ -1189,6 +1223,8 @@ function drawProjectiles(c){
   for(const pr of world.proj){
     const d=sgn(pr.vx);
     c.save(); c.translate(pr.x,pr.y); c.scale(d,1);
+    const ps={spark:'fx_spark',fire:'fx_fireorb',arrow:'fx_arrow',bigarrow:'fx_piercearrow'}[pr.sprite], pss=ps&&SPR[ps]&&SPR[ps].idle;
+    if(pss){ drawSheet(c,pss,Math.floor(clock*16),false); c.restore(); continue; }
     if(pr.sprite==='spark'){ c.fillStyle='rgba(255,240,150,.5)'; ell(c,-14,0,16,5); c.fill(); star(c,0,0,9,'#fff3a8'); }
     else if(pr.sprite==='fire'){ const g=c.createRadialGradient(0,0,2,0,0,20); g.addColorStop(0,'rgba(255,255,220,1)'); g.addColorStop(.5,'rgba(255,159,67,.9)'); g.addColorStop(1,'rgba(255,107,61,0)');
       c.fillStyle=g; ell(c,-6,0,24,18); c.fill(); ell(c,0,0,9,9); fs(c,'#ffb347',2); if(Math.random()<.6) particles.push({x:pr.x,y:pr.y+rand(-5,5),vx:-d*rand(20,80),vy:rand(-40,10),life:.35,max:.35,c:Math.random()<.5?'#ffd34d':'#ff7a3d',s:rand(3,5),g:-60}); }
@@ -1203,6 +1239,8 @@ function drawProjectiles(c){
     const a=Math.min(1,z.t/.3,(z.dur-z.t)/.2+.2);
     c.save(); c.globalAlpha=.35*a; c.fillStyle='#fff6c4'; ell(c,z.x,z.y,z.half,10); c.fill(); c.globalAlpha=a;
     for(let i=0;i<16;i++){ const x=z.x-z.half+((i*61+z.seed)%(z.half*2)), y=z.y-330+((clock*950+i*97+z.seed)%330);
+      const as=SPR.fx_arrow&&SPR.fx_arrow.idle;
+      if(as){ c.save(); c.translate(x,y); c.rotate(Math.PI/2); drawSheet(c,as,0,false); c.restore(); continue; }
       c.strokeStyle='rgba(255,255,255,.6)'; c.lineWidth=2; c.beginPath(); c.moveTo(x,y-20); c.lineTo(x,y); c.stroke();
       c.beginPath(); c.moveTo(x-4,y-2); c.lineTo(x,y+6); c.lineTo(x+4,y-2); c.closePath(); fs(c,'#eef4ff',1.4); }
     c.restore();
@@ -1372,6 +1410,8 @@ function drawMinimap(c,p){
 }
 
 function drawIcon(c,icon,x,y,s){
+  const ip=ICON_POS[icon], im=ip&&ICONS[ip.cls];
+  if(im){ c.save(); rr(c,x,y,s,s,s*.18); c.clip(); c.drawImage(im,ip.i*im.height,0,im.height,im.height,x,y,s,s); c.restore(); return; }
   c.save(); c.translate(x+s/2,y+s/2); const k=s/40; c.scale(k,k); c.lineCap='round'; c.lineJoin='round';
   const L=(a,b,cc,d)=>{ c.beginPath(); c.moveTo(a,b); c.lineTo(cc,d); c.stroke(); };
   const bg=(col)=>{ rr(c,-18,-18,36,36,8); c.fillStyle=col; c.fill(); };
@@ -1412,7 +1452,7 @@ function render(dt){
   drawDrops(c);
   for(const m of world.mobs) drawMob(c,m);
   for(const id in world.players) drawPlayer(c,world.players[id]);
-  drawProjectiles(c); drawEffects(c,dt); drawNumbers(c,dt); drawMotes(c);
+  drawProjectiles(c); drawEffects(c,dt); drawSpriteFx(c,dt); drawNumbers(c,dt); drawMotes(c);
   c.restore();
   if(p) drawHUD(c,p);
   for(const l of logs) l.t+=dt; for(const t of toasts) t.t+=dt;
