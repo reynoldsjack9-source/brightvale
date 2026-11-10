@@ -847,9 +847,39 @@ const HERO={
   mage:{skin:'#ffe0c7',hair:'#b48cff',hairD:'#8e63e6',body:'#a77bff',trim:'#7552d9',accent:'#ffd23f',pants:'#6046b8',boots:'#5a3a8a'},
   archer:{skin:'#f9cfa8',hair:'#7a4a2a',hairD:'#5a3420',body:'#6fd46a',trim:'#3fa346',accent:'#fff1b8',pants:'#8a6a44',boots:'#6a4528'},
 };
+const FRAME_SIZE=256, SOLE_BASELINE=244;
+const SPRITES={
+  vanguardIdle:loadStrip('vanguard-idle',4),
+  vanguardWalk:loadStrip('vanguard-walk',6),
+  vanguardAttack:loadStrip('vanguard-attack',4),
+  beetleIdle:loadStrip('beetle-idle',4),
+  beetleMove:loadStrip('beetle-move',6),
+  beetleHit:loadStrip('beetle-hit',2),
+};
+function loadStrip(name,count){
+  const img=new Image();
+  img.src='art/'+name+'.png';
+  return {img,count};
+}
+function drawSprite(c,strip,frame,scale){
+  const {img,count}=strip;
+  if(img.naturalWidth!==FRAME_SIZE*count||img.naturalHeight!==FRAME_SIZE) return false;
+  const size=FRAME_SIZE*scale;
+  c.drawImage(img,frame*FRAME_SIZE,0,FRAME_SIZE,FRAME_SIZE,-FRAME_SIZE*scale/2,-SOLE_BASELINE*scale,size,size);
+  return true;
+}
+function loopFrame(strip,t,fps){ return Math.floor(t*fps)%strip.count; }
+function actionFrame(strip,progress){ return Math.min(strip.count-1,Math.floor(progress*strip.count)); }
+
 function drawHero(c,cls,s){
   const P=HERO[cls], t=s.t;
   if(s.climb) return drawClimber(c,cls,s);
+  if(cls==='warrior'&&!s.air&&!s.dead&&(s.swing<0||s.key==='basic')){
+    const attack=s.swing>=0;
+    const strip=attack?SPRITES.vanguardAttack:s.walk?SPRITES.vanguardWalk:SPRITES.vanguardIdle;
+    const frame=attack?actionFrame(strip,s.swing):loopFrame(strip,t,s.walk?12:6);
+    if(drawSprite(c,strip,frame,64/232)) return;
+  }
   const walk=s.walk&&!s.air, ph=t*12;
   const bob=walk?Math.abs(Math.sin(ph))*2.2:(s.air?0:Math.sin(t*2.6)*.9);
   const lA=walk?Math.sin(ph)*.6:(s.air?.55:0), lB=walk?-Math.sin(ph)*.6:(s.air?-.4:0);
@@ -967,7 +997,12 @@ function drawMob(c,m){
   c.translate(m.x+ox,T.flying?m.y:m.y-m.z); c.scale(m.dir,1);
   const sq=1+(appear<1?(1-appear)*.3:0);
   c.scale(1/sq,sq);
-  if(m.type==='beetle') drawBeetle(c,m,fl); else if(m.type==='wisp') drawWisp(c,m,fl); else drawBoar(c,m,fl);
+  if(m.type==='beetle'){
+    const moving=m.moving&&m.freeze<=0&&m.stun<=0;
+    const strip=fl?SPRITES.beetleHit:moving?SPRITES.beetleMove:SPRITES.beetleIdle;
+    const frame=fl?actionFrame(strip,clamp(1-m.hitT/.16,0,1)):loopFrame(strip,Math.max(0,clock-m.born),moving?10:6);
+    if(!drawSprite(c,strip,frame,39/128)) drawBeetle(c,m,fl);
+  } else if(m.type==='wisp') drawWisp(c,m,fl); else drawBoar(c,m,fl);
   c.restore();
   const b=mobBox(m);
   if(m.freeze>0){ c.globalAlpha=.55*appear; rr(c,b.x0-5,b.y0-6,b.x1-b.x0+10,b.y1-b.y0+8,8); c.fillStyle='#bfeaff'; c.fill(); c.strokeStyle='#ffffff'; c.lineWidth=2; c.stroke();
@@ -1031,7 +1066,7 @@ function star(c,x,y,r,col){ c.beginPath(); for(let i=0;i<10;i++){ const a=i*Math
 
 /* ---------- players, projectiles, drops, effects */
 function drawPlayer(c,p){
-  if(p.dead){ c.save(); c.globalAlpha=.6; c.translate(p.x,p.y); c.rotate(-1.4*p.facing); c.scale(p.facing,1); drawHero(c,p.cls,{t:0,walk:false,air:false,swing:-1}); c.restore(); return; }
+  if(p.dead){ c.save(); c.globalAlpha=.6; c.translate(p.x,p.y); c.rotate(-1.4*p.facing); c.scale(p.facing,1); drawHero(c,p.cls,{t:0,walk:false,air:false,dead:true,swing:-1}); c.restore(); return; }
   c.fillStyle='rgba(40,60,40,.22)'; ell(c,p.x,p.rope?p.y:floorBelow(p.x,p.y-1)+1,14,4.5); c.fill();
   if(p.buffs.warcry){ const a=.35+Math.sin(clock*8)*.12; c.save(); c.globalAlpha=a; const g=c.createRadialGradient(p.x,p.y-26,6,p.x,p.y-26,44); g.addColorStop(0,'rgba(255,93,108,.8)'); g.addColorStop(1,'rgba(255,93,108,0)'); c.fillStyle=g; ell(c,p.x,p.y-26,44,48); c.fill(); c.restore(); }
   c.save();
