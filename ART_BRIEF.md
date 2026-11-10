@@ -28,9 +28,14 @@ LOOK
 - Bold dark outlines (deep plum, #3a2a33) about 3 px at final size, slightly thinner on inner details.
 - Light comes from the upper left on every image.
 
-CHARACTERS
-- Chibi proportions: the head is about 45% of total height, big expressive eyes with a white sparkle, small rosy blush, tiny mouth.
-- Short rounded limbs, chunky boots and hands, readable silhouette at small size.
+CHARACTERS (small "game sprite" look, like a tidy toy figure, not an illustration)
+- About 2.5 heads tall: the head is roughly HALF the character's total height. Small compact torso, short stubby arms and legs, small rounded hands and feet.
+- Big face: large glossy oval eyes set low on the face, dark irises with one bold white highlight, a tiny nose (or none), a small simple mouth, light blush.
+- Hair built from a few big chunky clumps with a clean silhouette, not lots of thin strands.
+- Thinner outlines than the scenery: about 2 px dark outline at final size, crisp clean edges.
+- Flat, simple shading: one base color, one shadow tone and a small highlight. No gradients, glows or painterly texture on characters.
+- Simple outfits made of clear blocks of color; keep small details to a minimum so the character still reads clearly at about 70 px tall.
+- Relaxed, slightly front-facing standing pose; poses read as cute and a bit stiff rather than dramatic or realistic.
 - Always drawn in a THREE-QUARTER VIEW facing RIGHT unless I say otherwise: the character faces and moves to the right, but the body and face are turned about 45 degrees toward the viewer, so both eyes, the chest and the front of the outfit are visible. Never a flat side profile.
 - Monsters stay in plain side view facing right.
 
