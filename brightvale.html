@@ -154,7 +154,7 @@ const CLASSES={
       d:{name:'Frost Nova',icon:'nova',kind:'nova',mp:22,cd:7,lock:.6,radius:175,mult:1.3,freeze:3,desc:'Freeze everything around you for 3 seconds.'},
       f:{name:'Blink',icon:'blink',kind:'blink',mp:6,cd:1.5,lock:.15,dist:210,desc:'Teleport a short distance forward, even mid-air.'},
     }},
-  archer:{name:'Ranger',role:'Bow & arrows',blurb:'Fast and nimble, with a double jump. Picks enemies off from far away.',
+  archer:{name:'Ranger',role:'Bow & arrows',blurb:'Fast and nimble, with the longest double jump. Picks enemies off from far away.',
     base:{hp:100,mp:70,atk:14,def:2},grow:{hp:19,mp:9,atk:3,def:.8},speed:240,doubleJump:true,ratings:{Toughness:3,Power:3,Range:5},
     skills:{
       basic:{name:'Quick Shot',icon:'arrow',kind:'proj',lock:.38,speed:980,range:540,mult:.95,sprite:'arrow',desc:'Fire a single arrow.'},
@@ -240,9 +240,13 @@ function tryJump(w,p){
   if(p.onGround){
     if(p.input.down&&!MAP.platforms[p.plat].ground){ p.dropPlat=p.plat; p.dropT=.3; p.onGround=false; p.vy=80; return; }
     p.vy=-JUMP; p.onGround=false; emit(w,{type:'jump',pid:p.id});
-  } else if(CLASSES[p.cls].doubleJump&&!p.usedDouble&&p.dashT<=0){
-    p.usedDouble=true; p.vy=-JUMP*.78; p.vx=p.facing*400; p.ctrlLock=.22;
-    emit(w,{type:'djump',pid:p.id,x:p.x,y:p.y});
+  } else if(!p.usedDouble&&p.dashT<=0){
+    // Double jump for every class: a quick forward burst with a little lift.
+    // Holding left/right picks the direction; the Ranger's goes farther and higher.
+    const long=CLASSES[p.cls].doubleJump, dir=((p.input.right?1:0)-(p.input.left?1:0))||p.facing;
+    p.facing=dir; p.usedDouble=true;
+    p.vy=-JUMP*(long?.7:.55); p.vx=dir*(long?500:420); p.ctrlLock=.25;
+    emit(w,{type:'djump',pid:p.id,x:p.x,y:p.y,facing:dir});
   }
 }
 
@@ -634,7 +638,9 @@ function drainEvents(){
       case 'bolt': e.pts.slice(1).forEach(q=>spriteFx('shock',{x:q.x,y:q.y,dur:.35})); effects.push({k:'bolt',pts:e.pts,t:0,d:.32,seed:Math.random()*100}); shake=Math.max(shake,3); break;
       case 'explode': if(spriteFx('fireburst',{x:e.x,y:e.y,dur:.45})){ shake=Math.max(shake,5); break; } effects.push({k:'explode',x:e.x,y:e.y,r:e.r,t:0,d:.45}); burst(e.x,e.y,18,['#ffe27a','#ff9f43','#ff6b3d'],320); shake=Math.max(shake,5); break;
       case 'blink': if(spriteFx('blink',{x:e.from,y:e.y-28,dur:.45})){ spriteFx('blink',{x:e.to,y:e.y-28,dur:.45}); break; } effects.push({k:'blink',x:e.from,y:e.y,t:0,d:.45},{k:'blink',x:e.to,y:e.y,t:0,d:.45}); burst(e.to,e.y-28,10,['#d9b8ff','#ffffff','#9d7bff'],160); break;
-      case 'djump': effects.push({k:'ring',x:e.x,y:e.y,t:0,d:.35,c:'#ffffff'}); break;
+      case 'djump': effects.push({k:'ring',x:e.x,y:e.y,t:0,d:.35,c:'#ffffff'});
+        if(!spriteFx('charge',{pid:e.pid,ox:-30,oy:-28,facing:e.facing||1,dur:.3})) effects.push({k:'dash',pid:e.pid,x:e.x,y:e.y,t:0,d:.3,facing:e.facing||1});
+        break;
       case 'levelup': if(mine){ effects.push({k:'level',pid:e.pid,t:0,d:2.2}); toast(`Level ${e.level}!`,'big'); logs.push({text:`You reached level ${e.level}`,t:0}); writeSave(); } break;
       case 'log': if(mine) logs.push({text:e.text,t:0}); break;
       case 'msg': if(mine) toast(e.text); break;
@@ -1529,7 +1535,7 @@ function togglePause(){
     const p=me(), C=CLASSES[p.cls];
     document.getElementById('skillTable').innerHTML=
       SKILL_KEYS.map(k=>{ const s=C.skills[k]; return `<tr><td><kbd>${KEY_LABEL[k]}</kbd> ${s.name}</td><td>${s.desc}${s.mp?` <b style="color:#2f86ff">${s.mp} MP</b>`:''}${s.cd?` · ${s.cd}s cooldown`:''}</td></tr>`; }).join('')+
-      `<tr><td>Movement</td><td>Arrows to move and climb, Space to jump${C.doubleJump?' (press again in the air to double jump)':''}, Down + Space to drop off a ledge.</td></tr>
+      `<tr><td>Movement</td><td>Arrows to move and climb, Space to jump (press again in the air to double jump${C.doubleJump?', extra long for the Ranger':''}), Down + Space to drop off a ledge.</td></tr>
        <tr><td><kbd>Q</kbd> <kbd>W</kbd></td><td>Drink an HP or MP potion (restores 45%).</td></tr>`;
     for(const k in held) release(k);
     document.getElementById('resumeBtn').focus();
