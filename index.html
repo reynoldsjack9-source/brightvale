@@ -636,10 +636,12 @@ function drainEvents(){
         break;
       case 'kill': effects.push({k:'poof',x:e.x,y:e.y,t:0,d:.6,mob:e.mob}); burst(e.x,e.y,14,mobColors(e.mob),240); break;
       case 'cast': castFx(e); break;
-      case 'bolt': e.pts.slice(1).forEach(q=>spriteFx('shock',{x:q.x,y:q.y,dur:.35})); effects.push({k:'bolt',pts:e.pts,t:0,d:.32,seed:Math.random()*100}); shake=Math.max(shake,3); break;
-      case 'explode': if(spriteFx('fireburst',{x:e.x,y:e.y,dur:.45})){ shake=Math.max(shake,5); break; } effects.push({k:'explode',x:e.x,y:e.y,r:e.r,t:0,d:.45}); burst(e.x,e.y,18,['#ffe27a','#ff9f43','#ff6b3d'],320); shake=Math.max(shake,5); break;
+      case 'bolt': e.pts.slice(1).forEach(q=>spriteFx('shock',{x:q.x,y:q.y,dur:.35})); if(e.pts.length>2) screenFlash(.2,'#e6f2ff'); effects.push({k:'bolt',pts:e.pts,t:0,d:.32,seed:Math.random()*100}); shake=Math.max(shake,3); break;
+      case 'explode': if(spriteFx('fireburst',{x:e.x,y:e.y,dur:.45})){ shake=Math.max(shake,6); screenFlash(.18,'#ffe2b8'); break; } effects.push({k:'explode',x:e.x,y:e.y,r:e.r,t:0,d:.45}); burst(e.x,e.y,18,['#ffe27a','#ff9f43','#ff6b3d'],320); shake=Math.max(shake,5); break;
       case 'blink': if(spriteFx('blink',{x:e.from,y:e.y-28,dur:.45})){ spriteFx('blink',{x:e.to,y:e.y-28,dur:.45}); break; } effects.push({k:'blink',x:e.from,y:e.y,t:0,d:.45},{k:'blink',x:e.to,y:e.y,t:0,d:.45}); burst(e.to,e.y-28,10,['#d9b8ff','#ffffff','#9d7bff'],160); break;
-      case 'djump': effects.push({k:'ring',x:e.x,y:e.y,t:0,d:.35,c:'#ffffff'});
+      case 'djump': djumpAt[e.pid]=clock;
+        if(spriteFx('doublejump',{x:e.x,y:e.y,dur:.4,facing:e.facing||1})){ spriteFx('charge',{pid:e.pid,ox:-30,oy:-28,facing:e.facing||1,dur:.3}); break; }
+        effects.push({k:'ring',x:e.x,y:e.y,t:0,d:.35,c:'#ffffff'});
         if(!spriteFx('charge',{pid:e.pid,ox:-30,oy:-28,facing:e.facing||1,dur:.3})) effects.push({k:'dash',pid:e.pid,x:e.x,y:e.y,t:0,d:.3,facing:e.facing||1});
         break;
       case 'levelup': if(mine){ effects.push({k:'level',pid:e.pid,t:0,d:2.2}); toast(`Level ${e.level}!`,'big'); logs.push({text:`You reached level ${e.level}`,t:0}); writeSave(); } break;
@@ -658,10 +660,10 @@ function castFx(e){
   const sk=CLASSES[e.cls].skills[e.key];
   const f=e.facing;
   if(e.kind==='melee'&&spriteFx(e.key==='a'?'cleave':'slash',{pid:e.pid,ox:e.key==='a'?56:40,oy:-32,facing:f,dur:e.key==='a'?.36:.28})) return;
-  if(e.kind==='slam'&&spriteFx('earthsplitter',{x:e.x,y:e.y,dur:.6})){ shake=Math.max(shake,9); return; }
-  if(e.kind==='buff'&&spriteFx('warcry',{pid:e.pid,oy:-30,dur:.8})) return;
+  if(e.kind==='slam'&&spriteFx('earthsplitter',{x:e.x,y:e.y,dur:.6})){ shake=Math.max(shake,11); screenFlash(.28,'#fff3d6'); return; }
+  if(e.kind==='buff'&&spriteFx('warcry',{pid:e.pid,oy:-30,dur:.8})){ screenFlash(.22,'#ffd9a0'); shake=Math.max(shake,4); return; }
   if(e.kind==='dash'&&spriteFx('charge',{pid:e.pid,ox:-36,oy:-28,facing:f,dur:.35})) return;
-  if(e.kind==='nova'&&spriteFx('frostnova',{x:e.x,y:e.y-28,dur:.55})) return;
+  if(e.kind==='nova'&&spriteFx('frostnova',{x:e.x,y:e.y-28,dur:.55})){ screenFlash(.3,'#e3f7ff'); shake=Math.max(shake,5); return; }
   if(e.kind==='vault'&&spriteFx('dust',{x:e.x,y:e.y,dur:.4,facing:f})) return;
   if(e.kind==='melee') effects.push({k:'slash',pid:e.pid,t:0,d:.28,r:sk.range*.75,wide:e.key==='a',facing:e.facing});
   else if(e.kind==='slam'){ effects.push({k:'slam',x:e.x,y:e.y,t:0,d:.6,r:sk.radius}); shake=Math.max(shake,9); burst(e.x,e.y,22,['#c98a4f','#8f5a2f','#f3d29b'],360,true); }
@@ -916,9 +918,9 @@ function drawPortal(c){
 // Each sheet is one row of 256x256 frames. At load we find the feet line and the body's center
 // so frames sit on the ground without jitter, and scale the art to the game's size.
 const SPRITE_SET={
-  warrior:{target:{h:74},sheets:{idle:['art/vanguard-idle.png',4],walk:['art/vanguard-walk.png',6],attack:['art/vanguard-attack.png',4],climb:['art/vanguard-climb.png',4]}},
-  mage:{target:{h:82},sheets:{idle:['art/arcanist-idle.png',4],walk:['art/arcanist-walk.png',6],attack:['art/arcanist-attack.png',4],climb:['art/arcanist-climb.png',4]}},
-  archer:{target:{h:74},sheets:{idle:['art/ranger-idle.png',4],walk:['art/ranger-walk.png',6],attack:['art/ranger-attack.png',4],climb:['art/ranger-climb.png',4]}},
+  warrior:{target:{h:74},sheets:{idle:['art/vanguard-idle.png',4],walk:['art/vanguard-walk.png',6],attack:['art/vanguard-attack.png',4],climb:['art/vanguard-climb.png',4],jump:['art/vanguard-jump.png',3],djump:['art/vanguard-double-jump.png',6]}},
+  mage:{target:{h:82},sheets:{idle:['art/arcanist-idle.png',4],walk:['art/arcanist-walk.png',6],attack:['art/arcanist-attack.png',4],climb:['art/arcanist-climb.png',4],jump:['art/arcanist-jump.png',3],djump:['art/arcanist-double-jump.png',6]}},
+  archer:{target:{h:74},sheets:{idle:['art/ranger-idle.png',4],walk:['art/ranger-walk.png',6],attack:['art/ranger-attack.png',4],climb:['art/ranger-climb.png',4],jump:['art/ranger-jump.png',3],djump:['art/ranger-double-jump.png',6]}},
   chef:{target:{h:72},sheets:{idle:['art/npc-cook-idle.png',4]}},
   item_coin:{target:{w:17},center:true,sheets:{idle:['art/item-coin.png',6]}},
   item_hp:{target:{h:22},center:true,sheets:{idle:['art/item-hp-potion.png',1]}},
@@ -934,12 +936,18 @@ const SPRITE_SET={
 };
 // Skill effects: file, frame count, size in game units, and whether the art sits on the ground (else it's centered).
 const FX_DEFS={
-  slash:['fx-slash',6,{h:90}], cleave:['fx-cleave',6,{h:130}], earthsplitter:['fx-earthsplitter',6,{w:420},true],
-  warcry:['fx-war-cry',6,{h:150}], charge:['fx-charge',4,{h:64}], spark:['fx-spark',4,{h:26}],
-  fireorb:['fx-fire-orb',4,{h:40}], fireburst:['fx-fire-burst',6,{h:170}], shock:['fx-shock',6,{h:70}],
-  frostnova:['fx-frost-nova',6,{w:350}], blink:['fx-blink',6,{h:110}], arrow:['fx-arrow',1,{w:36}],
-  piercearrow:['fx-pierce-arrow',1,{w:66}], dust:['fx-dust',6,{h:46},true], hit:['fx-hit',5,{h:54}],
+  slash:['fx-slash',6,{h:112}], cleave:['fx-cleave',6,{h:165}], earthsplitter:['fx-earthsplitter',6,{w:490},true],
+  warcry:['fx-war-cry',6,{h:195}], charge:['fx-charge',4,{h:72}], spark:['fx-spark',4,{h:32}],
+  fireorb:['fx-fire-orb',4,{h:48}], fireburst:['fx-fire-burst',6,{h:210}], shock:['fx-shock',6,{h:92}],
+  frostnova:['fx-frost-nova',6,{w:390}], blink:['fx-blink',6,{h:135}], arrow:['fx-arrow',1,{w:40}],
+  piercearrow:['fx-pierce-arrow',1,{w:80}], dust:['fx-dust',6,{h:52},true], hit:['fx-hit',5,{h:66}],
+  doublejump:['fx-double-jump',8,{w:120}],
 };
+// Effects that get an extra additive glow pass, and the screen flash each big skill fires.
+const FX_GLOW=new Set(['slash','cleave','earthsplitter','warcry','fireburst','shock','frostnova','blink','hit','doublejump','spark','fireorb','piercearrow']);
+const screenFx={a:0,c:'#ffffff'};
+function screenFlash(a,c){ if(a>screenFx.a){ screenFx.a=a; screenFx.c=c||'#ffffff'; } }
+const djumpAt={};
 for(const [k,[f,n,target,feet]] of Object.entries(FX_DEFS)) SPRITE_SET['fx_'+k]={target,center:!feet,sheets:{idle:['art/'+f+'.png',n]}};
 // Skill icon sheets: one row of 5 icons per class, in X, A, S, D, F order.
 const ICON_FILES={warrior:'icons-vanguard',mage:'icons-arcanist',archer:'icons-ranger'}, ICONS={}, ICON_POS={};
@@ -949,13 +957,13 @@ for(const [cls,f] of Object.entries(ICON_FILES)){
 }
 const SPR={};
 const fxs=[];
-function spriteFx(name,o){ const sp=SPR['fx_'+name]; if(!sp||!sp.idle) return false; fxs.push(Object.assign({sh:sp.idle,t:0,dur:.4,facing:1},o)); return true; }
+function spriteFx(name,o){ const sp=SPR['fx_'+name]; if(!sp||!sp.idle) return false; fxs.push(Object.assign({sh:sp.idle,t:0,dur:.4,facing:1,glow:FX_GLOW.has(name)},o)); return true; }
 function drawSpriteFx(c,dt){
   for(const f of fxs){
     f.t+=dt; const p=f.pid?world.players[f.pid]:null;
     const x=p?p.x+(f.ox||0)*f.facing:f.x, y=p?p.y+(f.oy||0):f.y;
     const fr=Math.min(f.sh.frames-1,Math.floor(f.t/f.dur*f.sh.frames));
-    c.save(); c.translate(x,y); c.scale(f.facing,1); drawSheet(c,f.sh,fr,false); c.restore();
+    c.save(); c.translate(x,y); c.scale(f.facing,1); drawSheet(c,f.sh,fr,f.glow); c.restore();
   }
   for(let i=fxs.length-1;i>=0;i--) if(fxs[i].t>=fxs[i].dur) fxs.splice(i,1);
 }
@@ -986,7 +994,8 @@ function loadSprites(){
     for(const [anim,[src,frames]] of Object.entries(set.sheets)){
       const img=new Image();
       img.onload=()=>{
-        const sh=analyzeSheet(img,frames);
+        // Frames are square, so the frame count comes from the image itself (a 2048x256 strip = 8 frames).
+        const sh=analyzeSheet(img,Math.max(1,Math.round(img.width/img.height))||frames);
         if(set.center) sh.fy=sh.cy??sh.fh/2;   // flying monsters are positioned by their middle, not their feet
         const ref=set.target.h?{size:sh.h,want:set.target.h}:{size:sh.w,want:set.target.w};
         sh.scale=ref.want/Math.max(1,ref.size);
@@ -1010,6 +1019,8 @@ function drawHeroSprite(c,cls,s){
   if(s.climb){ if(!sp.climb) return false; drawSheet(c,sp.climb,Math.floor((s.climbPh||0)*8),false); return true; }
   let sh=sp.idle, fr=Math.floor(s.t*6);
   if(s.swing>=0&&sp.attack){ sh=sp.attack; fr=Math.min(sh.frames-1,Math.floor(s.swing*sh.frames)); }
+  else if(s.dj>=0&&sp.djump){ sh=sp.djump; fr=Math.min(sh.frames-1,Math.floor(s.dj*sh.frames)); }
+  else if(s.air&&sp.jump){ sh=sp.jump; fr=Math.round((clamp((s.vy||0)/500,-1,1)+1)/2*(sh.frames-1)); }
   else if(s.air&&sp.walk){ sh=sp.walk; fr=1; }
   else if(s.walk&&sp.walk){ sh=sp.walk; fr=Math.floor(s.t*12); }
   drawSheet(c,sh,fr,false);
@@ -1229,7 +1240,8 @@ function drawPlayer(c,p){
   if(p.invuln>0&&p.dashT<=0&&Math.floor(clock*18)%2) c.globalAlpha=.45;
   c.translate(p.x,p.y); c.scale(p.facing,1);
   const swing=p.actT>0?1-p.actT/p.actDur:-1;
-  drawHero(c,p.cls,{t:clock,walk:p.onGround&&Math.abs(p.vx)>25,air:!p.onGround&&!p.rope,climb:!!p.rope,climbPh:p.climbPh,swing,key:p.act});
+  const djAge=clock-(djumpAt[p.id]??-9), dj=(!p.onGround&&!p.rope&&djAge<.42)?djAge/.42:-1;
+  drawHero(c,p.cls,{t:clock,walk:p.onGround&&Math.abs(p.vx)>25,air:!p.onGround&&!p.rope,climb:!!p.rope,climbPh:p.climbPh,swing,key:p.act,vy:p.vy,dj});
   c.restore();
   tag(c,p.x,p.y+14,CLASSES[p.cls].name,'#ffe27a');
 }
@@ -1473,6 +1485,7 @@ function render(dt){
   for(const id in world.players) drawPlayer(c,world.players[id]);
   drawProjectiles(c); drawEffects(c,dt); drawSpriteFx(c,dt); drawNumbers(c,dt); drawMotes(c);
   c.restore();
+  if(screenFx.a>0){ c.save(); c.globalAlpha=screenFx.a; c.fillStyle=screenFx.c; c.fillRect(0,0,VIEW_W,VIEW_H); c.restore(); screenFx.a=Math.max(0,screenFx.a-dt*2.2); }
   if(p) drawHUD(c,p);
   for(const l of logs) l.t+=dt; for(const t of toasts) t.t+=dt;
   for(let i=toasts.length-1;i>=0;i--) if(toasts[i].t>3) toasts.splice(i,1);
