@@ -684,7 +684,49 @@ const SCN=(()=>{
   return{clouds,hillsFar,treesMid,decor,bigTrees,motes};
 })();
 
+/* ---------- map art (art/bg-*.png, art/tile-*.png); anything missing falls back to the code-drawn scenery */
+const SCENE={};
+function loadScenery(){
+  const load=(key,src,fn)=>{ const img=new Image(); img.onload=()=>{ SCENE[key]=fn?fn(img):img; }; img.src=src; };
+  ['sky','hills','trees'].forEach(k=>load(k,`art/bg-${k}.png`));
+  // For platform tiles, find the first opaque row (the top of the grass) and the dirt color along the bottom edge.
+  const tile=img=>{ const t={img,top:0,bottom:'#b97a45'};
+    try{ const cv=document.createElement('canvas'); cv.width=img.width; cv.height=img.height;
+      const x=cv.getContext('2d',{willReadFrequently:true}); x.drawImage(img,0,0); const d=x.getImageData(0,0,img.width,img.height).data;
+      find: for(let y=0;y<img.height;y++) for(let i=0;i<img.width;i+=2){ if(d[(y*img.width+i)*4+3]>60){ t.top=y; break find; } }
+      let r=0,g=0,b=0,n=0; const y=img.height-3;
+      for(let i=0;i<img.width;i+=4){ const o=(y*img.width+i)*4; if(d[o+3]>200){ r+=d[o]; g+=d[o+1]; b+=d[o+2]; n++; } }
+      if(n) t.bottom=`rgb(${r/n|0},${g/n|0},${b/n|0})`;
+    }catch(e){}
+    return t; };
+  [['left','tile-ledge-left'],['mid','tile-ledge-mid'],['right','tile-ledge-right'],['ground','tile-ground']].forEach(([k,f])=>load('t_'+k,`art/${f}.png`,tile));
+}
+const TILE_S=40/128;   // a 128px-tall ledge tile becomes 40 game units tall
+function tileLayer(c,img,par,yOff){
+  const s=VIEW_H/img.height, W=img.width*s;
+  let x=-((cam.x*par)%W); if(x>0) x-=W;
+  for(;x<VIEW_W;x+=W) c.drawImage(img,x,yOff,W+1,VIEW_H);
+}
+function drawLedge(c,pl){
+  const L=SCENE.t_left, M=SCENE.t_mid, R=SCENE.t_right, s=TILE_S;
+  const tw=L.img.width*s, th=L.img.height*s, y=pl.y-L.top*s-5, x0=pl.x-14, x1=pl.x+pl.w+14;
+  for(let x=x0+tw*.9;x<x1-tw*.9;x+=M.img.width*s){ const w=Math.min(M.img.width*s,x1-tw*.9-x); c.drawImage(M.img,0,0,w/s,M.img.height,x,y,w+1,M.img.height*s); }
+  c.drawImage(L.img,x0,y,tw,th);
+  c.drawImage(R.img,x1-R.img.width*s,y,R.img.width*s,R.img.height*s);
+}
+function drawGroundTiles(c,pl){
+  const G=SCENE.t_ground, s=TILE_S, tw=G.img.width*s, th=G.img.height*s, y=pl.y-G.top*s-5;
+  c.fillStyle=G.bottom; c.fillRect(cam.x-20,y+th-2,VIEW_W+40,MAP.h-(y+th)+2);
+  for(let x=Math.floor((cam.x-20)/tw)*tw;x<cam.x+VIEW_W+20;x+=tw) c.drawImage(G.img,x,y,tw+1,th);
+}
+function drawPropSprite(c,key,x,y,frame){
+  const sp=SPR[key]; if(!sp||!sp.idle) return false;
+  c.save(); c.translate(x,y); drawSheet(c,sp.idle,frame||0,false); c.restore(); return true;
+}
+loadScenery();
+
 function drawSky(c){
+  if(SCENE.sky){ tileLayer(c,SCENE.sky,.03,0); return; }
   const g=c.createLinearGradient(0,0,0,VIEW_H); g.addColorStop(0,'#5fb8ff'); g.addColorStop(.55,'#a9dcff'); g.addColorStop(1,'#e6f7ff');
   c.fillStyle=g; c.fillRect(0,0,VIEW_W,VIEW_H);
   // sun
@@ -708,11 +750,15 @@ function drawCloud(c,x,y,s){
 function drawParallax(c){
   // far hills
   let par=.18, base=470+(400-cam.y)*par;
+  if(SCENE.hills) tileLayer(c,SCENE.hills,par,40+(400-cam.y)*par);
+  else {
   c.fillStyle='#a6dca0';
   for(const h of SCN.hillsFar){ const x=h.x-cam.x*par; if(x<-260||x>VIEW_W+260) continue; ell(c,x,base,h.rw,h.h); c.fill(); }
   c.fillStyle='#a6dca0'; c.fillRect(0,base,VIEW_W,VIEW_H);
+  }
   // mid round trees
   par=.42; base=505+(400-cam.y)*par;
+  if(SCENE.trees){ tileLayer(c,SCENE.trees,par,20+(400-cam.y)*par); return; }
   for(const t of SCN.treesMid){
     const x=t.x-cam.x*par; if(x<-80||x>VIEW_W+80) continue;
     c.fillStyle='#86b96a'; c.fillRect(x-4,base-t.h*.45,8,t.h*.45);
@@ -729,6 +775,7 @@ function drawParallax(c){
 function drawBigTree(c,x,s){
   const gy=MAP.platforms[0].y;
   c.save(); c.translate(x,gy); c.scale(s,s);
+  if(SPR.bigtree&&SPR.bigtree.idle){ drawSheet(c,SPR.bigtree.idle,0,false); c.restore(); return; }
   c.fillStyle='#a8744a'; c.beginPath(); c.moveTo(-22,0); c.quadraticCurveTo(-14,-140,-12,-300); c.lineTo(12,-300); c.quadraticCurveTo(14,-140,26,0); c.closePath(); c.fill();
   c.fillStyle='#8c5d39'; c.fillRect(-4,-260,4,200);
   const blobs=[[-70,-300,70],[0,-360,90],[70,-300,70],[-30,-250,60],[40,-240,60]];
@@ -742,6 +789,8 @@ function drawPlatforms(c){
   MAP.platforms.forEach((pl,i)=>{
     if(pl.x>cam.x+VIEW_W+40||pl.x+pl.w<cam.x-40) return;
     const D=SCN.decor[i];
+    if(pl.ground&&SCENE.t_ground){ drawGroundTiles(c,pl); return; }
+    if(!pl.ground&&SCENE.t_left&&SCENE.t_mid&&SCENE.t_right){ drawLedge(c,pl); return; }
     if(pl.ground){
       const g=c.createLinearGradient(0,pl.y,0,MAP.h); g.addColorStop(0,'#d9a066'); g.addColorStop(1,'#b97a45');
       c.fillStyle=g; c.fillRect(Math.max(0,cam.x-20),pl.y,VIEW_W+40,MAP.h-pl.y);
@@ -780,21 +829,26 @@ function drawRopes(c){
 function drawCamp(c){
   const gy=MAP.platforms[0].y;
   // tent
+  if(!drawPropSprite(c,'tent',130,gy)){
   c.save(); c.translate(130,gy);
   c.beginPath(); c.moveTo(-70,0); c.lineTo(0,-96); c.lineTo(70,0); c.closePath(); fs(c,'#ff8f6b',3);
   c.beginPath(); c.moveTo(-70,0); c.lineTo(0,-96); c.lineTo(-24,0); c.closePath(); c.fillStyle='#ffb08f'; c.fill();
   c.beginPath(); c.moveTo(-16,0); c.lineTo(0,-46); c.lineTo(16,0); c.closePath(); fs(c,'#7a3f3a',2);
   c.fillStyle='#ffd23f'; c.beginPath(); c.moveTo(0,-96); c.lineTo(0,-122); c.lineTo(22,-115); c.lineTo(0,-108); c.fill(); c.strokeStyle=OUT; c.lineWidth=2; c.beginPath(); c.moveTo(0,-96); c.lineTo(0,-124); c.stroke();
   c.restore();
+  }
   // NPC
   drawNPC(c,300,gy);
   // campfire
+  if(!drawPropSprite(c,'campfire',380,gy,Math.floor(clock*10))){
   c.save(); c.translate(380,gy);
   c.fillStyle='#8c5d39'; rr(c,-18,-6,36,7,3); c.fill(); rr(c,-14,-9,28,6,3); c.fill();
   for(let i=0;i<3;i++){ const h=18+Math.sin(clock*12+i*2)*5, x=(i-1)*7;
     c.fillStyle=['#ff7a3d','#ffb347','#ffe27a'][i]; c.beginPath(); c.moveTo(x-7,-6); c.quadraticCurveTo(x,-6-h*1.4,x+7,-6); c.fill(); }
   c.restore();
+  }
   // signpost
+  if(drawPropSprite(c,'sign',470,gy)){ tag(c,470,gy-92,'Hunting grounds →','#ffe27a'); return; }
   c.save(); c.translate(470,gy);
   c.fillStyle='#a8744a'; rr(c,-4,-60,8,60,2); fs(c,'#a8744a',2);
   rr(c,-46,-74,96,30,6); fs(c,'#f3d29b',2.5);
@@ -831,6 +885,7 @@ function tag(c,x,y,text,col){
 }
 function drawPortal(c){
   const {x,y}=MAP.portal;
+  if(drawPropSprite(c,'portal',x,y-56,Math.floor(clock*8))){ tag(c,x,y+14,'Deeper Woods (closed)','#bfe8ff'); return; }
   c.save(); c.translate(x,y-50);
   const g=c.createRadialGradient(0,0,4,0,0,60); g.addColorStop(0,'rgba(255,255,255,.9)'); g.addColorStop(.5,'rgba(140,220,255,.55)'); g.addColorStop(1,'rgba(180,140,255,0)');
   c.fillStyle=g; ell(c,0,0,60,70); c.fill();
@@ -849,6 +904,11 @@ const SPRITE_SET={
   archer:{target:{h:74},sheets:{idle:['art/ranger-idle.png',4],walk:['art/ranger-walk.png',6],attack:['art/ranger-attack.png',4]}},
   beetle:{target:{w:64},sheets:{idle:['art/beetle-idle.png',4],move:['art/beetle-move.png',6],hit:['art/beetle-hit.png',2]}},
   wisp:{target:{w:48},center:true,sheets:{idle:['art/wisp-idle.png',4],move:['art/wisp-move.png',6],hit:['art/wisp-hit.png',2],shoot:['art/wisp-shoot.png',4]}},
+  tent:{target:{h:120},sheets:{idle:['art/prop-tent.png',1]}},
+  campfire:{target:{h:48},sheets:{idle:['art/prop-campfire.png',4]}},
+  sign:{target:{h:76},sheets:{idle:['art/prop-sign.png',1]}},
+  bigtree:{target:{h:470},sheets:{idle:['art/prop-tree.png',1]}},
+  portal:{target:{h:124},center:true,sheets:{idle:['art/prop-portal.png',4]}},
   boar:{target:{w:88},sheets:{idle:['art/boar-idle.png',4],move:['art/boar-move.png',6],hit:['art/boar-hit.png',2],windup:['art/boar-windup.png',4],charge:['art/boar-charge.png',6]}},
 };
 const SPR={};
