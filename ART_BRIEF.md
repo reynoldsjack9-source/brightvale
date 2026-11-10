@@ -31,7 +31,8 @@ LOOK
 CHARACTERS
 - Chibi proportions: the head is about 45% of total height, big expressive eyes with a white sparkle, small rosy blush, tiny mouth.
 - Short rounded limbs, chunky boots and hands, readable silhouette at small size.
-- Always shown in side view facing RIGHT unless I say otherwise.
+- Always drawn in a THREE-QUARTER VIEW facing RIGHT unless I say otherwise: the character faces and moves to the right, but the body and face are turned about 45 degrees toward the viewer, so both eyes, the chest and the front of the outfit are visible. Never a flat side profile.
+- Monsters stay in plain side view facing right.
 
 PALETTE
 - Sky blue #5fb8ff, grass green #5cc44a, warm dirt #d9a066, sunshine yellow #ffd23f, berry pink #ff6b8b, mana blue #4aa3ff, soft white #ffffff.
@@ -60,7 +61,7 @@ There are three player classes, and each needs one concept sheet and then a set 
 
 ```
 Create a character concept sheet for the Brightvale [CLASS NAME]. [paste the Look, Weapon and Key colors from the table].
-Show three views side by side on a transparent background: side view facing right, front view, and back view. Same size and proportions in all three. Chibi proportions per the style guide. No text.
+Show three views side by side on a transparent background: three-quarter view facing right (body and face turned about 45 degrees toward the viewer, both eyes visible), front view, and back view. Same size and proportions in all three. Chibi proportions per the style guide. No text.
 ```
 
 Generate a few versions, pick one and save it as the reference. Every later prompt for that class starts with: "Here is the approved [CLASS NAME] reference. Match it exactly."
@@ -70,7 +71,7 @@ Generate a few versions, pick one and save it as the reference. Every later prom
 Ask for one row of poses at a time. Every frame must be the same size, with the feet on the same baseline.
 
 ```
-Using the approved [CLASS NAME] reference, create a horizontal sprite strip of [NUMBER] frames showing [POSE], side view facing right, transparent background. Each frame is the same size (256x256) with the character's feet touching the same bottom line and the body centered. Keep every detail identical between frames; only the pose changes.
+Using the approved [CLASS NAME] reference, create a horizontal sprite strip of [NUMBER] frames showing [POSE], three-quarter view facing right (turned about 45 degrees toward the viewer, both eyes and the front of the outfit visible), transparent background. Each frame is the same size (256x256) with the character's feet touching the same bottom line and the body centered. Keep every detail identical between frames; only the pose changes.
 ```
 
 Poses needed for each class (frame counts are in the animation section):
