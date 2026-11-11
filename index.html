@@ -1028,6 +1028,95 @@ function drawHeroSprite(c,cls,s){
 }
 loadSprites();
 
+/* ---------- pixel-art heroes
+   Licensed CraftPix sheets live in craftpix/ (kept out of the public repo). At load each strip is recolored,
+   its black outlines become dark shades of the color they border, and the attack's sword is redrawn bigger.
+   If the files aren't there, the hero falls back to the art/ sprites. */
+const PIXSET={
+  warrior:{dir:'craftpix/male/Swordsman/',ax:66,fy:128,ppu:1.06,anims:{idle:'Idle',run:'Run',jump:'Jump',attack:'Attack_3',hurt:'Hurt',dead:'Dead'}},
+};
+const PIX={};
+(() => {
+  const MAP={'#0a112b':'#16255c','#003166':'#2456b8','#65709c':'#7f97d8','#8994b2':'#9db3ea','#a3a9c4':'#b9cbf5','#dfe1e9':'#eef3ff','#ffffff':'#ffffff',
+    '#421020':'#4a2416','#491f30':'#6b3a22','#672d35':'#8a5230','#a24c57':'#b87a4a',
+    '#ffc622':'#ffc622','#ffd629':'#ffe05a','#ffa400':'#ffa400','#ff8b2a':'#ff8b2a','#c85b24':'#c85b24','#ffc3a1':'#ffd0b0','#d56a62':'#e58a78',
+    '#005137':'#005137','#007b37':'#007b37','#00a117':'#00a117','#00c219':'#00c219','#78dc2b':'#78dc2b','#001a1a':'#1a2030','#291727':'#5a2a2a'};
+  const GROUP={hair:['#ffc622','#ffd629','#ffa400','#ff8b2a','#c85b24'],skin:['#ffc3a1','#d56a62'],steel:['#65709c','#8994b2','#a3a9c4','#dfe1e9','#ffffff'],
+    navy:['#003166','#0a112b'],leather:['#421020','#491f30','#672d35','#a24c57'],eye:['#005137','#007b37','#00a117','#00c219','#78dc2b','#001a1a']};
+  const LINE={hair:'#9a4312',skin:'#a5523f',steel:'#34477f',navy:'#0e1a44',leather:'#2e150b',eye:'#12261c',none:'#2a1b2e'};
+  const h2i=h=>{const n=parseInt(h.slice(1),16);return ((255<<24)|((n&255)<<16)|(((n>>8)&255)<<8)|((n>>16)&255))>>>0;}, hk=h=>parseInt(h.slice(1),16);
+  const SRC=Object.keys(MAP).map(k=>({k:hk(k),r:hk(k)>>16,g:(hk(k)>>8)&255,b:hk(k)&255,to:h2i(MAP[k])}));
+  const GOF={}; for(const g in GROUP) for(const h of GROUP[g]) GOF[hk(h)]=g;
+  const OUT=hk('#010102'), TO={}; for(const s of SRC) TO[s.k]=s.to;
+  const near=(r,g,b)=>{ let best=null,bd=1e9; for(const s of SRC){ const d=(s.r-r)**2+(s.g-g)**2+(s.b-b)**2; if(d<bd){bd=d;best=s;} } return best.k; };
+  const SWORD_LEN=1.5, SWORD_HW=2.1;   // sword size: length vs the artist's blade, and half-width in pixels
+  function bigSword(src,out,w,h){
+    const F=h, n=Math.round(w/F), W1=hk('#ffffff'), W2=hk('#dfe1e9'), isB=v=>v===W1||v===W2;
+    const C={hi:h2i('#ffffff'),mid:h2i('#d9e5ff'),lo:h2i('#93abe6'),line:h2i('#34477f'),gold:h2i('#ffd23f'),goldLine:h2i('#8a5a10')};
+    for(let f=0;f<n;f++){
+      const x0=f*F, seen=new Uint8Array(F*F); let best=null,bx=0,by=0,bn=0;
+      for(let y=0;y<F;y++) for(let x=0;x<F;x++){ const v=src[y*w+x0+x]; if(v>=0){bx+=x;by+=y;bn++;}
+        if(seen[y*F+x]||!isB(v)) continue;
+        const comp=[],st=[[x,y]]; seen[y*F+x]=1;
+        while(st.length){ const [cx,cy]=st.pop(); comp.push([cx,cy]);
+          for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ const nx=cx+dx,ny=cy+dy; if(nx<0||ny<0||nx>=F||ny>=F||seen[ny*F+nx]) continue;
+            if(isB(src[ny*w+x0+nx])){ seen[ny*F+nx]=1; st.push([nx,ny]); } } }
+        if(!best||comp.length>best.length) best=comp; }
+      if(!best||best.length<10) continue;
+      bx/=bn; by/=bn;
+      let mx=0,my=0; for(const [x,y] of best){mx+=x;my+=y;} mx/=best.length; my/=best.length;
+      let sxx=0,syy=0,sxy=0; for(const [x,y] of best){ sxx+=(x-mx)**2; syy+=(y-my)**2; sxy+=(x-mx)*(y-my); }
+      const ang=.5*Math.atan2(2*sxy,sxx-syy); let ux=Math.cos(ang),uy=Math.sin(ang),tmin=1e9,tmax=-1e9;
+      for(const [x,y] of best){ const t=(x-mx)*ux+(y-my)*uy; if(t<tmin)tmin=t; if(t>tmax)tmax=t; }
+      const e1=[mx+ux*tmin,my+uy*tmin], e2=[mx+ux*tmax,my+uy*tmax], d1=(e1[0]-bx)**2+(e1[1]-by)**2, d2=(e2[0]-bx)**2+(e2[1]-by)**2;
+      const nr=d1<d2?e1:e2; if(d1>=d2){ux=-ux;uy=-uy;}
+      const ox=nr[0]+.5, oy=nr[1]+.5, L=(tmax-tmin)*SWORD_LEN+2, HW=SWORD_HW, flip=ux<0?-1:1;
+      for(let y=0;y<F;y++) for(let x=0;x<F;x++){ const px=x+.5-ox,py=y+.5-oy,u=px*ux+py*uy,v=(-px*uy+py*ux)*flip; let col=0;
+        if(u>=.5&&u<=L+1){ const hw=u>L-6?HW*Math.max(0,L-u)/6:HW; if(Math.abs(v)<=hw) col=v<-HW*.35?C.hi:v>HW*.35?C.lo:C.mid; else if(Math.abs(v)<=hw+1.05) col=C.line; }
+        if(u>=-3.2&&u<1.2&&Math.abs(v)<=HW+3.6) col=(u<-2.2||u>=.2||Math.abs(v)>HW+2.6)?C.goldLine:C.gold;
+        if(col) out[y*w+x0+x]=col; }
+    }
+  }
+  function restyle(img,sword){
+    const w=img.width,h=img.height, cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+    const c=cv.getContext('2d',{willReadFrequently:true}); c.drawImage(img,0,0);
+    const d=c.getImageData(0,0,w,h).data, src=new Int32Array(w*h).fill(-1), out=new Uint32Array(w*h);
+    for(let i=0;i<w*h;i++){ if(d[i*4+3]<128) continue; const r=d[i*4],g=d[i*4+1],b=d[i*4+2]; src[i]=(r<16&&g<16&&b<16)?OUT:near(r,g,b); }
+    for(let y=0;y<h;y++) for(let x=0;x<w;x++){ const i=y*w+x,k=src[i]; if(k<0) continue;
+      if(k!==OUT){ out[i]=TO[k]; continue; }
+      const tally={}; let top='none',tn=0;
+      for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue; const xx=x+dx,yy=y+dy; if(xx<0||yy<0||xx>=w||yy>=h) continue;
+        const nb=src[yy*w+xx]; if(nb<0||nb===OUT) continue; const g=GOF[nb]; if(!g) continue; const wt=(dx&&dy)?1:2; tally[g]=(tally[g]||0)+wt; if(tally[g]>tn){tn=tally[g];top=g;} }
+      out[i]=h2i(LINE[top]); }
+    if(sword) bigSword(src,out,w,h);
+    c.putImageData(new ImageData(new Uint8ClampedArray(out.buffer),w,h),0,0);
+    return {cv,n:Math.round(w/h),size:h};
+  }
+  for(const [cls,set] of Object.entries(PIXSET)) for(const [anim,file] of Object.entries(set.anims)){
+    const img=new Image();
+    img.onload=()=>{ try{ (PIX[cls]=PIX[cls]||{})[anim]=restyle(img,anim==='attack'); }catch(e){ /* opened from disk: pixels can't be read */ } };
+    img.src=set.dir+file+'.png';
+  }
+})();
+function drawPixHero(c,cls,s){
+  const P=PIX[cls], set=PIXSET[cls]; if(!P||!P.idle||!P.run||!P.jump||!P.attack) return false;
+  let a=P.idle, fr=Math.floor(s.t*7);
+  if(s.dead&&P.dead){ a=P.dead; fr=Math.min(a.n-1,Math.floor((s.deadT??1)*a.n)); }
+  else if(s.climb){ a=P.jump; fr=2+(Math.floor((s.climbPh||0)*6)%2); }
+  else if(s.swing>=0){ a=P.attack; fr=Math.min(a.n-1,Math.floor(s.swing*a.n)); }
+  else if(s.hurt>=0&&P.hurt){ a=P.hurt; fr=Math.min(a.n-1,Math.floor(s.hurt*a.n)); }
+  else if(s.dj>=0){ a=P.jump; fr=Math.floor(s.dj*a.n); }
+  else if(s.air){ a=P.jump; fr=1+Math.round((clamp((s.vy||0)/600,-1,1)+1)/2*(a.n-3)); }
+  else if(s.walk){ a=P.run; fr=Math.floor(s.t*12); }
+  fr=((fr%a.n)+a.n)%a.n;
+  // Crisp pixels: draw at a whole number of screen pixels per sprite pixel, snapped to the pixel grid.
+  const m=c.getTransform(), sgn=m.a<0?-1:1, k=Math.max(1,Math.round(set.ppu*Math.hypot(m.a,m.b)));
+  c.save(); c.setTransform(sgn*k,0,0,k,Math.round(m.e),Math.round(m.f)); c.imageSmoothingEnabled=false;
+  c.drawImage(a.cv,fr*a.size,0,a.size,a.size,-set.ax,-set.fy,a.size,a.size);
+  c.restore(); c.imageSmoothingEnabled=true;
+  return true;
+}
+
 /* ---------- heroes */
 const HERO={
   warrior:{skin:'#ffd9bd',hair:'#ff9a3c',hairD:'#e27a1f',body:'#7fb2ff',trim:'#4d7fd6',accent:'#ff5d6c',pants:'#4d5b8a',boots:'#7a4a2a'},
@@ -1036,6 +1125,7 @@ const HERO={
 };
 function drawHero(c,cls,s){
   const P=HERO[cls], t=s.t;
+  if(drawPixHero(c,cls,s)) return;
   if(drawHeroSprite(c,cls,s)) return;
   if(s.climb) return drawClimber(c,cls,s);
   const walk=s.walk&&!s.air, ph=t*12;
@@ -1233,7 +1323,9 @@ function star(c,x,y,r,col){ c.beginPath(); for(let i=0;i<10;i++){ const a=i*Math
 
 /* ---------- players, projectiles, drops, effects */
 function drawPlayer(c,p){
-  if(p.dead){ c.save(); c.globalAlpha=.6; c.translate(p.x,p.y); c.rotate(-1.4*p.facing); c.scale(p.facing,1); drawHero(c,p.cls,{t:0,walk:false,air:false,swing:-1}); c.restore(); return; }
+  if(p.dead){ const pix=PIX[p.cls]&&PIX[p.cls].dead&&PIX[p.cls].idle;   // pixel heroes have their own knockout animation
+    c.save(); c.globalAlpha=pix?1:.6; c.translate(p.x,p.y); if(!pix) c.rotate(-1.4*p.facing); c.scale(p.facing,1);
+    drawHero(c,p.cls,{t:0,walk:false,air:false,swing:-1,dead:true,deadT:clamp((3-p.deadT)/.5,0,1)}); c.restore(); return; }
   c.fillStyle='rgba(40,60,40,.22)'; ell(c,p.x,p.rope?p.y:floorBelow(p.x,p.y-1)+1,14,4.5); c.fill();
   if(p.buffs.warcry){ const a=.35+Math.sin(clock*8)*.12; c.save(); c.globalAlpha=a; const g=c.createRadialGradient(p.x,p.y-26,6,p.x,p.y-26,44); g.addColorStop(0,'rgba(255,93,108,.8)'); g.addColorStop(1,'rgba(255,93,108,0)'); c.fillStyle=g; ell(c,p.x,p.y-26,44,48); c.fill(); c.restore(); }
   c.save();
@@ -1241,7 +1333,7 @@ function drawPlayer(c,p){
   c.translate(p.x,p.y); c.scale(p.facing,1);
   const swing=p.actT>0?1-p.actT/p.actDur:-1;
   const djAge=clock-(djumpAt[p.id]??-9), dj=(!p.onGround&&!p.rope&&djAge<.42)?djAge/.42:-1;
-  drawHero(c,p.cls,{t:clock,walk:p.onGround&&Math.abs(p.vx)>25,air:!p.onGround&&!p.rope,climb:!!p.rope,climbPh:p.climbPh,swing,key:p.act,vy:p.vy,dj});
+  drawHero(c,p.cls,{t:clock,walk:p.onGround&&Math.abs(p.vx)>25,air:!p.onGround&&!p.rope,climb:!!p.rope,climbPh:p.climbPh,swing,key:p.act,vy:p.vy,dj,hurt:(p.ctrlLock>0&&p.invuln>.9)?1-p.ctrlLock/.3:-1});
   c.restore();
   tag(c,p.x,p.y+14,CLASSES[p.cls].name,'#ffe27a');
 }
@@ -1524,9 +1616,9 @@ function buildCards(){
 function drawPreviews(){
   for(const pv of previews){
     const c=pv.cv.getContext('2d'); c.setTransform(1,0,0,1,0,0); c.clearRect(0,0,300,240);
-    c.fillStyle='#78c55e'; c.fillRect(0,196,300,44); c.fillStyle='#5cc44a'; c.fillRect(0,192,300,10);
-    c.fillStyle='rgba(40,60,40,.22)'; ell(c,150,196,40,10); c.fill();
-    c.save(); c.translate(150,194); c.scale(2.6,2.6);
+    c.fillStyle='#78c55e'; c.fillRect(0,218,300,22); c.fillStyle='#5cc44a'; c.fillRect(0,214,300,10);
+    c.fillStyle='rgba(40,60,40,.22)'; ell(c,150,218,40,8); c.fill();
+    c.save(); c.translate(150,216); c.scale(2.6,2.6);
     const cyc=(clock*1.4)%1, sw=pv.hover?cyc:-1;
     drawHero(c,pv.cls,{t:clock,walk:false,air:false,swing:sw,key:'basic'});
     c.restore();
