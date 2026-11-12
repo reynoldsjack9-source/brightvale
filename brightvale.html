@@ -1587,7 +1587,7 @@ const CREATOR=(()=>{
   const DEFAULT_LOOK={gender:'male',skin:1,face:'1',eyes:'Round',eyeColor:0,brows:'Soft',mouth:'Smile',extra:'None',hair:'Spiky',hairColor:3};
   const FACES=['1','2','3','4','5','6'];           // whole faces (eyes, brows, mouth drawn together): face-<gender>-<n>.png
   // Proportions: heads bigger and bodies shorter than the raw part art, to match the compact heroes. OVERALL keeps the total height.
-  const HEAD_SCALE=1.22, BODY_SCALE=0.72, OVERALL=0.92, NECK_DROP=5;   // NECK_DROP: head sits this many template px lower on the neck (shorter neck)
+  const HEAD_SCALE=1.2, BODY_SCALE=0.8, OVERALL=0.88, NECK_DROP=13;   // NECK_DROP: head sits this many template px lower on the neck (shorter neck)
 
   /* ---- ChatGPT's parts (only loaded once the head template exists, so there's one 404 instead of fifty) */
   const PART={}, BODY={};
@@ -1653,7 +1653,7 @@ const CREATOR=(()=>{
   const PTH=(c,pts,close=true)=>{ c.beginPath(); c.moveTo(pts[0][0],pts[0][1]); for(let i=1;i<pts.length;i++){ const p=pts[i]; p.length===4?c.quadraticCurveTo(p[0],p[1],p[2],p[3]):c.lineTo(p[0],p[1]); } if(close) c.closePath(); };
 
   /* ---- stand-in parts (used until ChatGPT's file for that part exists) */
-  function headBase(g){ const cv=layer(); if(useP(cv,'head-'+g)){ cv.getContext('2d').clearRect(0,197,256,59); return cv; }   // cut the skin neck below the chin const c=cv.getContext('2d');
+  function headBase(g){ const cv=layer(); if(useP(cv,'head-'+g)){ cv.getContext('2d').clearRect(0,189,256,67); return cv; }   // cut the skin neck below the chin const c=cv.getContext('2d');
     E(c,82,146,10,13); F(c,G.base); c.beginPath(); c.rect(116,178,22,26); F(c,G.shade);
     E(c,132,138,62,58); F(c,G.base,3.4);
     c.save(); E(c,132,138,62,58); c.clip(); c.fillStyle='#9c9c9c'; E(c,80,150,18,46); c.fill(); c.restore();

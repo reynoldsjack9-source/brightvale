@@ -368,3 +368,17 @@ In the headless creator bodies (`art/creator/body-vanguard-*.png`), the sword ha
 - **Attack and cast:** keep the swing, but make the blade match the new, longer straight blade.
 
 Keep the exact same frame count, frame size, feet line, and neck point in each `body-vanguard-*.png`, and keep each matching `.json` neck file correct. Save a before/after strip as `art/creator/sword-check.png`.
+
+## Creator v3.3: sword position (fix the "cutting his throat" pose)
+
+The v3.2 sword is the right size and shape, but in **idle and walk** it now points up across the collar, so it looks like the hero is cutting his own throat. In the game the head is drawn much bigger than the body (big head, small body, no neck; the chin sits directly on the collar), so **nothing in a body sheet may reach above the shoulders near the center of the body**.
+
+Redraw only `art/creator/body-vanguard-idle.png` and `body-vanguard-walk.png` (keep the same frame count, frame size, feet line and neck JSON):
+- Hold the sword **out in front, pointing forward and slightly down**, at about 20–30° below horizontal, away from the body. The hilt is at the front hand at waist height and the blade extends forward past the front of the body.
+- The blade stays **below the shoulder line** in every frame and never crosses the collar, the chest center or the area above the shoulders.
+- It stays straight, rigid and the same length as v3.2, with a firm grip. It must not droop toward the ground.
+- In walk the sword bobs with the arm but keeps the same forward angle.
+
+Check other sheets too: if any frame of run, jump, cast or attack has the blade crossing the collar or above the shoulders near the head, fix it the same way.
+
+**Check before pushing:** in `art/creator/sword-check.png`, draw each idle and walk frame with a big head (about 1.2× the head template) placed with its chin on the collar, so you can see the sword never touches the neck or face.
