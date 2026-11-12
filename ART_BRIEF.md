@@ -289,6 +289,8 @@ Everything else (eye whites, eye outlines and lashes, the white eye sparkle, mou
 - All three classes wear gloves and long sleeves, so no skin shows on the body.
 - For every body sheet, also save `body-<class>-<pose>.json` with the neck point of each frame, for example `{"neck":[[128,200],[129,198],...]}`.
 - **Phase 1:** only `idle` (4 frames) for each class. **Phase 2:** `walk`, `run`, `attack`, `jump`, `double-jump`, `climb`.
+- Also `cast` (4 frames): the pose for big skills (S and D keys), e.g. the Vanguard raising and slamming his sword, the Arcanist lifting the staff overhead, the Ranger drawing a glowing arrow skyward.
+- The double jump no longer flips; it uses the first `jump` frame, so `double-jump` sheets are not needed.
 
 ### Rules
 

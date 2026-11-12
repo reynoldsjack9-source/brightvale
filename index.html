@@ -975,9 +975,9 @@ function drawPortal(c){
 // Each sheet is one row of 256x256 frames. At load we find the feet line and the body's center
 // so frames sit on the ground without jitter, and scale the art to the game's size.
 const SPRITE_SET={
-  warrior:{target:{h:64},sheets:{idle:['art/vanguard-compact-idle.png',1],run:['art/vanguard-compact-run.png',6]}},
-  mage:{target:{h:71},sheets:{idle:['art/arcanist-compact-idle.png',1],run:['art/arcanist-compact-run.png',6]}},
-  archer:{target:{h:64},sheets:{idle:['art/ranger-compact-idle.png',1],run:['art/ranger-compact-run.png',6]}},
+  warrior:{target:{h:64},sheets:{idle:['art/vanguard-compact-idle.png',1],run:['art/vanguard-compact-run.png',6],attack:['art/vanguard-compact-attack.png',4],cast:['art/vanguard-compact-cast.png',4],jump:['art/vanguard-compact-jump.png',3],climb:['art/vanguard-compact-climb.png',4]}},
+  mage:{target:{h:71},sheets:{idle:['art/arcanist-compact-idle.png',1],run:['art/arcanist-compact-run.png',6],attack:['art/arcanist-compact-attack.png',4],cast:['art/arcanist-compact-cast.png',4],jump:['art/arcanist-compact-jump.png',3],climb:['art/arcanist-compact-climb.png',4]}},
+  archer:{target:{h:64},sheets:{idle:['art/ranger-compact-idle.png',1],run:['art/ranger-compact-run.png',6],attack:['art/ranger-compact-attack.png',4],cast:['art/ranger-compact-cast.png',4],jump:['art/ranger-compact-jump.png',3],climb:['art/ranger-compact-climb.png',4]}},
   chef:{target:{h:72},sheets:{idle:['art/npc-cook-idle.png',4]}},
   item_coin:{target:{w:17},center:true,sheets:{idle:['art/item-coin.png',6]}},
   item_hp:{target:{h:22},center:true,sheets:{idle:['art/item-hp-potion.png',1]}},
@@ -1077,8 +1077,8 @@ function drawHeroSprite(c,cls,s){
   const sp=SPR[cls]; if(!sp||!sp.idle) return false;
   let sh=sp.idle, fr=Math.floor(s.t*6), rot=0, spin=false, breathe=false;
   if(s.climb){ if(sp.climb){ sh=sp.climb; fr=Math.floor((s.climbPh||0)*8); } }
-  else if(s.swing>=0){ if(sp.attack){ sh=sp.attack; fr=Math.min(sh.frames-1,Math.floor(s.swing*sh.frames)); } else rot=Math.sin(Math.min(1,s.swing*1.5)*Math.PI)*.18; }
-  else if(s.dj>=0){ if(sp.djump){ sh=sp.djump; fr=Math.min(sh.frames-1,Math.floor(s.dj*sh.frames)); } else { rot=s.dj*Math.PI*2; spin=true; } }
+  else if(s.swing>=0){ const pose=((s.key==='s'||s.key==='d')&&sp.cast)?sp.cast:sp.attack; if(pose){ sh=pose; fr=Math.min(sh.frames-1,Math.floor(s.swing*sh.frames)); } else rot=Math.sin(Math.min(1,s.swing*1.5)*Math.PI)*.18; }
+  else if(s.dj>=0){ if(sp.jump){ sh=sp.jump; fr=0; } else if(sp.run){ sh=sp.run; fr=2; } rot=Math.sin(Math.min(1,s.dj*1.3)*Math.PI)*.22; }
   else if(s.air){ if(sp.jump){ sh=sp.jump; fr=Math.round((clamp((s.vy||0)/500,-1,1)+1)/2*(sh.frames-1)); } else if(sp.run){ sh=sp.run; fr=2; } }
   else if(s.walk&&(sp.run||sp.walk)){ sh=sp.run||sp.walk; fr=Math.floor(s.t*(sp.run?14:12)); }
   else breathe=sh.frames===1;
@@ -1583,7 +1583,7 @@ const CREATOR=(()=>{
   const EYES={male:['Round','Bright','Sharp','Calm'],female:['Round','Bright','Lashes','Sleepy']};
   const BROWS=['Soft','Bold','Raised'], MOUTH=['Smile','Grin','Calm','Open'], EXTRA=['None','Freckles','Blush','Bandage','Glasses'];
   const HAIR={male:['Spiky','Crop','Messy','Swept','Topknot'],female:['Long','Bob','Ponytail','Twin tails','Bun']};
-  const SLUG={warrior:'vanguard',mage:'arcanist',archer:'ranger'}, POSES=['idle','walk','run','attack','jump','double-jump','climb'];
+  const SLUG={warrior:'vanguard',mage:'arcanist',archer:'ranger'}, POSES=['idle','walk','run','attack','cast','jump','climb'];
   const slug=s=>s.toLowerCase().replace(/ /g,'');
   const DEFAULT_LOOK={gender:'male',skin:1,eyes:'Round',eyeColor:0,brows:'Soft',mouth:'Smile',extra:'None',hair:'Spiky',hairColor:3};
 
@@ -1725,8 +1725,7 @@ const CREATOR=(()=>{
     const B=BODY[cls]; if(!compactParts||!B||!B.idle||!B.attack||!B.jump||!(B.run||B.walk)||!s.look) return false;
     let sh=B.idle, fr=Math.floor(s.t*6);
     if(s.climb&&B.climb){ sh=B.climb; fr=Math.floor((s.climbPh||0)*8); }
-    else if(s.swing>=0){ sh=B.attack; fr=Math.min(sh.frames-1,Math.floor(s.swing*sh.frames)); }
-    else if(s.dj>=0&&B['double-jump']){ sh=B['double-jump']; fr=Math.min(sh.frames-1,Math.floor(s.dj*sh.frames)); }
+    else if(s.swing>=0){ sh=((s.key==='s'||s.key==='d')&&B.cast)?B.cast:B.attack; fr=Math.min(sh.frames-1,Math.floor(s.swing*sh.frames)); }
     else if(s.air){ sh=B.jump; fr=Math.round((clamp((s.vy||0)/500,-1,1)+1)/2*(sh.frames-1)); }
     else if(s.walk){ sh=B.run||B.walk; fr=Math.floor(s.t*(B.run?14:12)); }
     fr=((fr%sh.frames)+sh.frames)%sh.frames;
