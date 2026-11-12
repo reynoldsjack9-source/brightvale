@@ -321,3 +321,24 @@ The game shifts these to the player's chosen skin and hair color while keeping y
 **Proportions.** The game now draws heads 1.35× and bodies 0.8× of the part art, so heroes have the compact heroes' big-head look. Keep drawing at the same template size.
 
 **When done,** update `art/creator/style.json` to `{"style":"compact","parts":"color"}`.
+
+## Creator v3.1: redraw the hair (faces are good, keep them)
+
+Jack likes the v3 faces. The **hair** still looks wrong next to the compact heroes. Redraw only the hair files; do not touch faces, heads or bodies.
+
+**What's wrong now:** the hair is thin and scraggly, sits like a small cap on top of the head, has a few thin flicks sticking out, and the outline is thin. The compact heroes' hair (`art/vanguard-compact-idle.png`, `art/ranger-compact-idle.png`, `art/arcanist-compact-idle.png`) is **big, chunky and full**.
+
+**Match the compact heroes' hair exactly in construction:**
+- **Volume:** hair is about as tall as the face again and wider than the head. It frames the face and covers the top half of the forehead with big bangs.
+- **Shapes:** 5–8 large, bold, rounded-tip clumps. No thin hair strands, no single-pixel flicks, no scraggly edges.
+- **Outline:** the same thick dark outline as the compact heroes (about 3px at 256 size), darker than every fill color.
+- **Shading:** base color, one darker shadow tone under each clump and along the back, plus one clear light highlight streak or band on top. Cel-shaded, flat fills, no gradients or texture.
+- **Fit:** the hair must cover the whole top of the bald head template with no skin showing at the hairline or the sides. The sides come down to about ear level (long styles go lower).
+- **Color:** draw everything in the chestnut base (about `#8a5a3a`) with the shadow and highlight in the same hue. The game recolors it to every hair color.
+
+**Files to redraw (all 256×256, same head template, neck point 128,200):** for each style `spiky, crop, messy, swept, topknot` (male) and `long, bob, ponytail, twintails, bun` (female):
+- `hair-<style>-front.png` (in front of the face: bangs and top)
+- `hair-<style>-back.png` (behind the head: back volume, ponytails, long hair)
+- `hair-<style>-rear.png` (back view for climbing)
+
+**Check before pushing:** put each style on `head-male.png` / `head-female.png` with `face-<g>-1.png` next to the compact Vanguard's head at the same size. The hair should look like it belongs to the same game. Save that comparison as `art/creator/hair-check.png`.
