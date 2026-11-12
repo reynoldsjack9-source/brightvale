@@ -1587,7 +1587,7 @@ const CREATOR=(()=>{
   const DEFAULT_LOOK={gender:'male',skin:1,face:'1',eyes:'Round',eyeColor:0,brows:'Soft',mouth:'Smile',extra:'None',hair:'Spiky',hairColor:3};
   const FACES=['1','2','3','4','5','6'];           // whole faces (eyes, brows, mouth drawn together): face-<gender>-<n>.png
   // Proportions: heads bigger and bodies shorter than the raw part art, to match the compact heroes. OVERALL keeps the total height.
-  const HEAD_SCALE=1.0, BODY_SCALE=0.8, OVERALL=0.92, NECK_DROP=26;   // NECK_DROP: head sits this many template px lower on the neck (shorter neck)
+  const HEAD_SCALE=1.22, BODY_SCALE=0.72, OVERALL=0.92, NECK_DROP=5;   // NECK_DROP: head sits this many template px lower on the neck (shorter neck)
 
   /* ---- ChatGPT's parts (only loaded once the head template exists, so there's one 404 instead of fifty) */
   const PART={}, BODY={};
@@ -1611,11 +1611,16 @@ const CREATOR=(()=>{
     for(const cls in SLUG) for(const pose of POSES){
       const base=`${P}body-${SLUG[cls]}-${pose}`, im=new Image();
       im.onload=()=>fetch(base+'.json').then(r=>r.ok?r.json():null).catch(()=>null).then(j=>{
-        try{ const n=Math.max(1,Math.round(im.width/im.height)), sh=analyzeSheet(im,n); sh.neck=(j&&j.neck)||null; sh.rot=(j&&j.rot)||null; (BODY[cls]=BODY[cls]||{})[pose]=sh; cacheKey=''; }catch(e){} });
+        try{ const n=Math.max(1,Math.round(im.width/im.height)), sh=analyzeSheet(cutNeck(im,n,j&&j.neck),n); sh.neck=(j&&j.neck)||null; sh.rot=(j&&j.rot)||null; (BODY[cls]=BODY[cls]||{})[pose]=sh; cacheKey=''; }catch(e){} });
       im.src=base+'.png';
     }
   };
   tpl.src='art/creator/head-template.png';
+  // No visible neck: remove the neck post that sticks up above each body's collar (the head's chin sits on the collar instead).
+  function cutNeck(im,n,necks){ if(!necks) return im; const cv=document.createElement('canvas'); cv.width=im.width; cv.height=im.height;
+    const c=cv.getContext('2d'); c.drawImage(im,0,0); const fw=im.width/n;
+    for(let i=0;i<n;i++){ const nk=necks[i]||necks[0]; if(!nk) continue; c.clearRect(i*fw+nk[0]-13,nk[1]-13,30,14); }
+    return cv; }
 
   /* ---- grayscale -> color */
   const G={line:'#3b3b3b',shade:'#737373',base:'#b3b3b3',light:'#ebebeb'};
@@ -1648,7 +1653,7 @@ const CREATOR=(()=>{
   const PTH=(c,pts,close=true)=>{ c.beginPath(); c.moveTo(pts[0][0],pts[0][1]); for(let i=1;i<pts.length;i++){ const p=pts[i]; p.length===4?c.quadraticCurveTo(p[0],p[1],p[2],p[3]):c.lineTo(p[0],p[1]); } if(close) c.closePath(); };
 
   /* ---- stand-in parts (used until ChatGPT's file for that part exists) */
-  function headBase(g){ const cv=layer(); if(useP(cv,'head-'+g)) return cv; const c=cv.getContext('2d');
+  function headBase(g){ const cv=layer(); if(useP(cv,'head-'+g)){ cv.getContext('2d').clearRect(0,197,256,59); return cv; }   // cut the skin neck below the chin const c=cv.getContext('2d');
     E(c,82,146,10,13); F(c,G.base); c.beginPath(); c.rect(116,178,22,26); F(c,G.shade);
     E(c,132,138,62,58); F(c,G.base,3.4);
     c.save(); E(c,132,138,62,58); c.clip(); c.fillStyle='#9c9c9c'; E(c,80,150,18,46); c.fill(); c.restore();
