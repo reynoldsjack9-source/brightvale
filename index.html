@@ -76,7 +76,7 @@ kbd{font-family:var(--display);background:#fff;border:2px solid var(--ink);borde
     <div class="logo">Brightvale</div>
     <div class="sub">Pick a class and head out into Clover Hill.</div>
     <div class="cards" id="cards"></div>
-    <div class="btns"><a class="btn" href="wardrobe.html">Wardrobe</a><a class="btn" href="skills.html">Skills</a><a class="btn" href="?style=compact" id="compactStyle">Compact sprites</a></div>
+    <div class="btns"><a class="btn" href="wardrobe.html">Wardrobe</a><a class="btn" href="skills.html">Skills</a><a class="btn" href="?style=compact" id="compactStyle">Compact sprites</a><a class="btn" href="?style=pixel" id="pixelStyle">Pixel sprites</a></div>
     <div class="keys">
       <span><kbd>←</kbd><kbd>→</kbd> move</span><span><kbd>↑</kbd><kbd>↓</kbd> climb ropes</span><span><kbd>Space</kbd> jump</span>
       <span><kbd>↓</kbd>+<kbd>Space</kbd> drop down</span><span><kbd>X</kbd> attack</span><span><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><kbd>F</kbd> skills</span>
@@ -97,7 +97,10 @@ kbd{font-family:var(--display);background:#fff;border:2px solid var(--ink);borde
 <script>
 (() => {
 'use strict';
-const COMPACT_SPRITES = new URLSearchParams(window.location?.search || '').get('style') === 'compact';
+// Hero art style: ChatGPT art by default; ?style=compact for its smaller set, ?style=pixel for the CraftPix pixel heroes.
+const HERO_STYLE = new URLSearchParams(window.location?.search || '').get('style') || '';
+const COMPACT_SPRITES = HERO_STYLE === 'compact', PIXEL_HEROES = HERO_STYLE === 'pixel';
+if (PIXEL_HEROES) { const l=document.getElementById('pixelStyle'); if(l){ l.href='?'; l.textContent='Default sprites'; } }
 const compactLink = document.getElementById('compactStyle');
 if (COMPACT_SPRITES) {
   compactLink.href = '?';
@@ -1134,7 +1137,7 @@ const PIXLIB=(()=>{
   return {restyle};
 })();
 /*PIXLIB-END*/
-for(const [cls,set] of Object.entries(PIXSET)) for(const [anim,file] of Object.entries(set.anims)){
+if(PIXEL_HEROES) for(const [cls,set] of Object.entries(PIXSET)) for(const [anim,file] of Object.entries(set.anims)){
   const img=new Image();
   img.onload=()=>{ try{
     const w=img.width,h=img.height, cv=document.createElement('canvas'); cv.width=w; cv.height=h;
@@ -1172,7 +1175,7 @@ const HERO={
 };
 function drawHero(c,cls,s){
   const P=HERO[cls], t=s.t;
-  if(!COMPACT_SPRITES&&drawPixHero(c,cls,s)) return;
+  if(PIXEL_HEROES&&drawPixHero(c,cls,s)) return;
   if(drawHeroSprite(c,cls,s)) return;
   if(s.climb) return drawClimber(c,cls,s);
   const walk=s.walk&&!s.air, ph=t*12;
@@ -1370,7 +1373,7 @@ function star(c,x,y,r,col){ c.beginPath(); for(let i=0;i<10;i++){ const a=i*Math
 
 /* ---------- players, projectiles, drops, effects */
 function drawPlayer(c,p){
-  if(p.dead){ const pix=!COMPACT_SPRITES&&PIX[p.cls]&&PIX[p.cls].dead&&PIX[p.cls].idle;   // pixel heroes have their own knockout animation
+  if(p.dead){ const pix=PIXEL_HEROES&&PIX[p.cls]&&PIX[p.cls].dead&&PIX[p.cls].idle;   // pixel heroes have their own knockout animation
     c.save(); c.globalAlpha=pix?1:.6; c.translate(p.x,p.y); if(!pix) c.rotate(-1.4*p.facing); c.scale(p.facing,1);
     drawHero(c,p.cls,{t:0,walk:false,air:false,swing:-1,dead:true,deadT:clamp((3-p.deadT)/.5,0,1)}); c.restore(); return; }
   c.fillStyle='rgba(40,60,40,.22)'; ell(c,p.x,p.rope?p.y:floorBelow(p.x,p.y-1)+1,14,4.5); c.fill();
@@ -1665,9 +1668,9 @@ function buildCards(){
 function drawPreviews(){
   for(const pv of previews){
     const c=pv.cv.getContext('2d'); c.setTransform(1,0,0,1,0,0); c.clearRect(0,0,300,240);
-    c.fillStyle='#78c55e'; c.fillRect(0,218,300,22); c.fillStyle='#5cc44a'; c.fillRect(0,214,300,10);
-    c.fillStyle='rgba(40,60,40,.22)'; ell(c,150,218,40,8); c.fill();
-    c.save(); c.translate(150,216); c.scale(2.6,2.6);
+    c.fillStyle='#78c55e'; c.fillRect(0,196,300,44); c.fillStyle='#5cc44a'; c.fillRect(0,192,300,10);
+    c.fillStyle='rgba(40,60,40,.22)'; ell(c,150,196,40,10); c.fill();
+    c.save(); c.translate(150,194); c.scale(2.6,2.6);
     const cyc=(clock*1.4)%1, sw=pv.hover?cyc:-1;
     drawHero(c,pv.cls,{t:clock,walk:false,air:false,swing:sw,key:'basic'});
     c.restore();
