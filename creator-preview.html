@@ -1,0 +1,261 @@
+<title>Brightvale Character Creator</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap">
+<style>
+/* Layout: stage on the left (character on a grassy plinth), option panel on the right; stacks on phones.
+   Deliberately one bright look, matching the game. */
+:root{
+  --sky:#8fd3ff; --deep:#1f3b63; --panel:#ffffff; --ink:#2b2140; --muted:#6b6485; --line:#d9e6f5;
+  --sun:#ffc93c; --sun-edge:#e5a21c; --chip:#eef6ff; --chip-line:#c7dcf5; --err:#c2334a;
+  --display:"Fredoka","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+body{background:linear-gradient(#bfe6ff,#e9f7ff);background-color:var(--sky);color:var(--ink);font-family:var(--body);
+  padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(30px,5vw,46px);margin:0;color:#fff;-webkit-text-stroke:3px var(--ink);paint-order:stroke fill;text-shadow:0 4px 0 var(--ink);line-height:1.1}
+.note{margin:0;color:var(--deep);font-weight:700;max-width:70ch}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:16px;align-items:start}
+@media (max-width:820px){.layout{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--panel);border:3px solid var(--ink);border-radius:18px;box-shadow:0 5px 0 var(--ink);min-width:0}
+.stage{padding:12px;display:flex;flex-direction:column;gap:10px}
+#stage{width:100%;max-width:100%;aspect-ratio:1/1;border-radius:12px;display:block;background:linear-gradient(#9fdaff,#e6f7ff 70%)}
+.who{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.who b{font-family:var(--display);font-size:22px}
+.who span{color:var(--muted);font-weight:700;font-size:14px}
+.panel{padding:14px;display:flex;flex-direction:column;gap:12px}
+label.name{display:flex;flex-direction:column;gap:4px;font-weight:800;font-size:13px}
+#name{font:inherit;font-size:16px;font-weight:700;padding:8px 10px;border:2px solid var(--ink);border-radius:10px;color:var(--ink);background:#fff}
+#name:focus-visible{outline:3px solid #4aa3ff;outline-offset:2px}
+#nameErr{color:var(--err);font-size:13px;min-height:1em}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{font-family:var(--display);font-weight:600;font-size:16px;padding:6px 14px;border-radius:999px;border:2px solid var(--ink);background:#fff;color:var(--ink);cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--sun);box-shadow:inset 0 -3px 0 var(--sun-edge)}
+.group{display:flex;flex-direction:column;gap:6px}
+.group h3{margin:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{font:inherit;font-weight:800;font-size:13px;border:2px solid var(--chip-line);background:var(--chip);color:var(--ink);border-radius:12px;padding:4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:64px}
+.opt canvas{width:56px;height:56px;image-rendering:auto}
+.opt.text{flex-direction:row;padding:6px 12px;min-width:0}
+.opt[aria-pressed="true"]{border-color:var(--ink);background:#fff6d6;box-shadow:inset 0 -3px 0 var(--sun)}
+.opt:focus-visible,.sw:focus-visible{outline:3px solid #4aa3ff;outline-offset:2px}
+.sw{width:30px;height:30px;border-radius:50%;border:2px solid var(--ink);cursor:pointer;padding:0}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 3px #fff,0 0 0 5px var(--ink)}
+.classes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+@media (max-width:440px){.classes{grid-template-columns:1fr}}
+.cls{font:inherit;text-align:left;border:2px solid var(--chip-line);background:var(--chip);border-radius:12px;padding:8px 10px;cursor:pointer;color:var(--ink);display:flex;flex-direction:column;gap:2px;min-width:0}
+.cls b{font-family:var(--display);font-size:17px}
+.cls small{color:var(--muted);font-weight:700;line-height:1.3}
+.cls[aria-pressed="true"]{border-color:var(--ink);background:#fff6d6;box-shadow:inset 0 -3px 0 var(--sun)}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn{font-family:var(--display);font-weight:600;font-size:17px;border:3px solid var(--ink);border-radius:12px;padding:7px 16px;cursor:pointer;background:#fff;color:var(--ink);box-shadow:inset 0 -3px 0 #d5deea}
+.btn.primary{background:var(--sun);box-shadow:inset 0 -3px 0 var(--sun-edge)}
+.btn:focus-visible{outline:3px solid #4aa3ff;outline-offset:2px}
+#done{font-weight:800;color:var(--deep);min-height:1.2em;margin:0}
+.ph{font-size:12px;color:var(--muted);margin:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<main>
+  <h1>Create your hero</h1>
+  <p class="note">Preview of the character creator. The drawings are stand-ins; ChatGPT's face and hair parts drop into the same slots, and every color is tinted by the game.</p>
+  <div class="layout">
+    <section class="card stage" aria-label="Character preview">
+      <canvas id="stage" width="512" height="512" role="img" aria-label="Your character"></canvas>
+      <div class="who"><b id="whoName">Hero</b><span id="whoLine">Vanguard</span></div>
+      <p class="ph">Stand-in art. Click the character to see the next idle pose.</p>
+    </section>
+    <section class="card panel" aria-label="Character options">
+      <label class="name">Name<input id="name" maxlength="12" autocomplete="off" spellcheck="false" placeholder="Pip"></label>
+      <div id="nameErr" role="alert"></div>
+      <div class="tabs" role="tablist" id="tabs"></div>
+      <div id="tabBody"></div>
+      <div class="actions">
+        <button class="btn" type="button" id="rand">Randomize</button>
+        <button class="btn primary" type="button" id="create">Create character</button>
+      </div>
+      <p id="done" role="status"></p>
+    </section>
+  </div>
+</main>
+<script>
+(() => {
+'use strict';
+/* ---------------- options ---------------- */
+const SKIN=[['Porcelain','#ffe3cf'],['Peach','#ffd2b0'],['Warm','#f2b98e'],['Tan','#d99a6c'],['Brown','#a8683f'],['Deep','#6f4128']];
+const HAIRC=[['Black','#33303f'],['Brown','#7a4a2a'],['Chestnut','#a65a2c'],['Ginger','#ff8a2a'],['Blonde','#ffd45a'],['Silver','#d6dbe8'],['Rose','#ff86b4'],['Lilac','#b48cff'],['Sky','#5aaeff'],['Mint','#62d6a0']];
+const EYEC=[['Brown','#7a4420'],['Hazel','#a8782a'],['Amber','#e0a020'],['Green','#2f9a4a'],['Blue','#2f6fd6'],['Teal','#1f9fa8'],['Violet','#7a4ad6'],['Ruby','#d0354d']];
+const EYES={male:['Round','Bright','Sharp','Calm'],female:['Round','Bright','Lashes','Sleepy']};
+const BROWS=['Soft','Bold','Raised'];
+const MOUTH=['Smile','Grin','Calm','Open'];
+const EXTRA=['None','Freckles','Blush','Bandage','Glasses'];
+const HAIR={male:['Spiky','Crop','Messy','Swept','Topknot'],female:['Long','Bob','Ponytail','Twin tails','Bun']};
+const CLASSES=[['warrior','Vanguard','Sword and armor. Tough up close.'],['mage','Arcanist','Spells and staff. Hits hard from range.'],['archer','Ranger','Bow and arrows. Fast, double jumps far.']];
+const st={name:'',gender:'male',skin:1,eyes:'Round',eyeColor:0,brows:'Soft',mouth:'Smile',extra:'None',hair:'Spiky',hairColor:3,cls:'warrior',pose:0};
+
+/* ---------------- drawing helpers ---------------- */
+// Parts are drawn in grayscale (outline .23, shadow .45, base .70, light .92) and then tinted:
+// each pixel's brightness picks a color from a 4-stop ramp built from the chosen color. ChatGPT's parts use the same rule.
+const G={line:'#3b3b3b',shade:'#737373',base:'#b3b3b3',light:'#ebebeb'};
+const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const mix=(a,b,t)=>a.map((v,i)=>Math.round(v+(b[i]-v)*t));
+function ramp(h){ const c=hex(h); return [[.23,mix(c,[20,12,30],.62)],[.45,mix(c,[30,18,40],.3)],[.70,c],[.92,mix(c,[255,255,255],.45)]]; }
+function tint(cv,h){ const R=ramp(h), c=cv.getContext('2d'), id=c.getImageData(0,0,cv.width,cv.height), d=id.data;
+  for(let i=0;i<d.length;i+=4){ if(!d[i+3]) continue; const L=(d[i]*.299+d[i+1]*.587+d[i+2]*.114)/255; let col;
+    if(L<=R[0][0]) col=R[0][1]; else if(L>=R[3][0]) col=R[3][1];
+    else for(let k=0;k<3;k++){ if(L<=R[k+1][0]){ col=mix(R[k][1],R[k+1][1],(L-R[k][0])/(R[k+1][0]-R[k][0])); break; } }
+    d[i]=col[0]; d[i+1]=col[1]; d[i+2]=col[2]; }
+  c.putImageData(id,0,0); return cv; }
+const layer=()=>{ const cv=document.createElement('canvas'); cv.width=cv.height=256; return cv; };
+function ell(c,x,y,rx,ry,rot=0){ c.beginPath(); c.ellipse(x,y,rx,ry,rot,0,Math.PI*2); }
+function fill(c,col,lw=3){ c.fillStyle=col; c.fill(); c.lineWidth=lw; c.strokeStyle=G.line; c.lineJoin='round'; c.stroke(); }
+function path(c,pts,close=true){ c.beginPath(); c.moveTo(pts[0][0],pts[0][1]); for(let i=1;i<pts.length;i++){ const p=pts[i]; p.length===4?c.quadraticCurveTo(p[0],p[1],p[2],p[3]):c.lineTo(p[0],p[1]); } if(close) c.closePath(); }
+
+/* Head template, shared by every part: three-quarter view facing right, neck point at (128,200). */
+const HEAD={cx:132,cy:138,rx:62,ry:58};
+function headBase(){ const cv=layer(), c=cv.getContext('2d');
+  ell(c,82,146,10,13); fill(c,G.base);                                  // ear
+  c.beginPath(); c.rect(116,178,22,26); fill(c,G.shade);                // neck
+  ell(c,HEAD.cx,HEAD.cy,HEAD.rx,HEAD.ry); fill(c,G.base,3.4);           // head
+  c.save(); ell(c,HEAD.cx,HEAD.cy,HEAD.rx,HEAD.ry); c.clip(); c.fillStyle='#9c9c9c'; ell(c,80,150,18,46); c.fill(); c.restore();
+  c.fillStyle=G.light; ell(c,150,112,20,9,-.3); c.fill();
+  return cv; }
+function hairLayers(style,gender){ const back=layer(), front=layer(), b=back.getContext('2d'), f=front.getContext('2d');
+  const cap=(c)=>{ path(c,[[70,150],[60,92,96,74],[134,56,168,74],[198,86,196,122],[190,108,176,104],[150,96,120,100],[96,104,84,132],[82,146,70,150]]); fill(c,G.base,3.4); };
+  const shine=(c)=>{ c.fillStyle=G.light; path(c,[[110,74],[132,64,156,72],[134,72,112,80]]); c.fill(); };
+  if(style==='Spiky'){ path(f,[[66,152],[52,110,70,86],[56,62],[86,74],[92,44],[114,64],[136,34],[146,64],[176,46],[172,74],[204,72],[192,98],[210,118],[186,112],[172,124],[166,104],[150,122],[140,102],[124,120],[118,102],[100,124],[96,108],[84,136]]); fill(f,G.base,3.4); shine(f); }
+  else if(style==='Crop'){ cap(f); shine(f); }
+  else if(style==='Messy'){ cap(f); path(f,[[150,98],[164,122],[170,100],[186,118],[184,96],[196,104]],false); f.lineWidth=3; f.strokeStyle=G.line; f.stroke(); path(f,[[96,70],[86,50],[110,62],[118,44],[130,60]]); fill(f,G.base,3); shine(f); }
+  else if(style==='Swept'){ cap(f); path(f,[[120,98],[150,84,190,90],[204,104,194,132],[180,114,160,108],[140,106,120,98]]); fill(f,G.base,3); shine(f); }
+  else if(style==='Topknot'){ ell(b,118,72,20,16); fill(b,G.base,3.4); cap(f); shine(f); }
+  else if(style==='Long'){ path(b,[[64,120],[52,200,74,236],[110,246,160,236],[196,206,196,150],[150,120,64,120]]); fill(b,G.shade,3.4); cap(f);
+    path(f,[[70,140],[66,190],[80,200],[92,160]]); fill(f,G.base,3); shine(f); }
+  else if(style==='Bob'){ path(b,[[66,120],[56,190,82,200],[150,206,190,196],[204,160,196,126]]); fill(b,G.shade,3.4); cap(f); path(f,[[70,140],[68,186],[88,194],[92,150]]); fill(f,G.base,3); shine(f); }
+  else if(style==='Ponytail'){ path(b,[[76,96],[30,100,26,150],[22,196,44,214],[44,170,60,150],[76,128,84,110]]); fill(b,G.base,3.4); ell(b,74,104,9,9); fill(b,G.shade,3); cap(f); shine(f); }
+  else if(style==='Twin tails'){ for(const [x,s] of [[70,-1],[196,1]]){ path(b,[[x,108],[x+s*34,120,x+s*30,170],[x+s*22,206,x+s*6,214],[x+s*14,170,x,130]]); fill(b,G.base,3.4); ell(b,x,112,8,8); fill(b,G.shade,3); } cap(f); shine(f); }
+  else if(style==='Bun'){ ell(b,128,62,24,20); fill(b,G.base,3.4); cap(f); shine(f); }
+  return {back,front}; }
+function faceLayers(o){ // whites/outline (fixed colors), iris (tinted), brows (tinted with hair), mouth, extras
+  const fixed=layer(), iris=layer(), brow=layer(), over=layer(), c=fixed.getContext('2d'), ic=iris.getContext('2d'), bc=brow.getContext('2d'), oc=over.getContext('2d');
+  const eyes=[[146,146,1],[184,146,.78]]; const blink=o.blink;
+  for(const [x,y,s] of eyes){
+    if(blink){ c.lineWidth=3.2; c.strokeStyle='#2b2140'; c.beginPath(); c.moveTo(x-10*s,y+2); c.quadraticCurveTo(x,y+8,x+10*s,y+2); c.stroke(); continue; }
+    const tall=o.eyes==='Sleepy'?9:o.eyes==='Sharp'||o.eyes==='Calm'?13:17, wide=(o.eyes==='Bright'?12:10.5)*s;
+    c.fillStyle='#ffffff'; ell(c,x,y,wide,tall); c.fill();
+    ic.fillStyle=G.shade; ell(ic,x,y+2,wide*.78,tall*.86); ic.fill(); ic.fillStyle=G.base; ell(ic,x,y+5,wide*.62,tall*.55); ic.fill();
+    ic.fillStyle=G.line; ell(ic,x+1,y+1,wide*.34,tall*.42); ic.fill();
+    c.lineWidth=3.2; c.strokeStyle='#2b2140'; ell(c,x,y,wide,tall); c.stroke();
+    if(o.eyes==='Sharp'){ c.fillStyle='#2b2140'; path(c,[[x-wide-2,y-tall+6],[x+wide+2,y-tall-2],[x+wide+2,y-tall+4],[x-wide-2,y-tall+10]]); c.fill(); }
+    if(o.eyes==='Calm'||o.eyes==='Sleepy'){ c.fillStyle='#2b2140'; c.fillRect(x-wide-1,y-tall-1,wide*2+2,o.eyes==='Sleepy'?7:4); }
+    if(o.eyes==='Lashes'){ c.lineWidth=3; c.strokeStyle='#2b2140'; for(const k of [-1,0,1]){ c.beginPath(); c.moveTo(x+wide*.6+k*3,y-tall+3); c.lineTo(x+wide+5+k*3,y-tall-4); c.stroke(); } }
+    // sparkle stays white after tinting
+    over.getContext('2d'); oc.fillStyle='#ffffff'; ell(oc,x-wide*.35,y-tall*.38,wide*.28,tall*.22); oc.fill(); ell(oc,x+wide*.3,y+tall*.38,wide*.14,tall*.1); oc.fill();
+  }
+  const bw={Soft:3.4,Bold:5.6,Raised:3.6}[o.brows], by={Soft:120,Bold:121,Raised:113}[o.brows];
+  bc.lineCap='round'; bc.strokeStyle=G.shade; bc.lineWidth=bw+2.4; for(const [x,s] of [[146,1],[184,.78]]){ bc.beginPath(); bc.moveTo(x-11*s,by+3); bc.quadraticCurveTo(x,by-(o.brows==='Raised'?5:2),x+11*s,by+(o.brows==='Bold'?3:1)); bc.stroke(); }
+  const m={Smile:()=>{ c.lineWidth=3; c.strokeStyle='#5a2a2a'; c.beginPath(); c.arc(168,170,6,.25,Math.PI-.25); c.stroke(); },
+    Grin:()=>{ c.fillStyle='#ffffff'; c.beginPath(); c.moveTo(158,168); c.quadraticCurveTo(168,182,178,168); c.closePath(); c.fill(); c.lineWidth=3; c.strokeStyle='#5a2a2a'; c.stroke(); },
+    Calm:()=>{ c.lineWidth=3; c.strokeStyle='#5a2a2a'; c.beginPath(); c.moveTo(161,172); c.lineTo(174,171); c.stroke(); },
+    Open:()=>{ c.fillStyle='#b8404a'; ell(c,168,173,6,7); c.fill(); c.lineWidth=3; c.strokeStyle='#5a2a2a'; c.stroke(); c.fillStyle='#ff8b95'; ell(c,168,177,3.4,2.4); c.fill(); }};
+  m[o.mouth]();
+  const cheek=(a)=>{ c.fillStyle=`rgba(255,110,130,${a})`; ell(c,138,166,9,5); c.fill(); ell(c,192,165,7,4.4); c.fill(); };
+  if(o.extra==='Blush') cheek(.55); else cheek(.22);
+  if(o.extra==='Freckles'){ c.fillStyle='#b4643f'; for(const [x,y] of [[130,162],[136,166],[141,161],[188,161],[194,165]]){ ell(c,x,y,1.8,1.8); c.fill(); } }
+  if(o.extra==='Bandage'){ oc.save(); oc.translate(132,170); oc.rotate(-.35); oc.fillStyle='#fff1d8'; oc.strokeStyle='#8a6a44'; oc.lineWidth=2.4; oc.beginPath(); oc.rect(-13,-6,26,12); oc.fill(); oc.stroke(); oc.fillStyle='#e8cfa6'; oc.fillRect(-4,-6,8,12); oc.restore(); }
+  if(o.extra==='Glasses'){ oc.lineWidth=3.4; oc.strokeStyle='#2b2140'; ell(oc,146,146,17,15); oc.stroke(); ell(oc,184,146,13,14); oc.stroke(); oc.beginPath(); oc.moveTo(163,144); oc.lineTo(171,144); oc.moveTo(129,142); oc.lineTo(96,136); oc.stroke(); oc.fillStyle='rgba(255,255,255,.35)'; ell(oc,140,140,6,4,-.5); oc.fill(); }
+  return {fixed,iris,brow,over}; }
+function bodyLayer(cls,pose){ // stand-in class outfit (ChatGPT's headless body sheets replace this)
+  const cv=layer(), c=cv.getContext('2d'), by=pose?2:0;
+  const col={warrior:['#7fb2ff','#4d7fd6','#ff5d6c','#7a4a2a'],mage:['#a77bff','#7552d9','#ffd23f','#5a3a8a'],archer:['#6fd46a','#3fa346','#fff1b8','#6a4528']}[cls];
+  if(cls==='warrior'){ path(c,[[112,198],[86,236],[94,252],[120,226]]); fill(c,col[2]); }
+  for(const x of [114,140]){ c.beginPath(); c.rect(x,224+by,18,22); fill(c,'#5a4a6a'); ell(c,x+11,248,13,7); fill(c,col[3]); }
+  if(cls==='mage'){ path(c,[[106,196+by],[154,196+by],[166,240],[94,240]]); fill(c,col[0]); c.fillStyle=col[2]; c.fillRect(98,232,64,5); }
+  else { c.beginPath(); c.roundRect(104,194+by,52,40,12); fill(c,col[0]); c.fillStyle=col[1]; c.fillRect(106,222+by,48,7); c.fillStyle='#ffd23f'; c.fillRect(126,222+by,9,7); }
+  ell(c,108,206+by,10,12); fill(c,col[1]); ell(c,152,206+by,10,12); fill(c,col[1]);
+  if(cls==='warrior'){ c.save(); c.translate(160,222+by); c.rotate(.5); c.beginPath(); c.rect(-4,-6,8,56); fill(c,'#eef4ff'); c.beginPath(); c.rect(-12,-8,24,7); fill(c,'#ffd23f'); c.restore(); }
+  if(cls==='mage'){ c.beginPath(); c.rect(162,150+by,7,96); fill(c,'#b07a48'); ell(c,165,146+by,11,11); fill(c,'#ffe27a'); }
+  if(cls==='archer'){ c.lineWidth=5; c.strokeStyle='#2b2140'; c.beginPath(); c.moveTo(166,176+by); c.quadraticCurveTo(196,214,166,252); c.stroke(); c.lineWidth=3; c.strokeStyle='#c98a4f'; c.stroke(); c.lineWidth=1.4; c.strokeStyle='#fff'; c.beginPath(); c.moveTo(166,176+by); c.lineTo(166,252); c.stroke(); }
+  ell(c,154,232+by,8,8); fill(c,'#d9b38c');   // glove
+  return cv; }
+
+/* ---------------- compose ---------------- */
+function render(o,blink){ // returns a 256 canvas with the whole character
+  const out=layer(), c=out.getContext('2d'), skin=SKIN[o.skin][1], hc=HAIRC[o.hairColor][1], ec=EYEC[o.eyeColor][1];
+  const hair=hairLayers(o.hair,o.gender), face=faceLayers({...o,blink});
+  c.drawImage(tint(hair.back,hc),0,0);
+  c.drawImage(bodyLayer(o.cls,o.pose),0,0);
+  c.drawImage(tint(headBase(),skin),0,0);
+  c.drawImage(face.fixed,0,0); if(!blink) c.drawImage(tint(face.iris,ec),0,0);
+  c.drawImage(tint(face.brow,hc),0,0);
+  c.drawImage(face.over,0,0);
+  c.drawImage(tint(hair.front,hc),0,0);
+  return out; }
+let cache=null, cacheKey='';
+function current(blink){ const k=JSON.stringify(st)+blink; if(k!==cacheKey){ cache=render(st,blink); cacheKey=k; } return cache; }
+
+/* ---------------- stage ---------------- */
+const S=document.getElementById('stage').getContext('2d');
+const t0=performance.now();
+function frame(now){
+  const t=(now-t0)/1000, blink=(t%3.6)>3.45, bob=Math.round(Math.sin(t*2.6)*3);
+  S.clearRect(0,0,512,512);
+  S.fillStyle='#78c55e'; S.beginPath(); S.ellipse(256,462,170,34,0,0,Math.PI*2); S.fill();
+  S.fillStyle='#5cc44a'; S.beginPath(); S.ellipse(256,456,170,30,0,0,Math.PI*2); S.fill();
+  S.fillStyle='rgba(40,60,40,.22)'; S.beginPath(); S.ellipse(262,458,72,12,0,0,Math.PI*2); S.fill();
+  S.drawImage(current(blink),0,0,256,256,0,-60+bob,512,512);
+  requestAnimationFrame(frame); }
+document.getElementById('stage').addEventListener('click',()=>{ st.pose=st.pose?0:1; refresh(); });
+
+/* ---------------- panel ---------------- */
+const tabs=[['Body',bodyTab],['Face',faceTab],['Hair',hairTab],['Class',classTab]]; let tab='Body';
+const tabsEl=document.getElementById('tabs'), bodyEl=document.getElementById('tabBody');
+for(const [label] of tabs){ const b=document.createElement('button'); b.type='button'; b.role='tab'; b.textContent=label;
+  b.onclick=()=>{ tab=label; drawTabs(); }; tabsEl.appendChild(b); }
+function drawTabs(){ tabsEl.querySelectorAll('button').forEach(b=>b.setAttribute('aria-selected',b.textContent===tab)); bodyEl.innerHTML=''; tabs.find(t=>t[0]===tab)[1](); }
+function group(title){ const g=document.createElement('div'); g.className='group'; g.innerHTML=`<h3>${title}</h3><div class="opts"></div>`; bodyEl.appendChild(g); return g.querySelector('.opts'); }
+function thumb(o,crop){ const cv=document.createElement('canvas'); cv.width=cv.height=112; const c=cv.getContext('2d'); c.drawImage(render(o,false),crop[0],crop[1],crop[2],crop[2],0,0,112,112); return cv; }
+function choice(box,key,values,thumbFor){ for(const v of values){ const b=document.createElement('button'); b.type='button'; b.className='opt'+(thumbFor?'':' text'); b.setAttribute('aria-pressed',st[key]===v);
+  if(thumbFor) b.appendChild(thumbFor(v)); const s=document.createElement('span'); s.textContent=v; b.appendChild(s);
+  b.onclick=()=>{ st[key]=v; box.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b)); refresh(); }; box.appendChild(b); } }
+function swatches(box,key,list){ list.forEach(([n,h],i)=>{ const b=document.createElement('button'); b.type='button'; b.className='sw'; b.style.background=h; b.title=n; b.setAttribute('aria-label',n); b.setAttribute('aria-pressed',st[key]===i);
+  b.onclick=()=>{ st[key]=i; box.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b)); refresh(); }; box.appendChild(b); }); }
+function bodyTab(){
+  const g=group('Body'); for(const [v,label] of [['male','Male'],['female','Female']]){ const b=document.createElement('button'); b.type='button'; b.className='opt text'; b.textContent=label; b.setAttribute('aria-pressed',st.gender===v);
+    b.onclick=()=>{ if(st.gender!==v){ st.gender=v; st.hair=HAIR[v][0]; if(!EYES[v].includes(st.eyes)) st.eyes=EYES[v][0]; } drawTabs(); refresh(); }; g.appendChild(b); }
+  swatches(group('Skin tone'),'skin',SKIN); }
+function faceTab(){
+  choice(group('Eyes'),'eyes',EYES[st.gender],v=>thumb({...st,eyes:v},[118,108,96]));
+  swatches(group('Eye color'),'eyeColor',EYEC);
+  choice(group('Brows'),'brows',BROWS,v=>thumb({...st,brows:v},[118,96,96]));
+  choice(group('Mouth'),'mouth',MOUTH,v=>thumb({...st,mouth:v},[136,140,64]));
+  choice(group('Extras'),'extra',EXTRA,v=>thumb({...st,extra:v},[88,88,140])); }
+function hairTab(){
+  choice(group('Hairstyle'),'hair',HAIR[st.gender],v=>thumb({...st,hair:v},[24,22,216]));
+  swatches(group('Hair color'),'hairColor',HAIRC); }
+function classTab(){ const box=document.createElement('div'); box.className='classes'; bodyEl.appendChild(box);
+  for(const [v,n,d] of CLASSES){ const b=document.createElement('button'); b.type='button'; b.className='cls'; b.setAttribute('aria-pressed',st.cls===v); b.innerHTML=`<b>${n}</b><small>${d}</small>`;
+    b.onclick=()=>{ st.cls=v; box.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b)); refresh(); }; box.appendChild(b); } }
+function refresh(){ document.getElementById('whoName').textContent=st.name||'Hero';
+  document.getElementById('whoLine').textContent=`${st.gender==='male'?'Male':'Female'} ${CLASSES.find(c=>c[0]===st.cls)[1]} · Lv 1`;
+  document.getElementById('done').textContent=''; }
+
+/* ---------------- name, randomize, create ---------------- */
+const nameEl=document.getElementById('name'), errEl=document.getElementById('nameErr');
+nameEl.addEventListener('input',()=>{ st.name=nameEl.value.trim(); errEl.textContent=''; refresh(); });
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const NAMES=['Pip','Rowan','Juniper','Bram','Marigold','Fennel','Wren','Tansy','Basil','Clover','Sorrel','Hazel'];
+document.getElementById('rand').onclick=()=>{ st.gender=pick(['male','female']); st.skin=Math.floor(Math.random()*SKIN.length); st.eyes=pick(EYES[st.gender]);
+  st.eyeColor=Math.floor(Math.random()*EYEC.length); st.brows=pick(BROWS); st.mouth=pick(MOUTH); st.extra=Math.random()<.6?'None':pick(EXTRA.slice(1));
+  st.hair=pick(HAIR[st.gender]); st.hairColor=Math.floor(Math.random()*HAIRC.length); st.cls=pick(CLASSES)[0];
+  if(!nameEl.value.trim()){ nameEl.value=pick(NAMES); st.name=nameEl.value; } drawTabs(); refresh(); };
+document.getElementById('create').onclick=()=>{
+  const n=nameEl.value.trim();
+  if(n.length<2){ errEl.textContent='Enter a name of at least 2 letters.'; nameEl.focus(); return; }
+  if(!/^[A-Za-z0-9 ]+$/.test(n)){ errEl.textContent='Use letters, numbers and spaces only.'; nameEl.focus(); return; }
+  errEl.textContent=''; document.getElementById('done').textContent=`${n} is ready. In the game, this button starts your adventure on Clover Hill.`; };
+
+drawTabs(); refresh(); requestAnimationFrame(frame);
+})();
+</script>

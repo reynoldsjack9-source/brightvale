@@ -238,3 +238,58 @@ A good first batch is one class's concept sheet, idle, walk and attack strips, p
 
 - [ ] Vanguard concept, idle, walk, attack
 - [ ] Clover Beetle concept, idle, move, hit
+
+## Character creator parts
+
+The character creator lets players pick body (male or female), skin tone, eyes, eye color, brows, mouth, an extra (freckles, blush, bandage or glasses), hairstyle, hair color and starting class. To make every combination work in every animation, characters are built from **separate layers**:
+
+- The **head is separate from the body.** Each face part and hairstyle is drawn once, on one fixed head template. The game pins the finished head onto the body in every animation frame.
+- **Colors are added by the game.** Skin, hair, brows and irises are drawn in **grayscale**, and the game tints them to the player's choice. Never draw them in color.
+
+### Grayscale rule (skin, hair, brows, irises)
+
+Use only these four grays, plus soft anti-aliased edges between them:
+
+| Role | Gray |
+| --- | --- |
+| Outline | #3b3b3b |
+| Shadow | #737373 |
+| Base | #b3b3b3 |
+| Highlight | #ebebeb |
+
+Everything else (eye whites, eye outlines and lashes, the white eye sparkle, mouths, blush, freckles, bandage, glasses, outfits) is drawn in normal color.
+
+### The head template (make this first)
+
+- Every head part is a **256x256 transparent PNG** at the **same pixel scale as the body sheets** (the head should be the same size as the head in `art/vanguard-idle.png`).
+- Three-quarter view facing right, like the current heroes.
+- The **neck point** (where the bottom of the neck meets the body) is at **x 128, y 200** in every head file.
+- The head itself sits roughly inside x 66–196, y 76–200. Hair may extend anywhere in the canvas.
+- First make `art/creator/head-template.png`: the head outline, the ear, the eye line, the mouth line and a small cross at the neck point. Draw every other part on top of this template so they all line up.
+
+### Files (all in `art/creator/`)
+
+| Part | Files | Notes |
+| --- | --- | --- |
+| Head base | `head-male.png`, `head-female.png` | Grayscale. Head, ear and short neck, no face, no hair |
+| Eyes | `eyes-male-round`, `-bright`, `-sharp`, `-calm`; `eyes-female-round`, `-bright`, `-lashes`, `-sleepy` | Two files each: `…-base.png` (whites, outline, lashes, white sparkle, in color) and `…-iris.png` (iris and pupil only, grayscale) |
+| Blink | `eyes-closed-male.png`, `eyes-closed-female.png` | Closed eyes, in color |
+| Brows | `brows-soft.png`, `brows-bold.png`, `brows-raised.png` | Grayscale (tinted to hair color) |
+| Mouth | `mouth-smile.png`, `mouth-grin.png`, `mouth-calm.png`, `mouth-open.png` | Color |
+| Extras | `extra-freckles.png`, `extra-blush.png`, `extra-bandage.png`, `extra-glasses.png` | Color |
+| Male hair | `hair-spiky`, `hair-crop`, `hair-messy`, `hair-swept`, `hair-topknot` | Two files each: `…-front.png` (drawn over the face) and `…-back.png` (drawn behind the head; leave it empty if the style has nothing behind). Grayscale |
+| Female hair | `hair-long`, `hair-bob`, `hair-ponytail`, `hair-twintails`, `hair-bun` | Same as male hair |
+| Check sheet | `creator-check.png` | A grid of 12 assembled heads mixing different parts, to prove everything lines up |
+
+### Headless bodies
+
+- One body per class, shared by male and female: `body-vanguard-<pose>.png`, `body-arcanist-<pose>.png`, `body-ranger-<pose>.png`.
+- Same outfits, poses, frame counts and 256x256 frames as the current class sheets, but **without the head**. End at a short neck stub.
+- All three classes wear gloves and long sleeves, so no skin shows on the body.
+- For every body sheet, also save `body-<class>-<pose>.json` with the neck point of each frame, for example `{"neck":[[128,200],[129,198],...]}`.
+- **Phase 1:** only `idle` (4 frames) for each class. **Phase 2:** `walk`, `run`, `attack`, `jump`, `double-jump`, `climb`.
+
+### Rules
+
+- Original designs only; keep the style of the current art (bold outlines, cel shading, chibi proportions).
+- Every part must line up on the template. If a part is shifted, redo it; don't stretch it.
