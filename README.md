@@ -18,11 +18,17 @@ https://raw.githubusercontent.com/reynoldsjack9-source/brightvale/main/ART_BRIEF
 | Monsters | Clover Beetle (Lv 2), Puff Wisp (Lv 4), Bristle Boar (Lv 6) |
 | Systems | EXP and levels, gold and potion drops, cooldowns, saves per class |
 
-All art is currently drawn in code. Image art from [ART_BRIEF.md](ART_BRIEF.md) will replace it piece by piece.
+Brightvale loads the sprite sheets in `art/` and uses drawn fallbacks when an asset is unavailable. The licensed Vanguard pixel sheets can be loaded from a private `craftpix/` folder and are excluded from this repository.
 
 ## Play it
 
 Open `index.html` in a browser. Controls: arrow keys to move and climb, Space to jump, X to attack, A/S/D/F for skills, Q/W for potions, Esc for the menu.
+
+For local testing, run `node tools/serve.cjs` from the repository root and open `http://localhost:5180/`.
+
+- **Compact sprites** on the title screen selects the smaller idle and six-frame run artwork for all three classes. **Default sprites** returns to the standard character art.
+- **Wardrobe** lets you mix body outfits, boots, gloves, hats, and weapons. It saves the preview selections per class in your browser.
+- **Skills** replays all 15 skills. The game and gallery share the effect renderer in `brightvale-vfx.js`.
 
 ## Files
 
@@ -31,6 +37,8 @@ Open `index.html` in a browser. Controls: arrow keys to move and climb, Space to
 | `ART_BRIEF.md` | Art brief and prompts for image generation |
 | `index.html` | Playable game page |
 | `brightvale.html` | Game source (the same game, without the page wrapper) |
+| `wardrobe.html`, `wardrobe.js` | Wardrobe inventory, equipment layers, and outfit preview |
+| `skills.html`, `brightvale-vfx.js` | Skill gallery and shared effects |
 | `art/` | Drop finished PNGs here, named per the brief |
 | `tools/serve.cjs` | Tiny local web server for testing |
 
