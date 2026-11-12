@@ -75,6 +75,7 @@ kbd{font-family:var(--display);background:#fff;border:2px solid var(--ink);borde
     <div class="logo">Brightvale</div>
     <div class="sub">Pick a class and head out into Clover Hill.</div>
     <div class="cards" id="cards"></div>
+    <div class="btns"><a class="btn" href="wardrobe.html">Wardrobe</a><a class="btn" href="skills.html">Skills</a><a class="btn" href="?style=compact" id="compactStyle">Compact sprites</a></div>
     <div class="keys">
       <span><kbd>←</kbd><kbd>→</kbd> move</span><span><kbd>↑</kbd><kbd>↓</kbd> climb ropes</span><span><kbd>Space</kbd> jump</span>
       <span><kbd>↓</kbd>+<kbd>Space</kbd> drop down</span><span><kbd>X</kbd> attack</span><span><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><kbd>F</kbd> skills</span>
@@ -91,9 +92,18 @@ kbd{font-family:var(--display);background:#fff;border:2px solid var(--ink);borde
   </div>
 </div>
 
+<script src="brightvale-vfx.js"></script>
 <script>
 (() => {
 'use strict';
+const COMPACT_SPRITES = new URLSearchParams(window.location?.search || '').get('style') === 'compact';
+const compactLink = document.getElementById('compactStyle');
+if (COMPACT_SPRITES) {
+  compactLink.href = '?';
+  compactLink.textContent = 'Default sprites';
+}
+const skillEffects = window.BrightvaleVFX;
+const skillVfx = skillEffects?.createLayer();
 /* =====================================================================
    SHARED DATA
    ===================================================================== */
@@ -625,6 +635,7 @@ canvas.addEventListener('click',e=>{
 // ---------- event handling (sim → visuals)
 function drainEvents(){
   for(const e of world.events){
+    skillVfx?.event(e);
     const mine=e.pid===ME;
     switch(e.type){
       case 'dmg':
@@ -656,6 +667,7 @@ function drainEvents(){
   if(logs.length>6) logs.splice(0,logs.length-6);
 }
 function castFx(e){
+  skillVfx?.cast(e);
   const sk=CLASSES[e.cls].skills[e.key];
   const f=e.facing;
   if(e.kind==='melee'&&spriteFx(e.key==='a'?'cleave':'slash',{pid:e.pid,ox:e.key==='a'?56:40,oy:-32,facing:f,dur:e.key==='a'?.36:.28})) return;
@@ -1025,6 +1037,15 @@ function drawHeroSprite(c,cls,s){
   drawSheet(c,sh,fr,false);
   return true;
 }
+if (COMPACT_SPRITES) {
+  const compact = {warrior:['vanguard',64], mage:['arcanist',71], archer:['ranger',64]};
+  for (const [key,[name,height]] of Object.entries(compact)) {
+    const set = SPRITE_SET[key];
+    set.target = {h:height};
+    set.sheets.idle = ['art/'+name+'-compact-idle.png',1];
+    set.sheets.walk = ['art/'+name+'-compact-run.png',6];
+  }
+}
 loadSprites();
 
 /* ---------- pixel-art heroes
@@ -1150,7 +1171,7 @@ const HERO={
 };
 function drawHero(c,cls,s){
   const P=HERO[cls], t=s.t;
-  if(drawPixHero(c,cls,s)) return;
+  if(!COMPACT_SPRITES&&drawPixHero(c,cls,s)) return;
   if(drawHeroSprite(c,cls,s)) return;
   if(s.climb) return drawClimber(c,cls,s);
   const walk=s.walk&&!s.air, ph=t*12;
@@ -1348,7 +1369,7 @@ function star(c,x,y,r,col){ c.beginPath(); for(let i=0;i<10;i++){ const a=i*Math
 
 /* ---------- players, projectiles, drops, effects */
 function drawPlayer(c,p){
-  if(p.dead){ const pix=PIX[p.cls]&&PIX[p.cls].dead&&PIX[p.cls].idle;   // pixel heroes have their own knockout animation
+  if(p.dead){ const pix=!COMPACT_SPRITES&&PIX[p.cls]&&PIX[p.cls].dead&&PIX[p.cls].idle;   // pixel heroes have their own knockout animation
     c.save(); c.globalAlpha=pix?1:.6; c.translate(p.x,p.y); if(!pix) c.rotate(-1.4*p.facing); c.scale(p.facing,1);
     drawHero(c,p.cls,{t:0,walk:false,air:false,swing:-1,dead:true,deadT:clamp((3-p.deadT)/.5,0,1)}); c.restore(); return; }
   c.fillStyle='rgba(40,60,40,.22)'; ell(c,p.x,p.rope?p.y:floorBelow(p.x,p.y-1)+1,14,4.5); c.fill();
@@ -1366,6 +1387,7 @@ function drawProjectiles(c){
   for(const pr of world.proj){
     const d=sgn(pr.vx);
     c.save(); c.translate(pr.x,pr.y); c.scale(d,1);
+    skillEffects?.projectile(c,pr.sprite,clock);
     const ps={spark:'fx_spark',fire:'fx_fireorb',arrow:'fx_arrow',bigarrow:'fx_piercearrow'}[pr.sprite], pss=ps&&SPR[ps]&&SPR[ps].idle;
     if(pss){ drawSheet(c,pss,Math.floor(clock*16),false); c.restore(); continue; }
     if(pr.sprite==='spark'){ c.fillStyle='rgba(255,240,150,.5)'; ell(c,-14,0,16,5); c.fill(); star(c,0,0,9,'#fff3a8'); }
@@ -1380,6 +1402,7 @@ function drawProjectiles(c){
   for(const e of world.eproj){ const g=c.createRadialGradient(e.x,e.y,1,e.x,e.y,12); g.addColorStop(0,'rgba(255,255,255,1)'); g.addColorStop(1,'rgba(180,140,255,0)'); c.fillStyle=g; ell(c,e.x,e.y,12,12); c.fill(); ell(c,e.x,e.y,5,5); fs(c,'#d9c2ff',1.6); }
   for(const z of world.zones){
     const a=Math.min(1,z.t/.3,(z.dur-z.t)/.2+.2);
+    skillEffects?.storm(c,z.x,z.y,z.half,clock,z.seed,a);
     c.save(); c.globalAlpha=.35*a; c.fillStyle='#fff6c4'; ell(c,z.x,z.y,z.half,10); c.fill(); c.globalAlpha=a;
     for(let i=0;i<16;i++){ const x=z.x-z.half+((i*61+z.seed)%(z.half*2)), y=z.y-330+((clock*950+i*97+z.seed)%330);
       const as=SPR.fx_arrow&&SPR.fx_arrow.idle;
@@ -1600,7 +1623,7 @@ function render(dt){
   drawDrops(c);
   for(const m of world.mobs) drawMob(c,m);
   for(const id in world.players) drawPlayer(c,world.players[id]);
-  drawProjectiles(c); drawEffects(c,dt); drawSpriteFx(c,dt); drawNumbers(c,dt); drawMotes(c);
+  drawProjectiles(c); drawEffects(c,dt); drawSpriteFx(c,dt); skillVfx?.draw(c,dt); drawNumbers(c,dt); drawMotes(c);
   c.restore();
   if(screenFx.a>0){ c.save(); c.globalAlpha=screenFx.a; c.fillStyle=screenFx.c; c.fillRect(0,0,VIEW_W,VIEW_H); c.restore(); screenFx.a=Math.max(0,screenFx.a-dt*2.2); }
   if(p) drawHUD(c,p);
@@ -1655,6 +1678,7 @@ function startGame(cls){
   const p=addPlayer(world,ME,Object.assign({cls},save));
   cam.x=clamp(p.x-VIEW_W/2,0,MAP.w-VIEW_W); cam.y=clamp(p.y-VIEW_H*.6,0,MAP.h-VIEW_H);
   effects.length=numbers.length=particles.length=logs.length=toasts.length=0;
+  skillVfx?.clear();
   for(const k in held) held[k]=false; skillOrder=[]; lastInput='';
   titleEl.hidden=true; running=true; paused=false;
   toast(save.level?`Welcome back, Lv ${save.level} ${CLASSES[cls].name}`:`Welcome to ${MAP.name}!`);

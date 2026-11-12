@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brightvale Skills</title>
+<style>
+:root{color-scheme:light;--ink:#312238;--muted:#665b6c;--line:#e3d8c7;--paper:#fffaf0;--accent:#a4502d}*{box-sizing:border-box}
+body{margin:0;background:#f6f1e6;color:var(--ink);font:15px system-ui,sans-serif}button,a{font:inherit;color:inherit}button{cursor:pointer}a{font-weight:750;text-underline-offset:4px}
+main{width:min(1120px,100%);margin:auto;padding:24px clamp(12px,3vw,24px)}header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}h1,h2,p{margin:0}h1{font-size:clamp(27px,5vw,42px);line-height:1;letter-spacing:-.05em}h2{font-size:23px;letter-spacing:-.028em}
+.stage{overflow:hidden;background:#162345;border:1px solid #2e3a54;border-radius:16px;box-shadow:0 5px 0 #e3d7c6}.stage canvas{width:100%;display:block;aspect-ratio:960/416}.toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 16px;background:var(--paper);flex-wrap:wrap}.toolbar p{color:var(--muted);margin-top:3px}.controls{display:flex;align-items:center;gap:12px}.controls label{display:flex;align-items:center;gap:5px;font-size:14px}.replay{border:0;border-radius:10px;background:var(--ink);color:#fff;padding:9px 14px;font-weight:750}
+.skills{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}.skills section{border:1px solid var(--line);background:var(--paper);border-radius:14px;padding:12px}.skills h2{margin:0 3px 7px;font-size:17px}.skills button{width:100%;display:flex;gap:9px;align-items:center;padding:7px 9px;border:1px solid transparent;background:transparent;text-align:left;border-radius:8px;font-weight:700}.skills button:hover{background:#f5ecdf}.skills button[aria-pressed=true]{border-color:#c7754d;background:#f8e4d3}.skills kbd{color:#5f4a59;border:1px solid var(--line);background:#fffdf9;border-radius:4px;text-align:center;min-width:22px;font:700 12px system-ui;padding:1px 4px}.dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--color);border:1px solid #46304a55}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #3d78c5;outline-offset:3px}
+@media(max-width:620px){.skills{grid-template-columns:1fr;gap:8px}.skills section{padding:8px 10px}.skills button{padding-block:6px}.toolbar p{font-size:13px}}
+</style>
+<main>
+  <header><h1>Brightvale Skills</h1><a href="index.html">Back to game</a></header>
+  <div class="stage">
+    <canvas id="scene" width="960" height="416" aria-label="Skill animation preview"></canvas>
+    <div class="toolbar"><div><h2 id="name"></h2><p id="note"></p></div><div class="controls"><label><input id="loop" type="checkbox"> Loop</label><button class="replay" type="button" id="replay">Replay skill</button></div></div>
+  </div>
+  <div class="skills" id="skills"></div>
+</main>
+<script src="brightvale-vfx.js"></script>
+<script>
+'use strict';
+const V=window.BrightvaleVFX;
+const skills={
+  Vanguard:[['slash','Slash','X','#91c5ff','A clean silver cut with a bright leading edge.'],['cleave','Cleave','A','#ffb653','Two golden arcs sweep across the blade’s reach.'],['earthsplitter','Earthsplitter','S','#d88d58','Glowing fractures and stone fragments spread along the ground.'],['warcry','War Cry','D','#f58c55','Amber ribbons orbit the Vanguard as a warm pulse expands.'],['charge','Charge','F','#a7e5ff','Steel-blue wind streams behind the forward rush.']],
+  Arcanist:[['spark','Spark','X','#f2d671','A small star bolt leaves a trail of gold.'],['fire','Fire Orb','A','#f59153','A hot core and curling embers bloom into a fire burst.'],['chain','Chain Lightning','S','#a6adff','Branching blue-white bolts jump between targets.'],['nova','Frost Nova','D','#92e2fa','A cold shock ring scatters faceted shards.'],['blink','Blink','F','#c794f5','Violet ribbons fold around the departure and arrival points.']],
+  Ranger:[['arrow','Quick Shot','X','#9acda5','A sharp bow release sends a thin wind trail after the arrow.'],['twin','Twin Shot','A','#a9dbad','Two distinct release flashes and parallel arrow trails.'],['pierce','Piercing Arrow','S','#86c6f0','An icy streak follows the heavy arrow through its targets.'],['rain','Arrow Storm','D','#7ebea4','A marked area fills with falling arrows and ground sparks.'],['vault','Vault','F','#a1d9bb','A curved gust traces the leap and a shot flies forward.']],
+};
+const media={
+  sky:'art/bg-sky.png',hills:'art/bg-hills.png',trees:'art/bg-trees.png',
+  Vanguard:'art/vanguard-compact-idle.png',Arcanist:'art/arcanist-compact-idle.png',Ranger:'art/ranger-compact-idle.png',
+  target:'art/beetle-idle.png',arrow:'art/fx-arrow.png',bigarrow:'art/fx-pierce-arrow.png',spark:'art/fx-spark.png',fire:'art/fx-fire-orb.png',
+};
+const images={};
+for(const [key,url] of Object.entries(media)){const im=new Image();im.src=url;images[key]=im;}
+const ready=k=>images[k].naturalWidth>0;
+const byId=id=>document.getElementById(id);
+const c=byId('scene').getContext('2d');
+const origin={x:316,y:330}, enemies=[{x:551,y:330},{x:662,y:330},{x:760,y:330}];
+let current=skills.Vanguard[1],hero='Vanguard',started=performance.now();
+const period=()=>current[0]==='rain'?3.15:current[0]==='fire'?1.65:1.48;
+const restart=()=>{started=performance.now();};
+function select(item,cls){
+  current=item;hero=cls;byId('name').textContent=item[1];byId('note').textContent=item[4];
+  for(const button of byId('skills').querySelectorAll('button'))button.setAttribute('aria-pressed',String(button.dataset.skill===item[0]));
+  restart();
+}
+for(const [cls,list] of Object.entries(skills)){
+  const section=document.createElement('section');const title=document.createElement('h2');title.textContent=cls;section.append(title);
+  for(const item of list){
+    const button=document.createElement('button');button.type='button';button.dataset.skill=item[0];
+    button.innerHTML=`<span class="dot" style="--color:${item[3]}"></span><kbd>${item[2]}</kbd><span>${item[1]}</span>`;
+    button.addEventListener('click',()=>select(item,cls));section.append(button);
+  }
+  byId('skills').append(section);
+}
+byId('replay').addEventListener('click',restart);
+byId('loop').checked=!matchMedia('(prefers-reduced-motion: reduce)').matches;
+byId('loop').addEventListener('change',restart);
+select(current,hero);
+function stage(){
+  c.fillStyle='#324d75';c.fillRect(0,0,960,416);
+  for(const k of ['sky','hills','trees'])if(ready(k))c.drawImage(images[k],0,0,960,416);
+  const shade=c.createLinearGradient(0,0,0,416);shade.addColorStop(0,'#232d6054');shade.addColorStop(1,'#141a3ac9');c.fillStyle=shade;c.fillRect(0,0,960,416);
+  c.fillStyle='#35483d';c.fillRect(0,330,960,86);c.fillStyle='#779067';c.fillRect(0,330,960,3);
+  for(let i=0;i<54;i++){const x=i*19+Math.sin(i*97)*8,y=334+(i*29)%43;c.fillStyle=i%3?'#526353':'#71826a';c.fillRect(x,y,3+(i%4)*2,1);}
+}
+function sprite(key,x,y,h,anim=0,frames=1){
+  if(!ready(key))return;
+  const im=images[key],w=im.width/frames;
+  c.drawImage(im,(anim%frames)*w,0,w,im.height,x-h/2,y-h*.95,h,h);
+}
+function missile(key,x,y,time,angle=0){
+  c.save();c.translate(x,y);c.rotate(angle);V.projectile(c,key,time);
+  if(ready(key)){
+    const im=images[key],frame=im.height,n=Math.round(im.width/frame),i=Math.floor(time*16)%n;
+    const size=key==='fire'?54:key==='spark'?32:key==='bigarrow'?88:47;
+    c.drawImage(im,i*frame,0,frame,frame,-size/2,-size/2,size,size);
+  }
+  c.restore();
+}
+function render(now){
+  let t=(now-started)/1000;
+  if(t>period()&&byId('loop').checked){started=now;t=0;}
+  const name=current[0],active=Math.max(0,t-.22),ground=['earthsplitter','nova','vault','rain'].includes(name);
+  const run=name==='charge'?Math.min(1,active/.23)*172:0;
+  const teleport=name==='blink'&&active>.07?176:0;
+  const vault=name==='vault'?Math.min(1,active/.38):0;
+  stage();
+  enemies.forEach((p,i)=>sprite('target',p.x,p.y,57,Math.floor(now/150)+i,4));
+  sprite(hero,origin.x+run+teleport-vault*79,origin.y-Math.sin(Math.PI*vault)*43,hero==='Arcanist'?86:78);
+  if(t>.22){
+    let x=origin.x+(name==='rain'?275:name==='charge'?run:0),y=origin.y-(ground?1:37);
+    const points=[{x:origin.x+20,y:origin.y-39},...enemies.map((p,i)=>({x:p.x,y:p.y-(i%2?59:24)}))];
+    if(['spark','fire','arrow','twin','pierce'].includes(name))x+=25;
+    V.draw(c,name,x,y,active/V.life[name],1,{points});
+    if(name==='blink')V.draw(c,name,x+176,y,active/V.life.blink,-1);
+    const projectile={spark:['spark',430,.63],fire:['fire',310,.72],arrow:['arrow',580,.75],twin:['arrow',580,.75],pierce:['bigarrow',730,.75],vault:['arrow',530,.65]}[name];
+    if(projectile&&active<projectile[2]){
+      const [key,speed]=projectile;
+      const px=origin.x+27+active*speed;
+      missile(key,px,origin.y-35+(name==='twin'?-7:0),active);
+      if(name==='twin')missile(key,px-13,origin.y-25,active);
+    }
+    if(name==='fire')V.draw(c,'fireburst',origin.x+250,origin.y-28,(active-.72)/V.life.fireburst);
+    if(name==='rain'&&active<2.4){
+      const alpha=Math.min(1,active*7,(2.4-active)*7);
+      V.storm(c,origin.x+275,origin.y,153,active,42,alpha);
+      c.save();c.globalAlpha=alpha*.87;
+      for(let i=0;i<12;i++){const u=(active*2.4+i*.337)%1;missile('arrow',origin.x+138+(i*77)%277-u*24,origin.y-256+u*254,active,1.68);}
+      c.restore();
+    }
+  }
+  requestAnimationFrame(render);
+}
+requestAnimationFrame(render);
+</script>
+</html>
