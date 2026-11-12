@@ -1,0 +1,124 @@
+<title>Brightvale Rig Test</title>
+<style>
+:root{--bg:#eaf5ff;--panel:#ffffff;--ink:#1f2a44;--muted:#5d6b86;--line:#cfe0f2;--accent:#ffcc3d;--accent-ink:#2a2100;--stage:#bfe6ff;--grass:#7cc95a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141b2b;--panel:#1d2740;--ink:#eef3ff;--muted:#a3b0cc;--line:#2e3a58;--stage:#2a4a6b;--grass:#4f8f3a}}
+:root[data-theme="dark"]{--bg:#141b2b;--panel:#1d2740;--ink:#eef3ff;--muted:#a3b0cc;--line:#2e3a58;--stage:#2a4a6b;--grass:#4f8f3a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:980px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:24px;margin:0 0 4px}
+p.sub{margin:0 0 16px;color:var(--muted)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:640px){.row{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
+.card h2{font-size:14px;margin:0 0 8px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+canvas{width:100%;height:auto;display:block;border-radius:10px;background:var(--stage)}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.bar span{align-self:center;color:var(--muted);font-size:13px;min-width:56px}
+button{font:inherit;font-weight:600;border:2px solid var(--ink);background:var(--panel);color:var(--ink);border-radius:999px;padding:6px 14px;cursor:pointer}
+button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent-ink)}
+.note{color:var(--muted);font-size:14px;margin-top:14px}
+</style>
+<main>
+<h1>Rig test: Vanguard in pieces</h1>
+<p class="sub">Left: the hand-drawn frames in the game now. Right: the same art cut into pieces and moved by bones. The cut here is rough, made from one finished image. ChatGPT drawing real separate pieces would remove the seams.</p>
+<div class="bar"><span>Move</span><span id="anims"></span></div>
+<div class="bar"><span>Head</span><span id="heads"></span></div>
+<div class="bar"><span>View</span><button id="parts" aria-pressed="false">Show pieces</button><button id="slow" aria-pressed="false">Slow motion</button></div>
+<div class="row">
+  <div class="card"><h2>Hand-drawn frames (now)</h2><canvas id="a" width="360" height="300"></canvas></div>
+  <div class="card"><h2>Bone rig (test)</h2><canvas id="b" width="360" height="300"></canvas></div>
+</div>
+<p class="note">With a rig, the head is always its own piece, so every face, hair and hat from the creator fits every move. New moves are code, not new drawings.</p>
+</main>
+<script>
+(()=>{
+const load=src=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src;});
+const SHEETS={idle:['art/vanguard-compact-idle.png',1],run:['art/vanguard-compact-run.png',6],attack:['art/vanguard-compact-attack.png',4],jump:['art/vanguard-compact-jump.png',3]};
+// Head sources: image, the cut line (everything above it is head) and the neck point that sits on the body's neck.
+const HEADS={Vanguard:{src:'art/vanguard-compact-idle.png',cut:123,extra:(x,y)=>x<90&&y<137,neck:[141,122]},
+             Arcanist:{src:'art/arcanist-compact-idle.png',cut:113,extra:()=>false,drop:(x,y)=>x>164&&y>70,neck:[140,113]},
+             Ranger:{src:'art/ranger-compact-idle.png',cut:116,extra:()=>false,neck:[143,116]}};
+// Pivots (joints) in the 256px source image.
+const J={hip:[128,180],neck:[141,122],shF:[95,136],shB:[151,134],hipF:[110,183],hipB:[146,183],cape:[98,138]};
+const inPoly=(x,y,p)=>{let c=false;for(let i=0,j=p.length-1;i<p.length;j=i++){const[xi,yi]=p[i],[xj,yj]=p[j];if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)c=!c;}return c;};
+const ARM_F=[[78,126],[106,130],[106,152],[100,176],[98,192],[78,244],[46,244],[60,204],[74,178],[78,150]];
+const ARM_B=[[142,124],[162,124],[176,150],[177,201],[150,201],[150,160],[142,150]];
+const ORDER=['cape','legB','legF','torso','armB','head','armF'];
+let P=null, S={}, headImgs={};
+function cut(img){
+  const W=256,H=256,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');g.drawImage(img,0,0);
+  const src=g.getImageData(0,0,W,H).data, owner=new Int8Array(W*H).fill(-1);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=(y*W+x)*4;if(src[i+3]<8)continue;const r=src[i],gg=src[i+1],b=src[i+2];
+    let k;
+    if(y<123||(x<90&&y<137))k='head';
+    else if(x<128&&r>150&&gg<120&&b<130&&r-gg>70)k='cape';
+    else if(inPoly(x,y,ARM_F))k='armF';
+    else if(inPoly(x,y,ARM_B))k='armB';
+    else if(y>=182)k=x<128?'legF':'legB';
+    else k='torso';
+    owner[y*W+x]=ORDER.indexOf(k);}
+  // Cape outline: dark pixels touching the cape go with it, so the edge doesn't stay behind when the cape swings.
+  const CI=ORDER.indexOf('cape');for(let pass=0;pass<2;pass++){const add=[];for(let y=137;y<H-1;y++)for(let x=1;x<128;x++){const p=y*W+x,i=p*4;if(owner[p]<0||owner[p]===CI||src[i]+src[i+1]+src[i+2]>230)continue;if(owner[p-1]===CI||owner[p+1]===CI||owner[p-W]===CI||owner[p+W]===CI)add.push(p);}for(const p of add)owner[p]=CI;}
+  const out={};
+  for(const k of ORDER){const cv=document.createElement('canvas');cv.width=W;cv.height=H;const cg=cv.getContext('2d'),id=cg.createImageData(W,H),d=id.data,n=ORDER.indexOf(k);
+    for(let p=0;p<W*H;p++)if(owner[p]===n){d.set(src.subarray(p*4,p*4+4),p*4);}
+    // Underpaint: torso and cape grow into the holes left by arms and legs, so seams stay covered when pieces move.
+    if(k==='torso'||k==='cape'){const filled=new Uint8Array(W*H);for(let p=0;p<W*H;p++)if(owner[p]===n)filled[p]=1;
+      for(let pass=0;pass<(k==='torso'?7:4);pass++){const add=[];
+        for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const p=y*W+x;if(filled[p]||owner[p]<0||ORDER[owner[p]]==='head')continue;
+          if(k==='torso'&&(y<118||y>200))continue; if(k==='cape'&&y<136)continue;
+          for(const q of [p-1,p+1,p-W,p+W])if(filled[q]){add.push([p,q]);break;}}
+        for(const[p,q]of add){d.set(d.subarray(q*4,q*4+4),p*4);filled[p]=1;}}}
+    cg.putImageData(id,0,0);out[k]=cv;}
+  return out;}
+function cutHead(img,h){const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');g.drawImage(img,0,0);
+  const id=g.getImageData(0,0,256,256),d=id.data;for(let y=0;y<256;y++)for(let x=0;x<256;x++)if(!(y<h.cut||h.extra(x,y))||(h.drop&&h.drop(x,y)))d[(y*256+x)*4+3]=0;
+  g.putImageData(id,0,0);return c;}
+// ---- poses: angles in degrees (positive = clockwise), plus body offset
+const lerp=(a,b,t)=>a+(b-a)*t, ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+function key(p,keys){for(let i=0;i<keys.length-1;i++){const[a,A]=keys[i],[b,B]=keys[i+1];if(p>=a&&p<=b){const t=ease((p-a)/(b-a));const o={};for(const k in A)o[k]=lerp(A[k],B[k]??A[k],t);return o;}}return keys[keys.length-1][1];}
+const ANIM={
+  idle:{len:1.6,f:p=>{const s=Math.sin(p*Math.PI*2);return{dy:s*1.2,torso:0,head:s*1.5,armF:s*2,armB:-s*2.5,cape:Math.sin(p*Math.PI*2+1)*3,legF:0,legB:0};}},
+  run:{len:.62,f:p=>{const s=Math.sin(p*Math.PI*2),c=Math.cos(p*Math.PI*2);return{dy:-Math.abs(c)*6+2,torso:10,head:-5,legF:s*38,legB:-s*38,armF:-s*35-15,armB:s*45,cape:7+Math.sin(p*Math.PI*4)*3};}},
+  attack:{len:.75,f:p=>key(p,[[0,{dy:0,torso:0,head:0,armF:0,armB:0,cape:0,legF:0,legB:0,dx:0}],
+      [.38,{dy:1,torso:-7,head:-4,armF:155,armB:-25,cape:-6,legF:-6,legB:6,dx:-3}],
+      [.55,{dy:2,torso:12,head:6,armF:285,armB:30,cape:10,legF:-14,legB:14,dx:7}],
+      [1,{dy:0,torso:0,head:0,armF:360,armB:0,cape:0,legF:0,legB:0,dx:0}]])},
+  jump:{len:1.1,f:p=>{const up=Math.sin(p*Math.PI);const air=Math.min(1,up*3);return{dy:-up*55,torso:-3*air,head:-4*air,legF:-32*air,legB:22*air,armF:30*air,armB:-70*air,cape:12*air};}}
+};
+let anim='idle', head='Vanguard', showParts=false, slow=false, t0=performance.now();
+const TINT={head:'#ff5d73',torso:'#3f8cff',armF:'#ffb020',armB:'#22c3a6',legF:'#a35cff',legB:'#ff7ad9',cape:'#7cd13a'};
+function bone(g,piv,deg,fn){g.save();g.translate(piv[0],piv[1]);g.rotate(deg*Math.PI/180);g.translate(-piv[0],-piv[1]);fn();g.restore();}
+const tinted=new Map();
+function tintOf(k,img){if(!tinted.has(img)){const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');g.drawImage(img,0,0);g.globalCompositeOperation='source-atop';g.globalAlpha=.55;g.fillStyle=TINT[k];g.fillRect(0,0,256,256);tinted.set(img,c);}return tinted.get(img);}
+function drawPiece(g,k,img){g.drawImage(showParts?tintOf(k,img):img,0,0);}
+function stage(g,cv){const css=getComputedStyle(document.documentElement);g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,cv.width,cv.height);
+  g.fillStyle=css.getPropertyValue('--grass');g.beginPath();g.ellipse(cv.width/2,262,90,14,0,0,Math.PI*2);g.fill();}
+function drawRig(g,cv,p,time){stage(g,cv);const a=ANIM[anim].f(p);const sc=1.05;
+  g.setTransform(sc,0,0,sc,cv.width/2-128*sc+(a.dx||0)*sc,262-242*sc+a.dy*sc);
+  // shadow-free layering: cape behind, then legs, torso, back arm, head, front arm (sword) in front
+  const piece=(k,img)=>drawPiece(g,k,img);
+  bone(g,J.hip,a.torso,()=>bone(g,J.cape,a.cape,()=>piece('cape',P.cape)));
+  bone(g,J.hipB,a.legB,()=>piece('legB',P.legB));
+  bone(g,J.hipF,a.legF,()=>piece('legF',P.legF));
+  bone(g,J.hip,a.torso,()=>{piece('torso',P.torso);
+    bone(g,J.shB,a.armB,()=>piece('armB',P.armB));
+    bone(g,J.neck,a.head,()=>{const h=HEADS[head];g.save();g.translate(J.neck[0]-h.neck[0],J.neck[1]-h.neck[1]);drawPiece(g,'head',headImgs[head]);g.restore();});
+    bone(g,J.shF,a.armF,()=>piece('armF',P.armF));
+    if(anim==='attack'&&p>.4&&p<.62){const k=(p-.4)/.22;g.save();g.globalAlpha=(1-k)*.85;g.strokeStyle='#ffffff';g.lineWidth=10;g.lineCap='round';g.beginPath();g.arc(J.shF[0],J.shF[1],95,(-110+k*40)*Math.PI/180,(20+k*40)*Math.PI/180);g.stroke();g.restore();}
+  });}
+function drawSheet(g,cv,p){stage(g,cv);const[img,n]=S[anim]||[];if(!img)return;const fr=Math.min(n-1,Math.floor(p*n)),fw=img.width/n,sc=1.05*256/img.height;
+  const lift=anim==='jump'?-Math.sin(p*Math.PI)*55:0;g.setTransform(sc,0,0,sc,cv.width/2-fw*sc/2,262-242*sc+lift*sc);g.drawImage(img,fr*fw,0,fw,img.height,0,0,fw,img.height);}
+function frame(now){const len=ANIM[anim].len*(slow?3:1),p=((now-t0)/1000/len)%1;
+  const A=document.getElementById('a'),B=document.getElementById('b');drawSheet(A.getContext('2d'),A,p);if(P)drawRig(B.getContext('2d'),B,p,now);requestAnimationFrame(frame);}
+function buttons(id,list,get,set){const box=document.getElementById(id);for(const v of list){const b=document.createElement('button');b.textContent=v[0].toUpperCase()+v.slice(1);b.onclick=()=>{set(v);t0=performance.now();for(const x of box.children)x.setAttribute('aria-pressed',x===b);};b.setAttribute('aria-pressed',get()===v);box.appendChild(b);}}
+buttons('anims',Object.keys(ANIM),()=>anim,v=>anim=v);
+buttons('heads',Object.keys(HEADS),()=>head,v=>head=v);
+document.getElementById('parts').onclick=e=>{showParts=!showParts;e.target.setAttribute('aria-pressed',showParts);};
+document.getElementById('slow').onclick=e=>{slow=!slow;e.target.setAttribute('aria-pressed',slow);};
+(async()=>{for(const k in SHEETS){S[k]=[await load(SHEETS[k][0]),SHEETS[k][1]];}
+  for(const k in HEADS){const im=await load(HEADS[k].src);if(im)headImgs[k]=cutHead(im,HEADS[k]);}
+  const base=await load('art/vanguard-compact-idle.png');if(base)P=cut(base);requestAnimationFrame(frame);})();
+})();
+</script>
