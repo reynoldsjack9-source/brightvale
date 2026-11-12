@@ -342,3 +342,29 @@ Jack likes the v3 faces. The **hair** still looks wrong next to the compact hero
 - `hair-<style>-rear.png` (back view for climbing)
 
 **Check before pushing:** put each style on `head-male.png` / `head-female.png` with `face-<g>-1.png` next to the compact Vanguard's head at the same size. The hair should look like it belongs to the same game. Save that comparison as `art/creator/hair-check.png`.
+
+## Creator v3.2: hair detail and the Vanguard sword
+
+Jack likes the v3.1 hair shapes. Two more fixes. Do not change faces, heads or the other classes.
+
+### 1. More detail in the hair (all 10 styles, front/back/rear)
+Keep the same chunky silhouettes from v3.1, and add detail inside them:
+- **Strand lines:** 2–4 curved inner lines inside each big clump, following the flow of the hair (thinner and lighter than the outer outline).
+- **Two shadow tones:** a mid shadow under each clump plus a deeper shadow where clumps overlap and at the back.
+- **Highlights:** a main glossy highlight band across the top, plus small highlight flicks on the tips of the front clumps.
+- **Small accent spikes:** a few small spikes or locks between the big clumps so the edge isn't one smooth curve (still no thin scraggly strands).
+- Keep everything in the chestnut base (`#8a5a3a`) hue family so the game can still recolor it. Keep the thick dark outline.
+
+Update `art/creator/hair-check.png` with the new versions next to the compact Vanguard.
+
+### 2. The Vanguard sword looks saggy
+In the headless creator bodies (`art/creator/body-vanguard-*.png`), the sword hangs limply, pointing down at the ground with a short, stubby blade. Redraw the sword in every Vanguard body sheet so it looks strong:
+- **Grip:** the hand clearly wraps the hilt.
+- **Blade:** straight, rigid and longer, about 3/4 of the body height, with a crisp center highlight line and a bright tip glint.
+- **Idle and walk:** held in a ready stance, blade angled **up and forward** at about 45°, not drooping toward the ground.
+- **Run:** held back and level behind the body, as in the compact run.
+- **Jump:** angled up.
+- **Climb:** on the back.
+- **Attack and cast:** keep the swing, but make the blade match the new, longer straight blade.
+
+Keep the exact same frame count, frame size, feet line, and neck point in each `body-vanguard-*.png`, and keep each matching `.json` neck file correct. Save a before/after strip as `art/creator/sword-check.png`.
