@@ -28,6 +28,7 @@ LOOK
 - Bold dark outlines (deep plum, #3a2a33) about 3 px at final size, slightly thinner on inner details.
 - Light comes from the upper left on every image.
 
+CHARACTERS: every character matches the compact sprites (art/<class>-compact-idle.png and art/<class>-compact-run.png).
 CHARACTERS
 - Chibi proportions: the head is about 45% of total height, big expressive eyes with a white sparkle, small rosy blush, tiny mouth.
 - Short rounded limbs, chunky boots and hands, readable silhouette at small size.
@@ -261,10 +262,10 @@ Everything else (eye whites, eye outlines and lashes, the white eye sparkle, mou
 
 ### The head template (make this first)
 
-- Every head part is a **256x256 transparent PNG** at the **same pixel scale as the body sheets** (the head should be the same size as the head in `art/vanguard-idle.png`).
+- Every head part is a **256x256 transparent PNG** at the **same pixel scale as the body sheets** (the head should be the same size and style as the heads in the **compact sprites**: `art/vanguard-compact-idle.png`, `art/arcanist-compact-idle.png`, `art/ranger-compact-idle.png`).
 - Three-quarter view facing right, like the current heroes.
 - The **neck point** (where the bottom of the neck meets the body) is at **x 128, y 200** in every head file.
-- The head itself sits roughly inside x 66–196, y 76–200. Hair may extend anywhere in the canvas.
+- The head is as big as in the compact sprites, so it sits roughly inside x 50–200, y 50–200 above the neck point. Hair may extend anywhere in the canvas.
 - First make `art/creator/head-template.png`: the head outline, the ear, the eye line, the mouth line and a small cross at the neck point. Draw every other part on top of this template so they all line up.
 
 ### Files (all in `art/creator/`)
@@ -284,12 +285,13 @@ Everything else (eye whites, eye outlines and lashes, the white eye sparkle, mou
 ### Headless bodies
 
 - One body per class, shared by male and female: `body-vanguard-<pose>.png`, `body-arcanist-<pose>.png`, `body-ranger-<pose>.png`.
-- Same outfits, poses, frame counts and 256x256 frames as the current class sheets, but **without the head**. End at a short neck stub.
+- Bodies match the **compact sprites** (`art/<class>-compact-idle.png`, `art/<class>-compact-run.png`): same short, stocky build, thick outlines and flat shading. Same poses and frame counts as before, 256x256 frames, but **without the head**. End at a short neck stub.
 - All three classes wear gloves and long sleeves, so no skin shows on the body.
 - For every body sheet, also save `body-<class>-<pose>.json` with the neck point of each frame, for example `{"neck":[[128,200],[129,198],...]}`.
 - **Phase 1:** only `idle` (4 frames) for each class. **Phase 2:** `walk`, `run`, `attack`, `jump`, `double-jump`, `climb`.
 
 ### Rules
 
-- Original designs only; keep the style of the current art (bold outlines, cel shading, chibi proportions).
+- Original designs only. **Everything matches the compact sprites**: thick bold outlines, big eyes with a strong top lash line, flat clean cel shading, big head on a short stocky body.
+- When a batch is in the compact style, also save `art/creator/style.json` containing `{"style":"compact"}`. The game only uses creator art in play once that file says compact.
 - Every part must line up on the template. If a part is shifted, redo it; don't stretch it.

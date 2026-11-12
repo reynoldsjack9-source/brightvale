@@ -108,7 +108,7 @@ kbd{font-family:var(--display);background:#fff;border:2px solid var(--ink);borde
     <div class="logo">Brightvale</div>
     <div class="sub">Pick a class and head out into Clover Hill.</div>
     <div class="cards" id="cards"></div>
-    <div class="btns"><button class="btn primary" type="button" id="newCharBtn">New character</button><a class="btn" href="wardrobe.html">Wardrobe</a><a class="btn" href="skills.html">Skills</a><a class="btn" href="?style=compact" id="compactStyle">Compact sprites</a><a class="btn" href="?style=pixel" id="pixelStyle">Pixel sprites</a></div>
+    <div class="btns"><button class="btn primary" type="button" id="newCharBtn">New character</button><a class="btn" href="wardrobe.html">Wardrobe</a><a class="btn" href="skills.html">Skills</a></div>
     <div class="keys">
       <span><kbd>←</kbd><kbd>→</kbd> move</span><span><kbd>↑</kbd><kbd>↓</kbd> climb ropes</span><span><kbd>Space</kbd> jump</span>
       <span><kbd>↓</kbd>+<kbd>Space</kbd> drop down</span><span><kbd>X</kbd> attack</span><span><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><kbd>F</kbd> skills</span>
@@ -148,15 +148,6 @@ kbd{font-family:var(--display);background:#fff;border:2px solid var(--ink);borde
 <script>
 (() => {
 'use strict';
-// Hero art style: ChatGPT art by default; ?style=compact for its smaller set, ?style=pixel for the CraftPix pixel heroes.
-const HERO_STYLE = new URLSearchParams(window.location?.search || '').get('style') || '';
-const COMPACT_SPRITES = HERO_STYLE === 'compact', PIXEL_HEROES = HERO_STYLE === 'pixel';
-if (PIXEL_HEROES) { const l=document.getElementById('pixelStyle'); if(l){ l.href='?'; l.textContent='Default sprites'; } }
-const compactLink = document.getElementById('compactStyle');
-if (COMPACT_SPRITES) {
-  compactLink.href = '?';
-  compactLink.textContent = 'Default sprites';
-}
 const skillEffects = window.BrightvaleVFX;
 const skillVfx = skillEffects?.createLayer();
 /* =====================================================================
@@ -984,9 +975,9 @@ function drawPortal(c){
 // Each sheet is one row of 256x256 frames. At load we find the feet line and the body's center
 // so frames sit on the ground without jitter, and scale the art to the game's size.
 const SPRITE_SET={
-  warrior:{target:{h:74},sheets:{idle:['art/vanguard-idle.png',4],walk:['art/vanguard-walk.png',6],run:['art/vanguard-run.png',6],attack:['art/vanguard-attack.png',4],climb:['art/vanguard-climb.png',4],jump:['art/vanguard-jump.png',3],djump:['art/vanguard-double-jump.png',6]}},
-  mage:{target:{h:82},sheets:{idle:['art/arcanist-idle.png',4],walk:['art/arcanist-walk.png',6],run:['art/arcanist-run.png',6],attack:['art/arcanist-attack.png',4],climb:['art/arcanist-climb.png',4],jump:['art/arcanist-jump.png',3],djump:['art/arcanist-double-jump.png',6]}},
-  archer:{target:{h:74},sheets:{idle:['art/ranger-idle.png',4],walk:['art/ranger-walk.png',6],run:['art/ranger-run.png',6],attack:['art/ranger-attack.png',4],climb:['art/ranger-climb.png',4],jump:['art/ranger-jump.png',3],djump:['art/ranger-double-jump.png',6]}},
+  warrior:{target:{h:64},sheets:{idle:['art/vanguard-compact-idle.png',1],run:['art/vanguard-compact-run.png',6]}},
+  mage:{target:{h:71},sheets:{idle:['art/arcanist-compact-idle.png',1],run:['art/arcanist-compact-run.png',6]}},
+  archer:{target:{h:64},sheets:{idle:['art/ranger-compact-idle.png',1],run:['art/ranger-compact-run.png',6]}},
   chef:{target:{h:72},sheets:{idle:['art/npc-cook-idle.png',4]}},
   item_coin:{target:{w:17},center:true,sheets:{idle:['art/item-coin.png',6]}},
   item_hp:{target:{h:22},center:true,sheets:{idle:['art/item-hp-potion.png',1]}},
@@ -1080,143 +1071,26 @@ function drawSheet(c,sh,frame,flash){
   c.drawImage(...args);
   if(flash){ c.save(); c.globalCompositeOperation='lighter'; c.globalAlpha*=.6; c.drawImage(...args); c.restore(); }
 }
+// Compact heroes. Poses without their own sheet yet are made from the standing pose:
+// a forward lean for attacks, a full spin for the double jump, a run frame in the air.
 function drawHeroSprite(c,cls,s){
   const sp=SPR[cls]; if(!sp||!sp.idle) return false;
-  if(s.climb){ if(!sp.climb) return false; drawSheet(c,sp.climb,Math.floor((s.climbPh||0)*8),false); return true; }
-  let sh=sp.idle, fr=Math.floor(s.t*6);
-  if(s.swing>=0&&sp.attack){ sh=sp.attack; fr=Math.min(sh.frames-1,Math.floor(s.swing*sh.frames)); }
-  else if(s.dj>=0&&sp.djump){ sh=sp.djump; fr=Math.min(sh.frames-1,Math.floor(s.dj*sh.frames)); }
-  else if(s.air&&sp.jump){ sh=sp.jump; fr=Math.round((clamp((s.vy||0)/500,-1,1)+1)/2*(sh.frames-1)); }
-  else if(s.air&&sp.walk){ sh=sp.walk; fr=1; }
+  let sh=sp.idle, fr=Math.floor(s.t*6), rot=0, spin=false, breathe=false;
+  if(s.climb){ if(sp.climb){ sh=sp.climb; fr=Math.floor((s.climbPh||0)*8); } }
+  else if(s.swing>=0){ if(sp.attack){ sh=sp.attack; fr=Math.min(sh.frames-1,Math.floor(s.swing*sh.frames)); } else rot=Math.sin(Math.min(1,s.swing*1.5)*Math.PI)*.18; }
+  else if(s.dj>=0){ if(sp.djump){ sh=sp.djump; fr=Math.min(sh.frames-1,Math.floor(s.dj*sh.frames)); } else { rot=s.dj*Math.PI*2; spin=true; } }
+  else if(s.air){ if(sp.jump){ sh=sp.jump; fr=Math.round((clamp((s.vy||0)/500,-1,1)+1)/2*(sh.frames-1)); } else if(sp.run){ sh=sp.run; fr=2; } }
   else if(s.walk&&(sp.run||sp.walk)){ sh=sp.run||sp.walk; fr=Math.floor(s.t*(sp.run?14:12)); }
-  drawSheet(c,sh,fr,false);
+  else breathe=sh.frames===1;
+  if(rot||breathe){
+    const mid=spin?-sh.h*sh.scale*.5:0;
+    c.save(); c.translate(0,mid); if(rot) c.rotate(rot); c.translate(0,-mid);
+    if(breathe) c.scale(1,1+Math.sin(s.t*2.6)*.018);
+    drawSheet(c,sh,fr,false); c.restore();
+  } else drawSheet(c,sh,fr,false);
   return true;
-}
-if (COMPACT_SPRITES) {
-  const compact = {warrior:['vanguard',64], mage:['arcanist',71], archer:['ranger',64]};
-  for (const [key,[name,height]] of Object.entries(compact)) {
-    const set = SPRITE_SET[key];
-    set.target = {h:height};
-    set.sheets.idle = ['art/'+name+'-compact-idle.png',1];
-    set.sheets.walk = ['art/'+name+'-compact-run.png',6];
-  }
 }
 loadSprites();
-
-/* ---------- pixel-art heroes
-   Licensed CraftPix sheets live in craftpix/ (kept out of the public repo). At load each strip is recolored,
-   its black outlines become dark shades of the color they border, and the attack's sword is redrawn bigger.
-   If the files aren't there, the hero falls back to the art/ sprites. */
-// ax = where the character's center is in the 128px frame (the artist shifts it in some animations, so axs overrides per animation).
-const PIXSET={
-  warrior:{dir:'craftpix/male/Swordsman/',ax:65,axs:{jump:64,attack:62,hurt:56,dead:56},fy:128,ppu:1.06,sword:true,anims:{idle:'Idle',run:'Run',jump:'Jump',attack:'Attack_3',hurt:'Hurt',dead:'Dead'}},
-  mage:{dir:'craftpix/male/Wizard/',ax:64,axs:{run:65,jump:59,attack:49,hurt:56,dead:54},fy:128,ppu:1.06,anims:{idle:'Idle',run:'Run',jump:'Jump',attack:'Attack_3',hurt:'Hurt',dead:'Dead'}},
-  archer:{dir:'craftpix/male/Archer/',ax:58,axs:{run:59,jump:56,attack:54,hurt:55,dead:60},fy:128,ppu:1.06,anims:{idle:'Idle',run:'Run',jump:'Jump',attack:'Shot_1',hurt:'Hurt',dead:'Dead'}},
-};
-const PIX={};
-/*PIXLIB-START (pure pixel code, no page access: also run by tools/px-preview.cjs) */
-const PIXLIB=(()=>{
-  // Per class: which pack colors become which Brightvale colors (each listed twice: as browsers read it through the
-  // image's color profile, and as the raw file value). Colors not listed keep the artist's color.
-  // "groups" + "line" (optional) give hand-picked outline colors per material; without them the outline is a dark shade of its neighbor.
-  const CFG={
-    warrior:{
-      map:{'#0a112b':'#16255c','#003166':'#2456b8','#65709c':'#7f97d8','#8994b2':'#9db3ea','#a3a9c4':'#b9cbf5','#dfe1e9':'#eef3ff','#ffffff':'#ffffff',
-        '#421020':'#4a2416','#491f30':'#6b3a22','#672d35':'#8a5230','#a24c57':'#b87a4a',
-        '#ffc622':'#ffc622','#ffd629':'#ffe05a','#ffa400':'#ffa400','#ff8b2a':'#ff8b2a','#c85b24':'#c85b24','#ffc3a1':'#ffd0b0','#d56a62':'#e58a78',
-        '#005137':'#005137','#007b37':'#007b37','#00a117':'#00a117','#00c219':'#00c219','#78dc2b':'#78dc2b','#001a1a':'#1a2030','#291727':'#5a2a2a'},
-      groups:{hair:['#ffc622','#ffd629','#ffa400','#ff8b2a','#c85b24'],skin:['#ffc3a1','#d56a62'],steel:['#65709c','#8994b2','#a3a9c4','#dfe1e9','#ffffff'],
-        navy:['#003166','#0a112b'],leather:['#421020','#491f30','#672d35','#a24c57'],eye:['#005137','#007b37','#00a117','#00c219','#78dc2b','#001a1a']},
-      line:{hair:'#9a4312',skin:'#a5523f',steel:'#34477f',navy:'#0e1a44',leather:'#2e150b',eye:'#12261c',none:'#2a1b2e'}},
-    mage:{map:{'#1b323e':'#7450d0','#283540':'#7450d0','#001a1a':'#472ea6','#122020':'#472ea6','#23324d':'#3f3d9c','#2c354d':'#3f3d9c','#0a112b':'#27256a','#14182e':'#27256a','#ff8a26':'#ffd23f','#ff8933':'#ffd23f','#ff6a00':'#e9a820','#fa6a0a':'#e9a820'}},
-    archer:{map:{'#87102a':'#3f9d48','#73172d':'#3f9d48','#421020':'#236a30','#3b1725':'#236a30','#a05151':'#b07a48','#8e5252':'#b07a48','#7f3f38':'#7a4f2a','#71413b':'#7a4f2a','#672d35':'#5a3a22','#5b3138':'#5a3a22','#342226':'#3a2616','#33272a':'#3a2616','#eee1de':'#c98a4a','#eae0dd':'#c98a4a','#926e6a':'#96602c','#886e6a':'#96602c'}},
-  };
-  const hk=h=>parseInt(h.slice(1),16), rgb2i=(r,g,b)=>((255<<24)|(b<<16)|(g<<8)|r)>>>0, h2i=h=>{const n=hk(h);return rgb2i(n>>16,(n>>8)&255,n&255);};
-  const OUT=-2, NONE=h2i('#2a1b2e');
-  const SWORD_LEN=1.5, SWORD_HW=2.1;   // sword size: length vs the artist's blade, and half-width in pixels
-  function bigSword(src,out,w,h){
-    const F=h, n=Math.round(w/F), W1=hk('#ffffff'), W2=hk('#dfe1e9'), isB=v=>v===W1||v===W2;
-    const C={hi:h2i('#ffffff'),mid:h2i('#d9e5ff'),lo:h2i('#93abe6'),line:h2i('#34477f'),gold:h2i('#ffd23f'),goldLine:h2i('#8a5a10')};
-    for(let f=0;f<n;f++){
-      const x0=f*F, seen=new Uint8Array(F*F); let best=null,bx=0,by=0,bn=0;
-      for(let y=0;y<F;y++) for(let x=0;x<F;x++){ const v=src[y*w+x0+x]; if(v!==-1){bx+=x;by+=y;bn++;}
-        if(seen[y*F+x]||!isB(v)) continue;
-        const comp=[],st=[[x,y]]; seen[y*F+x]=1;
-        while(st.length){ const [cx,cy]=st.pop(); comp.push([cx,cy]);
-          for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ const nx=cx+dx,ny=cy+dy; if(nx<0||ny<0||nx>=F||ny>=F||seen[ny*F+nx]) continue;
-            if(isB(src[ny*w+x0+nx])){ seen[ny*F+nx]=1; st.push([nx,ny]); } } }
-        if(!best||comp.length>best.length) best=comp; }
-      if(!best||best.length<10) continue;
-      bx/=bn; by/=bn;
-      let mx=0,my=0; for(const [x,y] of best){mx+=x;my+=y;} mx/=best.length; my/=best.length;
-      let sxx=0,syy=0,sxy=0; for(const [x,y] of best){ sxx+=(x-mx)**2; syy+=(y-my)**2; sxy+=(x-mx)*(y-my); }
-      const ang=.5*Math.atan2(2*sxy,sxx-syy); let ux=Math.cos(ang),uy=Math.sin(ang),tmin=1e9,tmax=-1e9;
-      for(const [x,y] of best){ const t=(x-mx)*ux+(y-my)*uy; if(t<tmin)tmin=t; if(t>tmax)tmax=t; }
-      const e1=[mx+ux*tmin,my+uy*tmin], e2=[mx+ux*tmax,my+uy*tmax], d1=(e1[0]-bx)**2+(e1[1]-by)**2, d2=(e2[0]-bx)**2+(e2[1]-by)**2;
-      const nr=d1<d2?e1:e2; if(d1>=d2){ux=-ux;uy=-uy;}
-      const ox=nr[0]+.5, oy=nr[1]+.5, L=(tmax-tmin)*SWORD_LEN+2, HW=SWORD_HW, flip=ux<0?-1:1;
-      for(let y=0;y<F;y++) for(let x=0;x<F;x++){ const px=x+.5-ox,py=y+.5-oy,u=px*ux+py*uy,v=(-px*uy+py*ux)*flip; let col=0;
-        if(u>=.5&&u<=L+1){ const hw=u>L-6?HW*Math.max(0,L-u)/6:HW; if(Math.abs(v)<=hw) col=v<-HW*.35?C.hi:v>HW*.35?C.lo:C.mid; else if(Math.abs(v)<=hw+1.05) col=C.line; }
-        if(u>=-3.2&&u<1.2&&Math.abs(v)<=HW+3.6) col=(u<-2.2||u>=.2||Math.abs(v)>HW+2.6)?C.goldLine:C.gold;
-        if(col) out[y*w+x0+x]=col; }
-    }
-  }
-  // d: RGBA bytes of one animation strip. Returns Uint32 pixels: recolored, with colored outlines (and the bigger sword if asked).
-  function restyle(d,w,h,cls,sword){
-    const cfg=CFG[cls]||{map:{}}, mapK={}; for(const k in cfg.map) mapK[hk(k)]=hk(cfg.map[k]);
-    const keys=Object.keys(mapK).map(Number), snap=!!cfg.groups, memo=new Map();
-    const GOF={}; if(cfg.groups) for(const g in cfg.groups) for(const c of cfg.groups[g]) GOF[hk(c)]=g;
-    const nearest=k=>{ if(memo.has(k)) return memo.get(k); const r=k>>16,g=(k>>8)&255,b=k&255; let best=k,bd=1e9;
-      for(const q of keys){ const dd=(r-(q>>16))**2+(g-((q>>8)&255))**2+(b-(q&255))**2; if(dd<bd){bd=dd;best=q;} } memo.set(k,best); return best; };
-    // color profiles shift values a little between browsers and tools, so match a listed color when it is very close
-    const close=k=>{ const q=nearest(k), dr=(k>>16)-(q>>16), dg=((k>>8)&255)-((q>>8)&255), db=(k&255)-(q&255); return dr*dr+dg*dg+db*db<=300?q:k; };
-    const to=k=>k in mapK?mapK[k]:k, int=k=>rgb2i(k>>16,(k>>8)&255,k&255);
-    const dark=k=>{ const f=.42; return rgb2i(Math.round((k>>16)*f*.92),Math.round(((k>>8)&255)*f*.86),Math.round((k&255)*f)); };
-    const src=new Int32Array(w*h).fill(-1), out=new Uint32Array(w*h);
-    for(let i=0;i<w*h;i++){ if(d[i*4+3]<128) continue; const r=d[i*4],g=d[i*4+1],b=d[i*4+2];
-      if(Math.max(r,g,b)<31){ src[i]=OUT; continue; } const k=(r<<16)|(g<<8)|b; src[i]=snap?nearest(k):close(k); }
-    for(let y=0;y<h;y++) for(let x=0;x<w;x++){ const i=y*w+x,k=src[i]; if(k===-1) continue;
-      if(k!==OUT){ out[i]=int(to(k)); continue; }
-      const tally=new Map(); let top=null,tn=0;
-      for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue; const xx=x+dx,yy=y+dy; if(xx<0||yy<0||xx>=w||yy>=h) continue;
-        const nb=src[yy*w+xx]; if(nb===-1||nb===OUT) continue; const key=snap?GOF[nb]:nb; if(key===undefined) continue;
-        const v=(tally.get(key)||0)+((dx&&dy)?1:2); tally.set(key,v); if(v>tn){tn=v;top=key;} }
-      out[i]=top===null?(snap?h2i(cfg.line.none):NONE):snap?h2i(cfg.line[top]):dark(to(top)); }
-    if(sword) bigSword(src,out,w,h);
-    return out;
-  }
-  return {restyle};
-})();
-/*PIXLIB-END*/
-if(PIXEL_HEROES) for(const [cls,set] of Object.entries(PIXSET)) for(const [anim,file] of Object.entries(set.anims)){
-  const img=new Image();
-  img.onload=()=>{ try{
-    const w=img.width,h=img.height, cv=document.createElement('canvas'); cv.width=w; cv.height=h;
-    const c=cv.getContext('2d',{willReadFrequently:true}); c.drawImage(img,0,0);
-    const px=PIXLIB.restyle(c.getImageData(0,0,w,h).data,w,h,cls,!!set.sword&&anim==='attack');
-    c.putImageData(new ImageData(new Uint8ClampedArray(px.buffer),w,h),0,0);
-    (PIX[cls]=PIX[cls]||{})[anim]={cv,n:Math.round(w/h),size:h};
-  }catch(e){ /* opened from disk: pixels can't be read, so the art/ sprites are used */ } };
-  img.src=set.dir+file+'.png';
-}
-function drawPixHero(c,cls,s){
-  const P=PIX[cls], set=PIXSET[cls]; if(!P||!P.idle||!P.run||!P.jump||!P.attack) return false;
-  let a=P.idle, an='idle', fr=Math.floor(s.t*7);
-  if(s.dead&&P.dead){ a=P.dead; an='dead'; fr=Math.min(a.n-1,Math.floor((s.deadT??1)*a.n)); }
-  else if(s.climb){ a=P.jump; an='jump'; fr=2+(Math.floor((s.climbPh||0)*6)%2); }
-  else if(s.swing>=0){ a=P.attack; an='attack'; fr=Math.min(a.n-1,Math.floor(s.swing*a.n)); }
-  else if(s.hurt>=0&&P.hurt){ a=P.hurt; an='hurt'; fr=Math.min(a.n-1,Math.floor(s.hurt*a.n)); }
-  else if(s.dj>=0){ a=P.jump; an='jump'; fr=Math.floor(s.dj*a.n); }
-  else if(s.air){ a=P.jump; an='jump'; fr=1+Math.round((clamp((s.vy||0)/600,-1,1)+1)/2*(a.n-3)); }
-  else if(s.walk){ a=P.run; an='run'; fr=Math.floor(s.t*12); }
-  fr=((fr%a.n)+a.n)%a.n;
-  // Crisp pixels: draw at a whole number of screen pixels per sprite pixel, snapped to the pixel grid.
-  const m=c.getTransform(), sgn=m.a<0?-1:1, k=Math.max(1,Math.round(set.ppu*Math.hypot(m.a,m.b)));
-  c.save(); c.setTransform(sgn*k,0,0,k,Math.round(m.e),Math.round(m.f)); c.imageSmoothingEnabled=false;
-  c.drawImage(a.cv,fr*a.size,0,a.size,a.size,-((set.axs&&set.axs[an])??set.ax),-set.fy,a.size,a.size);
-  c.restore(); c.imageSmoothingEnabled=true;
-  return true;
-}
 
 /* ---------- heroes */
 const HERO={
@@ -1227,7 +1101,6 @@ const HERO={
 function drawHero(c,cls,s){
   const P=HERO[cls], t=s.t;
   if(s.look&&CREATOR.drawGame(c,cls,s)) return;
-  if(PIXEL_HEROES&&drawPixHero(c,cls,s)) return;
   if(drawHeroSprite(c,cls,s)) return;
   if(s.climb) return drawClimber(c,cls,s);
   const walk=s.walk&&!s.air, ph=t*12;
@@ -1425,7 +1298,7 @@ function star(c,x,y,r,col){ c.beginPath(); for(let i=0;i<10;i++){ const a=i*Math
 
 /* ---------- players, projectiles, drops, effects */
 function drawPlayer(c,p){
-  if(p.dead){ const pix=PIXEL_HEROES&&PIX[p.cls]&&PIX[p.cls].dead&&PIX[p.cls].idle;   // pixel heroes have their own knockout animation
+  if(p.dead){ const pix=false;
     c.save(); c.globalAlpha=pix?1:.6; c.translate(p.x,p.y); if(!pix) c.rotate(-1.4*p.facing); c.scale(p.facing,1);
     drawHero(c,p.cls,{t:0,walk:false,air:false,swing:-1,dead:true,deadT:clamp((3-p.deadT)/.5,0,1)}); c.restore(); return; }
   c.fillStyle='rgba(40,60,40,.22)'; ell(c,p.x,p.rope?p.y:floorBelow(p.x,p.y-1)+1,14,4.5); c.fill();
@@ -1719,6 +1592,8 @@ const CREATOR=(()=>{
   let redrawSoon=0;
   const loadImg=(key,src,store)=>{ const im=new Image(); im.onload=()=>{ store[key]=im; cacheKey=''; headCache.clear();
     clearTimeout(redrawSoon); redrawSoon=setTimeout(()=>{ if(!el.hidden) draw(); },150); }; im.src=src; };   // refresh thumbnails once parts arrive
+  let compactParts=false;   // art/creator/style.json says {"style":"compact"} once the parts match the compact heroes
+  fetch('art/creator/style.json').then(r=>r.ok?r.json():null).then(j=>{ compactParts=!!(j&&j.style==='compact'); }).catch(()=>{});
   const tpl=new Image();
   tpl.onload=()=>{
     const P='art/creator/';
@@ -1846,7 +1721,7 @@ const CREATOR=(()=>{
 
   /* ---- in the game: custom look once the class has its headless bodies */
   function drawGame(c,cls,s){
-    const B=BODY[cls]; if(!B||!B.idle||!B.attack||!B.jump||!(B.run||B.walk)||!s.look) return false;
+    const B=BODY[cls]; if(!compactParts||!B||!B.idle||!B.attack||!B.jump||!(B.run||B.walk)||!s.look) return false;
     let sh=B.idle, fr=Math.floor(s.t*6);
     if(s.climb&&B.climb){ sh=B.climb; fr=Math.floor((s.climbPh||0)*8); }
     else if(s.swing>=0){ sh=B.attack; fr=Math.min(sh.frames-1,Math.floor(s.swing*sh.frames)); }
