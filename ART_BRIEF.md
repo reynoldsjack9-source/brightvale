@@ -297,3 +297,27 @@ Everything else (eye whites, eye outlines and lashes, the white eye sparkle, mou
 - Original designs only. **Everything matches the compact sprites**: thick bold outlines, big eyes with a strong top lash line, flat clean cel shading, big head on a short stocky body.
 - When a batch is in the compact style, also save `art/creator/style.json` containing `{"style":"compact"}`. The game only uses creator art in play once that file says compact.
 - Every part must line up on the template. If a part is shifted, redo it; don't stretch it.
+
+## Creator v3: whole faces and full-color parts
+
+This replaces the separate eyes, brows and mouths, and the grayscale skin and hair. The heads looked stiff because they were assembled from tiny pieces, and the hair looked flat because it was tinted from gray.
+
+**Whole faces.** Draw 6 complete faces per gender, each with eyes, brows, nose and mouth together, copied in style from the compact heroes' faces:
+
+| File | What it is |
+| --- | --- |
+| `face-male-1.png` … `face-male-6.png`, `face-female-1.png` … `face-female-6.png` | The face in full color: eye whites, lash lines, brows (dark brown), nose, mouth, blush. **No iris color**: leave the irises out of this layer |
+| `face-<gender>-<n>-iris.png` | Only the irises and pupils, in grayscale (the game colors them) |
+| `face-<gender>-<n>-blink.png` | The same face with eyes closed, for blinking |
+
+Give the faces real variety (calm, cheerful, determined, sleepy, sly, bright-eyed), all clearly the same art style as the compact heroes. They sit on the same head template and neck point (128, 200) as before.
+
+**Full-color skin and hair.** Redraw `head-male.png`, `head-female.png` and every `hair-<style>-front/back/rear.png` **in full color with real shading**, not grayscale:
+- Skin: one medium-warm skin tone (about #f2b98e) with its own shadow and highlight.
+- Hair: every style in the same medium chestnut brown (about #8a5a3a) with clear shading, shine and outlines, just like the compact heroes' hair.
+
+The game shifts these to the player's chosen skin and hair color while keeping your shading.
+
+**Proportions.** The game now draws heads 1.35× and bodies 0.8× of the part art, so heroes have the compact heroes' big-head look. Keep drawing at the same template size.
+
+**When done,** update `art/creator/style.json` to `{"style":"compact","parts":"color"}`.

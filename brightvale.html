@@ -1584,15 +1584,18 @@ const CREATOR=(()=>{
   const HAIR={male:['Spiky','Crop','Messy','Swept','Topknot'],female:['Long','Bob','Ponytail','Twin tails','Bun']};
   const SLUG={warrior:'vanguard',mage:'arcanist',archer:'ranger'}, POSES=['idle','walk','run','attack','cast','jump','climb'];
   const slug=s=>s.toLowerCase().replace(/ /g,'');
-  const DEFAULT_LOOK={gender:'male',skin:1,eyes:'Round',eyeColor:0,brows:'Soft',mouth:'Smile',extra:'None',hair:'Spiky',hairColor:3};
+  const DEFAULT_LOOK={gender:'male',skin:1,face:'1',eyes:'Round',eyeColor:0,brows:'Soft',mouth:'Smile',extra:'None',hair:'Spiky',hairColor:3};
+  const FACES=['1','2','3','4','5','6'];           // whole faces (eyes, brows, mouth drawn together): face-<gender>-<n>.png
+  // Proportions: heads bigger and bodies shorter than the raw part art, to match the compact heroes. OVERALL keeps the total height.
+  const HEAD_SCALE=1.35, BODY_SCALE=0.8, OVERALL=0.92;
 
   /* ---- ChatGPT's parts (only loaded once the head template exists, so there's one 404 instead of fifty) */
   const PART={}, BODY={};
   let redrawSoon=0;
   const loadImg=(key,src,store)=>{ const im=new Image(); im.onload=()=>{ store[key]=im; cacheKey=''; headCache.clear();
     clearTimeout(redrawSoon); redrawSoon=setTimeout(()=>{ if(!el.hidden) draw(); },150); }; im.src=src; };   // refresh thumbnails once parts arrive
-  let compactParts=false;   // art/creator/style.json says {"style":"compact"} once the parts match the compact heroes
-  fetch('art/creator/style.json').then(r=>r.ok?r.json():null).then(j=>{ compactParts=!!(j&&j.style==='compact'); }).catch(()=>{});
+  let compactParts=false, colorParts=false;   // art/creator/style.json: {"style":"compact"} once parts match the compact heroes; "parts":"color" once skin and hair are drawn in color
+  fetch('art/creator/style.json').then(r=>r.ok?r.json():null).then(j=>{ compactParts=!!(j&&j.style==='compact'); colorParts=!!(j&&j.parts==='color'); headCache.clear(); cacheKey=''; }).catch(()=>{});
   const tpl=new Image();
   tpl.onload=()=>{
     const P='art/creator/';
@@ -1601,6 +1604,7 @@ const CREATOR=(()=>{
       for(const e of EYES[g]) for(const k of ['base','iris']) loadImg(`eyes-${g}-${slug(e)}-${k}`,`${P}eyes-${g}-${slug(e)}-${k}.png`,PART);
       for(const h of HAIR[g]) for(const k of ['front','back','rear']) loadImg(`hair-${slug(h)}-${k}`,`${P}hair-${slug(h)}-${k}.png`,PART);
     }
+    for(const g of ['male','female']) for(const f of FACES) for(const k of ['','-iris','-blink']) loadImg(`face-${g}-${f}${k}`,`${P}face-${g}-${f}${k}.png`,PART);
     for(const b of BROWS) loadImg('brows-'+slug(b),P+'brows-'+slug(b)+'.png',PART);
     for(const m of MOUTH) loadImg('mouth-'+slug(m),P+'mouth-'+slug(m)+'.png',PART);
     for(const x of EXTRA.slice(1)) loadImg('extra-'+slug(x),P+'extra-'+slug(x)+'.png',PART);
@@ -1624,6 +1628,18 @@ const CREATOR=(()=>{
       else for(let k=0;k<3;k++){ if(L<=R[k+1][0]){ col=mix(R[k][1],R[k+1][1],(L-R[k][0])/(R[k+1][0]-R[k][0])); break; } }
       d[i]=col[0]; d[i+1]=col[1]; d[i+2]=col[2]; }
     c.putImageData(id,0,0); return cv; }
+  const rgb2hsl=(r,g,b)=>{ r/=255; g/=255; b/=255; const mx=Math.max(r,g,b), mn=Math.min(r,g,b), l=(mx+mn)/2; let h=0, s=0;
+    if(mx!==mn){ const d=mx-mn; s=l>.5?d/(2-mx-mn):d/(mx+mn); h=mx===r?((g-b)/d+(g<b?6:0)):mx===g?((b-r)/d+2):((r-g)/d+4); h/=6; } return [h,s,l]; };
+  const hsl2rgb=(h,s,l)=>{ if(!s) return [l*255,l*255,l*255]; const q=l<.5?l*(1+s):l+s-l*s, p=2*l-q, f=t=>{ t=(t+1)%1; return t<1/6?p+(q-p)*6*t:t<.5?q:t<2/3?p+(q-p)*(2/3-t)*6:p; };
+    return [f(h+1/3)*255,f(h)*255,f(h-1/3)*255]; };
+  function shift(cv,hexColor){ const t=rgb2hsl(...hex(hexColor)), c=cv.getContext('2d',{willReadFrequently:true}), id=c.getImageData(0,0,cv.width,cv.height), d=id.data;
+    let n=0,bs=0,bl=0; for(let i=0;i<d.length;i+=4){ if(d[i+3]<100) continue; const [,S,L]=rgb2hsl(d[i],d[i+1],d[i+2]); if(L>.3&&L<.8){ bs+=S; bl+=L; n++; } }
+    if(!n) return cv; bs/=n; bl/=n;
+    for(let i=0;i<d.length;i+=4){ if(!d[i+3]) continue; const [,S,L]=rgb2hsl(d[i],d[i+1],d[i+2]);
+      const nl=L<.16?Math.min(L,t[2]*.35):Math.max(0,Math.min(1,L+(t[2]-bl)*(1-Math.abs(L-bl))));
+      const ns=Math.max(0,Math.min(1,S*(t[1]/Math.max(.05,bs)))), o=hsl2rgb(t[0],L<.16?ns*.5:ns,nl); d[i]=o[0]; d[i+1]=o[1]; d[i+2]=o[2]; }
+    c.putImageData(id,0,0); return cv; }
+  const recolor=(cv,h)=>colorParts?shift(cv,h):tint(cv,h);
   const layer=()=>{ const cv=document.createElement('canvas'); cv.width=cv.height=256; return cv; };
   const useP=(cv,key)=>{ if(!PART[key]) return false; cv.getContext('2d').drawImage(PART[key],0,0,256,256); return true; };
   const E=(c,x,y,rx,ry,rot=0)=>{ c.beginPath(); c.ellipse(x,y,rx,ry,rot,0,Math.PI*2); };
@@ -1652,7 +1668,13 @@ const CREATOR=(()=>{
     else if(style==='Twin tails'){ for(const [x,s2] of [[70,-1],[196,1]]){ PTH(b,[[x,108],[x+s2*34,120,x+s2*30,170],[x+s2*22,206,x+s2*6,214],[x+s2*14,170,x,130]]); F(b,G.base,3.4); E(b,x,112,8,8); F(b,G.shade,3); } cap(f); shine(f); }
     else if(style==='Bun'){ E(b,128,62,24,20); F(b,G.base,3.4); cap(f); shine(f); }
     return {back,front}; }
-  function faceParts(o,blink){ const fixed=layer(), iris=layer(), brow=layer(), over=layer(), g=o.gender, e=slug(o.eyes);
+  function faceParts(o,blink){ const g=o.gender, fk=`face-${g}-${o.face||'1'}`;
+    if(PART[fk]){ const fixed=layer(), iris=layer(), brow=layer(), over=layer();
+      if(blink&&PART[fk+'-blink']) useP(fixed,fk+'-blink'); else { useP(fixed,fk); useP(iris,fk+'-iris'); }
+      if(o.extra!=='None') useP(over,'extra-'+slug(o.extra));
+      return {fixed,iris,brow,over}; }
+    return facePartsOld(o,blink); }
+  function facePartsOld(o,blink){ const fixed=layer(), iris=layer(), brow=layer(), over=layer(), g=o.gender, e=slug(o.eyes);
     const c=fixed.getContext('2d'), ic=iris.getContext('2d'), bc=brow.getContext('2d'), oc=over.getContext('2d');
     const eyes=[[146,146,1],[184,146,.78]];
     if(blink){ if(!useP(fixed,'eyes-closed-'+g)) for(const [x,y,s] of eyes){ c.lineWidth=3.2; c.strokeStyle='#2b2140'; c.beginPath(); c.moveTo(x-10*s,y+2); c.quadraticCurveTo(x,y+8,x+10*s,y+2); c.stroke(); } }
@@ -1697,27 +1719,28 @@ const CREATOR=(()=>{
   const headCache=new Map();
   function head(o,blink){ const k=JSON.stringify(o)+blink; if(headCache.has(k)) return headCache.get(k);
     const skin=SKIN[o.skin][1], hc=HAIRC[o.hairColor][1], ec=EYEC[o.eyeColor][1], hair=hairParts(o.hair), face=faceParts(o,blink);
-    const back=tint(hair.back,hc), front=layer(), c=front.getContext('2d');
-    c.drawImage(tint(headBase(o.gender),skin),0,0); c.drawImage(face.fixed,0,0); if(!blink) c.drawImage(tint(face.iris,ec),0,0);
-    c.drawImage(tint(face.brow,hc),0,0); c.drawImage(face.over,0,0); c.drawImage(tint(hair.front,hc),0,0);
+    const back=recolor(hair.back,hc), front=layer(), c=front.getContext('2d');
+    c.drawImage(recolor(headBase(o.gender),skin),0,0); c.drawImage(face.fixed,0,0); if(!blink) c.drawImage(tint(face.iris,ec),0,0);
+    c.drawImage(tint(face.brow,hc),0,0); c.drawImage(face.over,0,0); c.drawImage(recolor(hair.front,hc),0,0);
     const r={back,front}; if(headCache.size>40) headCache.clear(); headCache.set(k,r); return r; }
   // Seen from behind (climbing): ChatGPT's back-of-head hair over the skin-toned head; without it, the head shape filled with hair color.
   function headRear(o){ const k='rear'+JSON.stringify(o); if(headCache.has(k)) return headCache.get(k);
     const hc=HAIRC[o.hairColor][1], front=layer(), c=front.getContext('2d'), rear=layer();
-    if(useP(rear,'hair-'+slug(o.hair)+'-rear')){ c.drawImage(tint(headBase(o.gender),SKIN[o.skin][1]),0,0); c.drawImage(tint(rear,hc),0,0); }
+    if(useP(rear,'hair-'+slug(o.hair)+'-rear')){ c.drawImage(recolor(headBase(o.gender),SKIN[o.skin][1]),0,0); c.drawImage(recolor(rear,hc),0,0); }
     else { const hair=hairParts(o.hair); c.drawImage(tint(headBase(o.gender),hc),0,0); c.drawImage(tint(hair.back,hc),0,0); c.drawImage(tint(hair.front,hc),0,0); }
     const r={back:layer(),front}; headCache.set(k,r); return r; }
   // Full character on a 256 canvas for the creator screen. With ChatGPT's body it's composed in the body frame's
   // coordinates (the head goes on the frame's neck point); with the stand-in body, in the head template's.
   function full(o,cls,blink){ const out=layer(), c=out.getContext('2d'), h=head(o,blink), b=BODY[cls]&&BODY[cls].idle;
-    if(b){ const n=b.neck&&b.neck[0]||[b.ax,b.fy-130], dx=n[0]-128, dy=n[1]-200;
-      c.drawImage(h.back,dx,dy); c.drawImage(b.img,0,0,b.fw,b.fh,0,0,b.fw,b.fh); c.drawImage(h.front,dx,dy); out.feet=b.fy; }
+    if(b){ c.save(); c.translate(128,250); drawFrame(c,cls,o,b,0,blink,OVERALL,false); c.restore(); out.feet=250; }
     else { c.drawImage(h.back,0,0); c.drawImage(standInBody(cls),0,0); c.drawImage(h.front,0,0); out.feet=252; }
     return out; }
   // Thumbnail crops (x, y, size on the head template) for each option row; ChatGPT's head sits lower than the stand-in.
   const CROP={stand:{eyes:[118,108,96],brows:[118,96,96],mouth:[136,140,64],extra:[88,88,140],hair:[24,22,216]},
               art:{eyes:[100,123,84],brows:[100,111,84],mouth:[123,160,52],extra:[80,111,110],hair:[26,72,200]}};
+  CROP.art.face=[92,124,104];
   const crop=k=>CROP[PART['head-'+look.gender]?'art':'stand'][k];
+  const hasFaces=()=>!!PART['face-'+look.gender+'-1'];
 
   /* ---- in the game: custom look once the class has its headless bodies */
   function drawGame(c,cls,s){
@@ -1728,15 +1751,16 @@ const CREATOR=(()=>{
     else if(s.air){ sh=B.jump; fr=Math.round((clamp((s.vy||0)/500,-1,1)+1)/2*(sh.frames-1)); }
     else if(s.walk){ sh=B.run||B.walk; fr=Math.floor(s.t*(B.run?14:12)); }
     fr=((fr%sh.frames)+sh.frames)%sh.frames;
-    drawFrame(c,cls,s.look,sh,fr,(s.t%4)>3.86,(SPR[cls]&&SPR[cls].idle&&SPR[cls].idle.scale)||74/232,sh===B.climb);
+    drawFrame(c,cls,s.look,sh,fr,(s.t%4)>3.86,((SPR[cls]&&SPR[cls].idle&&SPR[cls].idle.scale)||74/232)*OVERALL,sh===B.climb);
     return true; }
   function drawFrame(c,cls,look,sh,fr,blink,sc,rear){
     const n=(sh.neck&&sh.neck[fr])||[sh.ax,sh.fy-200];
     // The head turns around its neck point by the frame's "rot" (degrees), so it follows the body through flips.
-    const h=rear?headRear(look):head(look,blink), nx=(n[0]-sh.ax)*sc, ny=(n[1]-sh.fy)*sc, rot=((sh.rot&&sh.rot[fr])||0)*Math.PI/180;
-    const drawHead=l=>{ c.save(); c.translate(nx,ny); if(rot) c.rotate(rot); c.drawImage(l,-128*sc,-200*sc,256*sc,256*sc); c.restore(); };
+    const sb=sc*BODY_SCALE, sh2=sc*HEAD_SCALE;
+    const h=rear?headRear(look):head(look,blink), nx=(n[0]-sh.ax)*sb, ny=(n[1]-sh.fy)*sb, rot=((sh.rot&&sh.rot[fr])||0)*Math.PI/180;
+    const drawHead=l=>{ c.save(); c.translate(nx,ny); if(rot) c.rotate(rot); c.drawImage(l,-128*sh2,-200*sh2,256*sh2,256*sh2); c.restore(); };
     drawHead(h.back);
-    c.drawImage(sh.img,fr*sh.fw,0,sh.fw,sh.fh,-sh.ax*sc,-sh.fy*sc,sh.fw*sc,sh.fh*sc);
+    c.drawImage(sh.img,fr*sh.fw,0,sh.fw,sh.fh,-sh.ax*sb,-sh.fy*sb,sh.fw*sb,sh.fh*sb);
     drawHead(h.front); }
   // #posecheck on the page URL: every frame of every pose for one class, with a custom head attached (for checking art).
   function poseCheck(cls,look){ const B=BODY[cls]; if(!B) return null; const poses=POSES.filter(p=>B[p]), cell=150, cv=document.createElement('canvas');
@@ -1756,7 +1780,8 @@ const CREATOR=(()=>{
     document.getElementById('crLine').textContent=`${look.gender==='male'?'Male':'Female'} ${CLASSES[cls].name} · Lv 1`; }
   const TABS=[['Body',()=>{ const g=group('Body'); for(const [v,l] of [['male','Male'],['female','Female']]){ const b=opt(l,look.gender===v,null); b.onclick=()=>{ if(look.gender!==v){ look.gender=v; look.hair=HAIR[v][0]; if(!EYES[v].includes(look.eyes)) look.eyes=EYES[v][0]; } draw(); changed(); }; g.appendChild(b); }
       swatch(group('Skin tone'),'skin',SKIN); }],
-    ['Face',()=>{ choice(group('Eyes'),'eyes',EYES[look.gender],crop('eyes')); swatch(group('Eye color'),'eyeColor',EYEC);
+    ['Face',()=>{ if(hasFaces()){ choice(group('Face'),'face',FACES,crop('face'),v=>'Face '+v); swatch(group('Eye color'),'eyeColor',EYEC); choice(group('Extras'),'extra',EXTRA,crop('extra')); return; }
+      choice(group('Eyes'),'eyes',EYES[look.gender],crop('eyes')); swatch(group('Eye color'),'eyeColor',EYEC);
       choice(group('Brows'),'brows',BROWS,crop('brows')); choice(group('Mouth'),'mouth',MOUTH,crop('mouth')); choice(group('Extras'),'extra',EXTRA,crop('extra')); }],
     ['Hair',()=>{ choice(group('Hairstyle'),'hair',HAIR[look.gender],crop('hair')); swatch(group('Hair color'),'hairColor',HAIRC); }],
     ['Class',()=>{ const box=document.createElement('div'); box.className='cr-classes'; bodyEl.appendChild(box);
@@ -1768,7 +1793,7 @@ const CREATOR=(()=>{
   function opt(label,on,cv){ const b=document.createElement('button'); b.type='button'; b.className='cr-opt'+(cv?'':' text'); b.setAttribute('aria-pressed',on); if(cv) b.appendChild(cv); const s=document.createElement('span'); s.textContent=label; b.appendChild(s); return b; }
   function thumb(o,cr){ const cv=document.createElement('canvas'); cv.width=cv.height=112; const c=cv.getContext('2d'), h=head(o,false);
     for(const l of [h.back,h.front]) c.drawImage(l,cr[0],cr[1],cr[2],cr[2],0,0,112,112); return cv; }
-  function choice(box,key,values,crop){ for(const v of values){ const b=opt(v,look[key]===v,thumb({...look,[key]:v},crop)); b.onclick=()=>{ look[key]=v; box.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b)); changed(); }; box.appendChild(b); } }
+  function choice(box,key,values,crop,label){ for(const v of values){ const b=opt(label?label(v):v,look[key]===v,thumb({...look,[key]:v},crop)); b.onclick=()=>{ look[key]=v; box.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b)); changed(); }; box.appendChild(b); } }
   function swatch(box,key,list){ list.forEach(([n,h],i)=>{ const b=document.createElement('button'); b.type='button'; b.className='cr-sw'; b.style.background=h; b.title=n; b.setAttribute('aria-label',n); b.setAttribute('aria-pressed',look[key]===i);
     b.onclick=()=>{ look[key]=i; box.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b)); changed(); }; box.appendChild(b); }); }
   function tick(){ const t=clock, blink=(t%3.6)>3.45, bob=Math.round(Math.sin(t*2.6)*3), k=JSON.stringify(look)+cls+blink+Object.keys(PART).length;
@@ -1781,7 +1806,7 @@ const CREATOR=(()=>{
   const pick=a=>a[Math.floor(Math.random()*a.length)];
   const NAMES=['Pip','Rowan','Juniper','Bram','Marigold','Fennel','Wren','Tansy','Basil','Clover','Sorrel','Hazel'];
   document.getElementById('crRand').onclick=()=>{ const g=pick(['male','female']);
-    look={gender:g,skin:Math.floor(Math.random()*SKIN.length),eyes:pick(EYES[g]),eyeColor:Math.floor(Math.random()*EYEC.length),brows:pick(BROWS),mouth:pick(MOUTH),
+    look={gender:g,skin:Math.floor(Math.random()*SKIN.length),face:pick(FACES),eyes:pick(EYES[g]),eyeColor:Math.floor(Math.random()*EYEC.length),brows:pick(BROWS),mouth:pick(MOUTH),
       extra:Math.random()<.6?'None':pick(EXTRA.slice(1)),hair:pick(HAIR[g]),hairColor:Math.floor(Math.random()*HAIRC.length)};
     if(!nameEl.value.trim()) nameEl.value=pick(NAMES); errEl.textContent=''; draw(); changed(); };
   document.getElementById('crBack').onclick=()=>{ el.hidden=true; onBack&&onBack(); };
