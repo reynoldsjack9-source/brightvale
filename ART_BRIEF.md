@@ -382,3 +382,30 @@ Redraw only `art/creator/body-vanguard-idle.png` and `body-vanguard-walk.png` (k
 Check other sheets too: if any frame of run, jump, cast or attack has the blade crossing the collar or above the shoulders near the head, fix it the same way.
 
 **Check before pushing:** in `art/creator/sword-check.png`, draw each idle and walk frame with a big head (about 1.2× the head template) placed with its chin on the collar, so you can see the sword never touches the neck or face.
+
+## Creator v4: ChatGPT owns the final look (replaces the v3.3 request)
+
+Jack keeps seeing a neck, a sword across the throat, and odd legs. The cause: the game was resizing and cutting your parts, so your checks never matched the game. **That's removed.** As of this version the game draws every creator part **exactly as you draw it**: no scaling, no cropping. The head image is placed so its template point (128,200) sits exactly on the body's neck point from the `.json`. What you see in your own composite is what the game shows.
+
+### Target proportions (what Jack wants)
+A classic big-head side-scroller MMO avatar. Describe it to yourself in numbers, not from any existing game's art:
+- **Head (with hair) is about 55% of total height**, and about **1.8× as wide as the shoulders**.
+- **No neck.** The chin outline rests directly on the collar/shoulders. No skin shows between the chin and the clothes, from the front or the side.
+- **Small, compact body:** short torso, short legs and small feet. Legs and boots stay in proportion with each other (no tiny legs with huge boots).
+- Total height about 200px inside the 256px frame, feet on the same line as now.
+- Same clean style as the compact heroes: thick dark outline, cel shading, bright colors.
+
+### What to redraw
+1. `head-male.png`, `head-female.png`: bigger, sized to the proportions above, with **no neck stub**. The jaw/chin is the bottom of the drawing.
+2. `face-<g>-<n>.png` (+ `-iris`, `-blink`): re-fit to the bigger heads. Keep the same designs Jack liked.
+3. `hair-<style>-front/back/rear.png`: re-fit to the bigger heads. Keep the v3.2 detail.
+4. **All headless bodies** `body-<class>-<pose>.png` for vanguard, arcanist and ranger: the small compact body above, with **no neck post** sticking up. The collar top is where the chin sits. Update every `.json` neck point so it marks where the chin should rest.
+5. **Vanguard sword:** straight, rigid, firm grip. In idle and walk it points **forward and slightly down, away from the body**. The blade never goes above the shoulders or across the collar or head in any frame of any pose.
+
+### Check in the real game before pushing (required)
+1. Run `node tools/serve.cjs` and open `http://localhost:5180/#posecheck`. That page draws every pose of every class with sample heads using the game's own code.
+2. Also open `http://localhost:5180/`, click **New character**, and try both genders and a few faces and hairstyles.
+3. Save screenshots of both as `art/creator/v4-posecheck.png` and `art/creator/v4-creator.png`.
+4. Look for: any visible neck, a sword touching the neck or face, legs or boots out of proportion, head too small. Fix them before pushing.
+
+Keep `art/creator/style.json` as `{"style":"compact","parts":"color"}`.
