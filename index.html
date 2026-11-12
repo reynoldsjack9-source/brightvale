@@ -1600,7 +1600,7 @@ const CREATOR=(()=>{
     for(const g of ['male','female']){
       loadImg('head-'+g,P+'head-'+g+'.png',PART); loadImg('eyes-closed-'+g,P+'eyes-closed-'+g+'.png',PART);
       for(const e of EYES[g]) for(const k of ['base','iris']) loadImg(`eyes-${g}-${slug(e)}-${k}`,`${P}eyes-${g}-${slug(e)}-${k}.png`,PART);
-      for(const h of HAIR[g]) for(const k of ['front','back']) loadImg(`hair-${slug(h)}-${k}`,`${P}hair-${slug(h)}-${k}.png`,PART);
+      for(const h of HAIR[g]) for(const k of ['front','back','rear']) loadImg(`hair-${slug(h)}-${k}`,`${P}hair-${slug(h)}-${k}.png`,PART);
     }
     for(const b of BROWS) loadImg('brows-'+slug(b),P+'brows-'+slug(b)+'.png',PART);
     for(const m of MOUTH) loadImg('mouth-'+slug(m),P+'mouth-'+slug(m)+'.png',PART);
@@ -1702,10 +1702,11 @@ const CREATOR=(()=>{
     c.drawImage(tint(headBase(o.gender),skin),0,0); c.drawImage(face.fixed,0,0); if(!blink) c.drawImage(tint(face.iris,ec),0,0);
     c.drawImage(tint(face.brow,hc),0,0); c.drawImage(face.over,0,0); c.drawImage(tint(hair.front,hc),0,0);
     const r={back,front}; if(headCache.size>40) headCache.clear(); headCache.set(k,r); return r; }
-  // Seen from behind (climbing): no face; the head shape is filled with hair color, with the hairstyle on top.
+  // Seen from behind (climbing): ChatGPT's back-of-head hair over the skin-toned head; without it, the head shape filled with hair color.
   function headRear(o){ const k='rear'+JSON.stringify(o); if(headCache.has(k)) return headCache.get(k);
-    const hc=HAIRC[o.hairColor][1], hair=hairParts(o.hair), front=layer(), c=front.getContext('2d');
-    c.drawImage(tint(headBase(o.gender),hc),0,0); c.drawImage(tint(hair.back,hc),0,0); c.drawImage(tint(hair.front,hc),0,0);
+    const hc=HAIRC[o.hairColor][1], front=layer(), c=front.getContext('2d'), rear=layer();
+    if(useP(rear,'hair-'+slug(o.hair)+'-rear')){ c.drawImage(tint(headBase(o.gender),SKIN[o.skin][1]),0,0); c.drawImage(tint(rear,hc),0,0); }
+    else { const hair=hairParts(o.hair); c.drawImage(tint(headBase(o.gender),hc),0,0); c.drawImage(tint(hair.back,hc),0,0); c.drawImage(tint(hair.front,hc),0,0); }
     const r={back:layer(),front}; headCache.set(k,r); return r; }
   // Full character on a 256 canvas for the creator screen. With ChatGPT's body it's composed in the body frame's
   // coordinates (the head goes on the frame's neck point); with the stand-in body, in the head template's.
@@ -1716,7 +1717,7 @@ const CREATOR=(()=>{
     return out; }
   // Thumbnail crops (x, y, size on the head template) for each option row; ChatGPT's head sits lower than the stand-in.
   const CROP={stand:{eyes:[118,108,96],brows:[118,96,96],mouth:[136,140,64],extra:[88,88,140],hair:[24,22,216]},
-              art:{eyes:[100,136,80],brows:[100,128,80],mouth:[114,158,60],extra:[80,112,110],hair:[36,82,180]}};
+              art:{eyes:[100,123,84],brows:[100,111,84],mouth:[123,160,52],extra:[80,111,110],hair:[26,72,200]}};
   const crop=k=>CROP[PART['head-'+look.gender]?'art':'stand'][k];
 
   /* ---- in the game: custom look once the class has its headless bodies */
