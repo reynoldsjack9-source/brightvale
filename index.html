@@ -1733,7 +1733,7 @@ const CREATOR=(()=>{
     for(const cls in SLUG) for(const pose of POSES){
       const base=`${P}body-${SLUG[cls]}-${pose}`, im=new Image();
       im.onload=()=>fetch(base+'.json').then(r=>r.ok?r.json():null).catch(()=>null).then(j=>{
-        try{ const n=Math.max(1,Math.round(im.width/im.height)), sh=analyzeSheet(im,n); sh.neck=(j&&j.neck)||null; (BODY[cls]=BODY[cls]||{})[pose]=sh; cacheKey=''; }catch(e){} });
+        try{ const n=Math.max(1,Math.round(im.width/im.height)), sh=analyzeSheet(im,n); sh.neck=(j&&j.neck)||null; sh.rot=(j&&j.rot)||null; (BODY[cls]=BODY[cls]||{})[pose]=sh; cacheKey=''; }catch(e){} });
       im.src=base+'.png';
     }
   };
@@ -1850,10 +1850,12 @@ const CREATOR=(()=>{
     else if(s.walk){ sh=B.run||B.walk; fr=Math.floor(s.t*(B.run?14:12)); }
     fr=((fr%sh.frames)+sh.frames)%sh.frames;
     const sc=(SPR[cls]&&SPR[cls].idle&&SPR[cls].idle.scale)||74/232, n=(sh.neck&&sh.neck[fr])||[sh.ax,sh.fy-200];
-    const h=head(s.look,(s.t%4)>3.86), hx=(n[0]-sh.ax-128)*sc, hy=(n[1]-sh.fy-200)*sc;
-    c.drawImage(h.back,hx,hy,256*sc,256*sc);
+    // The head turns around its neck point by the frame's "rot" (degrees), so it follows the body through flips.
+    const h=head(s.look,(s.t%4)>3.86), nx=(n[0]-sh.ax)*sc, ny=(n[1]-sh.fy)*sc, rot=((sh.rot&&sh.rot[fr])||0)*Math.PI/180;
+    const drawHead=l=>{ c.save(); c.translate(nx,ny); if(rot) c.rotate(rot); c.drawImage(l,-128*sc,-200*sc,256*sc,256*sc); c.restore(); };
+    drawHead(h.back);
     c.drawImage(sh.img,fr*sh.fw,0,sh.fw,sh.fh,-sh.ax*sc,-sh.fy*sc,sh.fw*sc,sh.fh*sc);
-    c.drawImage(h.front,hx,hy,256*sc,256*sc);
+    drawHead(h.front);
     return true; }
 
   /* ---- the screen */
