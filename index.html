@@ -1827,6 +1827,11 @@ const CREATOR=(()=>{
     c.drawImage(tint(headBase(o.gender),skin),0,0); c.drawImage(face.fixed,0,0); if(!blink) c.drawImage(tint(face.iris,ec),0,0);
     c.drawImage(tint(face.brow,hc),0,0); c.drawImage(face.over,0,0); c.drawImage(tint(hair.front,hc),0,0);
     const r={back,front}; if(headCache.size>40) headCache.clear(); headCache.set(k,r); return r; }
+  // Seen from behind (climbing): no face; the head shape is filled with hair color, with the hairstyle on top.
+  function headRear(o){ const k='rear'+JSON.stringify(o); if(headCache.has(k)) return headCache.get(k);
+    const hc=HAIRC[o.hairColor][1], hair=hairParts(o.hair), front=layer(), c=front.getContext('2d');
+    c.drawImage(tint(headBase(o.gender),hc),0,0); c.drawImage(tint(hair.back,hc),0,0); c.drawImage(tint(hair.front,hc),0,0);
+    const r={back:layer(),front}; headCache.set(k,r); return r; }
   // Full character on a 256 canvas for the creator screen. With ChatGPT's body it's composed in the body frame's
   // coordinates (the head goes on the frame's neck point); with the stand-in body, in the head template's.
   function full(o,cls,blink){ const out=layer(), c=out.getContext('2d'), h=head(o,blink), b=BODY[cls]&&BODY[cls].idle;
@@ -1849,14 +1854,23 @@ const CREATOR=(()=>{
     else if(s.air){ sh=B.jump; fr=Math.round((clamp((s.vy||0)/500,-1,1)+1)/2*(sh.frames-1)); }
     else if(s.walk){ sh=B.run||B.walk; fr=Math.floor(s.t*(B.run?14:12)); }
     fr=((fr%sh.frames)+sh.frames)%sh.frames;
-    const sc=(SPR[cls]&&SPR[cls].idle&&SPR[cls].idle.scale)||74/232, n=(sh.neck&&sh.neck[fr])||[sh.ax,sh.fy-200];
+    drawFrame(c,cls,s.look,sh,fr,(s.t%4)>3.86,(SPR[cls]&&SPR[cls].idle&&SPR[cls].idle.scale)||74/232,sh===B.climb);
+    return true; }
+  function drawFrame(c,cls,look,sh,fr,blink,sc,rear){
+    const n=(sh.neck&&sh.neck[fr])||[sh.ax,sh.fy-200];
     // The head turns around its neck point by the frame's "rot" (degrees), so it follows the body through flips.
-    const h=head(s.look,(s.t%4)>3.86), nx=(n[0]-sh.ax)*sc, ny=(n[1]-sh.fy)*sc, rot=((sh.rot&&sh.rot[fr])||0)*Math.PI/180;
+    const h=rear?headRear(look):head(look,blink), nx=(n[0]-sh.ax)*sc, ny=(n[1]-sh.fy)*sc, rot=((sh.rot&&sh.rot[fr])||0)*Math.PI/180;
     const drawHead=l=>{ c.save(); c.translate(nx,ny); if(rot) c.rotate(rot); c.drawImage(l,-128*sc,-200*sc,256*sc,256*sc); c.restore(); };
     drawHead(h.back);
     c.drawImage(sh.img,fr*sh.fw,0,sh.fw,sh.fh,-sh.ax*sc,-sh.fy*sc,sh.fw*sc,sh.fh*sc);
-    drawHead(h.front);
-    return true; }
+    drawHead(h.front); }
+  // #posecheck on the page URL: every frame of every pose for one class, with a custom head attached (for checking art).
+  function poseCheck(cls,look){ const B=BODY[cls]; if(!B) return null; const poses=POSES.filter(p=>B[p]), cell=150, cv=document.createElement('canvas');
+    cv.width=cell*8; cv.height=cell*poses.length; const c=cv.getContext('2d'); c.fillStyle='#cfe9ff'; c.fillRect(0,0,cv.width,cv.height);
+    poses.forEach((p,r)=>{ const sh=B[p]; c.fillStyle='#2b2140'; c.font='bold 13px sans-serif'; c.fillText(p,6,r*cell+16);
+      for(let f=0;f<sh.frames&&f<8;f++){ c.save(); c.translate(f*cell+cell/2,r*cell+cell-14); drawFrame(c,cls,look,sh,f,false,.5,p==='climb'); c.restore();
+        c.strokeStyle='rgba(43,33,64,.15)'; c.strokeRect(f*cell,r*cell,cell,cell); } });
+    return cv; }
 
   /* ---- the screen */
   const el=document.getElementById('creator'), stage=document.getElementById('crStage').getContext('2d');
@@ -1906,6 +1920,14 @@ const CREATOR=(()=>{
     if(old&&!confirmReplace){ confirmReplace=true; doneEl.textContent=`This replaces your Lv ${old.level} ${old.name||CLASSES[cls].name}. Click Create again to replace it.`; return; }
     el.hidden=true; onCreate&&onCreate(cls,n,{...look}); };
   function open(startCls,cb,back){ cls=startCls||'warrior'; look={...DEFAULT_LOOK}; nameEl.value=''; errEl.textContent=''; tab='Body'; onCreate=cb; onBack=back; changed(); draw(); el.hidden=false; nameEl.focus(); }
+  if(location.hash==='#posecheck'){ const looks=[{gender:'male',skin:2,eyes:'Sharp',eyeColor:4,brows:'Bold',mouth:'Grin',extra:'None',hair:'Spiky',hairColor:3},
+      {gender:'female',skin:4,eyes:'Lashes',eyeColor:5,brows:'Soft',mouth:'Smile',extra:'Glasses',hair:'Twin tails',hairColor:6},
+      {gender:'female',skin:0,eyes:'Round',eyeColor:3,brows:'Raised',mouth:'Open',extra:'Freckles',hair:'Long',hairColor:1}];
+    const box=document.createElement('div'); box.style.cssText='position:fixed;inset:0;z-index:50;overflow:auto;background:#fff;padding:8px';
+    document.body.appendChild(box); let tries=0;
+    const t=setInterval(()=>{ tries++; const ready=['warrior','mage','archer'].every(k=>BODY[k]&&POSES.every(p=>BODY[k][p])); if(!ready&&tries<60) return; clearInterval(t);
+      ['warrior','mage','archer'].forEach((k,i)=>{ const cv=poseCheck(k,looks[i]); if(cv){ cv.style.cssText='display:block;max-width:100%;margin-bottom:8px'; cv.id='pc-'+k; box.appendChild(cv); } });
+      document.title='posecheck ready'; },250); }
   return {open,tick,drawGame,isOpen:()=>!el.hidden};
 })();
 
