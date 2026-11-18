@@ -1,77 +1,41 @@
-# Codex handoff: fix the Brightvale character creator art
+# Brightvale creator handoff (rebuilt November 18, 2026)
 
-You (ChatGPT Codex) now own the character creator's look, art **and** creator code if you need to change it. This file has everything you need. Read it fully before starting.
+## Current implementation
 
-## The goal (Jack's words, summarized)
-Brightvale is a bright, smooth, side-scrolling MMO-style action game (genre like classic 2D MMOs; **all content must be original**: no names, art, characters or maps from any existing game).
-Jack wants a **mix-and-match character creator** (gender, face, eyes, hair, colors, class) where every combination looks as good as the **compact heroes**, the only art he has consistently liked:
-- `art/vanguard-compact-idle.png` (+ `-run`, `-attack`, `-cast`, `-jump`, `-climb`)
-- `art/arcanist-compact-*.png`
-- `art/ranger-compact-*.png`
+Jack rejected the assembled v4 characters during the real-game comparison: their proportions and faces did not match the normal heroes. The creator now uses the handoff's alternative of complete compact characters with color customization.
 
-Target look for creator characters:
-- Same style as the compact heroes: thick dark outline, cel shading, bright saturated colors, smooth (not pixel art).
-- Big-head chibi proportions: head with hair is about 55% of total height and about 1.8× as wide as the shoulders.
-- **No neck:** the chin sits directly on the collar.
-- Small body, with legs and boots in proportion.
-- 3/4 view facing right, like the compact heroes.
-- Vanguard holds the sword firmly. In idle and walk it points forward and slightly down, away from the body, and **never crosses the neck or face**.
+- The complete `art/<class>-compact-*.png` animations are the source for both normal and created heroes. These PNGs are unchanged.
+- `CREATOR` in `brightvale.html` provides six finished color looks per class (Classic, Sunbeam, Moonlit, Briar, Rose, Storm), plus independent skin, hair, eye and outfit palettes.
+- Classic uses the original sprites without recoloring. Other looks recolor complete sheets; they never attach heads, move limbs, crop necks, or change geometry.
+- The former gender, face, hairstyle and accessory selectors are retired. The three class designs retain their authored faces, hair, headgear and silhouettes. Distinct new designs need complete animation sets, rather than reintroducing the rejected head/body assembly.
+- Preview animations, class cards, and gameplay use the same sprite geometry, scale, pose timing and original animations. Preview lets players inspect idle, run, attack, cast, jump and climb before creating.
+- The old `art/creator/body-*`, head and hair parts remain in the repository for history; the game no longer loads them. `creator-preview.html` forwards to the real in-game creator.
 
-## What Jack disliked (don't repeat)
-- **Visible neck:** skin or a dark neck post between chin and collar.
-- **Sword across the throat or face.**
-- Stubby legs with huge boots.
-- Thin, scraggly hair (v3.1+ chunky hair was better; v3.2 added detail).
-- Separate tiny eye/brow/mouth parts that looked stiff (whole faces were better).
-- Grayscale-tinted parts that looked flat (full-color parts were better).
-- A bone-rig made by cutting one drawing into pieces ("looks awful").
-- A 3D-rendered character (Blender/VRM) ("looks really bad").
-- Pixel-art versions; he prefers the smooth compact art.
+## Saves and rendering
 
-## Current state
-- **Live game:** creator v37, using your v4 art.
-- **Repo:** https://github.com/reynoldsjack9-source/brightvale (branch `main`).
-- **Game file:** `brightvale.html`. `index.html` is the same file wrapped in a doctype shell. After editing `brightvale.html`, regenerate it:
-  ```
-  { echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>'; cat brightvale.html; echo '</body></html>'; } > index.html
-  ```
-- The creator code is the `CREATOR` section near line ~1575 of `brightvale.html`. Key constants:
-  - `HEAD_SCALE=1, BODY_SCALE=1, OVERALL=1, NECK_DROP=0`: parts are drawn **exactly as you draw them**, with no resizing or cropping.
-  - `FACES=['1'..'6']` per gender.
-  - `HAIR={male:['Spiky','Crop','Messy','Swept','Topknot'], female:['Long','Bob','Ponytail','Twin tails','Bun']}`. File slugs are lowercase with no spaces (`twintails`).
-  - `SKIN`, `HAIRC`, `EYEC` color lists, and `EXTRA` (freckles, blush, bandage, glasses).
-  - `SLUG={warrior:'vanguard', mage:'arcanist', archer:'ranger'}`.
-  - `POSES=['idle','walk','run','attack','cast','jump','climb']`.
-- `art/creator/style.json` = `{"style":"compact","parts":"color"}`:
-  - `"compact"` lets the game use creator art in play.
-  - `"color"` means skin and hair are drawn in **full color** (skin about `#f2b98e`, hair chestnut about `#8a5a3a`). The game recolors them by shifting hue and lightness, so shading and outlines are kept. Pixels darker than about 21% lightness are treated as outline and stay dark.
-- Saves use localStorage key `brightvale.save.v1` and store the name and the look.
+The localStorage key is still `brightvale.save.v1`. Names, progress and save slots are unchanged. New looks store `compactVersion: 2` and palette indices. Older looks retain their fields and map their existing skin/hair/eye color indices to the new palettes at render time. Old modular face/hair shape selections no longer affect appearance.
 
-### How a creator character is assembled (current system)
-All files are in `art/creator/`:
-1. **Body:** `body-<class>-<pose>.png` is one horizontal row of 256×256 frames, headless. `body-<class>-<pose>.json` holds `{"neck":[[x,y],...]}`, one neck point per frame, plus an optional `"rot":[deg,...]` head tilt per frame.
-2. **Head:** a 256×256 layer stack. Template point **(128,200)** is placed exactly on the body's neck point for that frame. Drawing order:
-   - `hair-<style>-back.png`
-   - `head-<gender>.png` (recolored to skin)
-   - `face-<gender>-<n>.png` (+ `-iris` tinted to eye color, `-blink` for blinking)
-   - `extra-*.png`
-   - `hair-<style>-front.png` (recolored to hair color)
-3. **Climbing:** uses `head-<gender>.png` + `hair-<style>-rear.png` (back of head).
-4. **Feet:** found automatically per sheet. The in-game height is scaled to match the compact hero of that class.
+Color masks are cached once per original sheet. Recolored full sheets use a bounded cache. Ink, low-saturation steel, white areas, original alpha and coordinates are preserved. Skin includes exposed hands; eye color is restricted to the face and near eye whites so staff orbs stay gold. All poses use the original `drawHeroSprite` path, including double jumps.
 
-You may change this system if a different approach gives a better result. One example is drawing **whole premade characters**, each a full compact-style sprite set like the heroes, and letting players pick a look plus recolor hair, skin and outfit. If you change the code, keep saves working and keep the game rules in the SIMULATION block untouched.
+Keep the SIMULATION block unchanged. Change client rendering/UI only. Original content only; do not add gitignored `craftpix/` or `vroid/` assets. Keep the compact source PNGs unchanged unless Jack specifically requests it.
 
-## How to check your work (required before every push)
-1. `node tools/serve.cjs`, then open `http://localhost:5180/`.
-2. `http://localhost:5180/#posecheck` draws every frame of every pose, for all three classes, with sample heads, using the game's own code. **Reload after changing the hash.**
-3. On the main page, click **New character**. Try both genders, all 6 faces, every hairstyle, several hair, skin and eye colors, and all three classes.
-4. Start a game with a created character and walk, run, jump, attack, use skills (A/S/D/F) and climb a rope.
-5. Save screenshots as `art/creator/check-posecheck.png`, `art/creator/check-creator.png` and `art/creator/check-ingame.png`, next to the compact heroes at the same size.
-6. Look honestly for: any neck, the sword touching the face or neck, odd proportions, hair not covering the scalp, parts misaligned in any frame, and colors that look flat after recoloring.
+## Required checks before pushing
 
-## Rules
-- Original content only. Do not trace, copy or imitate a specific existing game's sprites.
-- Keep the repo public-safe: no licensed third-party asset files. The `craftpix/` and `vroid/` folders are gitignored; never add them.
-- Do not change `art/<class>-compact-*.png` (the heroes Jack likes) unless asked.
-- Keep the exact file names and frame layouts above, or update the code to match anything you change.
-- Commit with a clear message and push to `main`. Claude (the other assistant) will pull, check in the real game and publish.
+1. Run `node tools/serve.cjs`; use `http://localhost:5180/` and New character. `/#creator` opens it directly.
+2. `/#posecheck` shows every frame of idle/walk/run/attack/cast/jump/climb for all three classes, with the original beside a recolored character at identical world scale. Walk uses the original run sheet, matching normal gameplay. Reload after changing the hash. Optional `?class=warrior#posecheck`, `?class=mage#posecheck`, or `?class=archer#posecheck` isolates a class.
+3. `/#lookcheck` shows every finished palette beside the unmodified original for all classes.
+4. Try the three classes, six finished looks, all color controls and all preview animations. Check desktop and stacked narrow layouts.
+5. Create a hero, run, jump/double jump, attack, use A/S/D/F, and climb a rope. Reload and continue to verify saved appearance and progress.
+6. Optional `/#playcheck` exposes bounded QA buttons that drive the normal `press`/`release` input path and show live position/movement state. Seek rope right runs to the next rope and climbs briefly. It changes no simulation rules and is absent in ordinary play.
+7. Run `node tools/check-creator.cjs` (parsing and index synchronization). `--baseline` also compares the simulation to HEAD before committing.
+8. Save `art/creator/check-posecheck.png`, `check-creator.png`, `check-ingame.png`; `check-looks.png` and `check-climb.png` provide additional evidence. Regenerate index.html from brightvale.html in the same doctype/head/body shell.
+
+## Verification for this rebuild
+
+- Inspected all source animation frames for all three classes beside recolored complete sprites.
+- Exercised all six finished looks, every color control, all preview animations and all three creator classes in the in-app browser.
+- Created Vanguard Rowan with Storm colors, tested real running, attack and A/S/D/F (using an MP potion when needed), rope attachment, climbing and a directional rope jump; reloaded and continued with the saved appearance/progress.
+- Checked desktop and narrow stacked creator layouts. No browser console errors in the final production game check.
+- JavaScript parsing, index synchronization, unchanged simulation comparison and unchanged compact source assets verified before commit.
+
+Commit clearly and push main. Claude can pull, review in the real game, and publish.
