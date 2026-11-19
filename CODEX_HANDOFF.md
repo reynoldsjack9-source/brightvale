@@ -1,63 +1,43 @@
 # Brightvale character creator handoff
 
-## Current implementation — revision 3
+## Current creator
 
-The creator uses complete compact animation sheets. Features has **Male / Female** with separate sets: male faces **Bright / Bold / Gentle** and hair **Curly crop / Side-swept bob / Tied back**; female faces **Freckled / Angular / Heart** and hair **Feathered pixie / Twin buns / Crown braid**. All nine face/hair combinations work for both genders on Vanguard, Arcanist and Ranger. Original reset restores the canonical class hero and gender; palettes remain independent of shape choices.
+Whole compact animation sheets, with three independent faces and hairstyles per gender:
 
-This revision addresses the reported defects:
+| Gender | Faces | Hairstyles |
+| --- | --- | --- |
+| Male | Steady, Rugged, Keen | Close crop, Short side part, Short spikes |
+| Female | Freckled, Angular, Heart | Feathered pixie, Twin buns, Crown braid |
 
-- Original and customized heroes use offline skin, hair, iris and outfit masks. Runtime no longer guesses regions from similar colors. Eye color changes visible iris paint. Ears, lips, eyebrows, pupils, whites and ink stay outside the hair mask.
-- Chin placement uses the actual outline. Original face/head pixels are retired separately from neck, collar, shoulders and equipment.
-- Body paint and foreground equipment are tracked separately. The Ranger retains source bow, string, hand and quiver details, including raised bow tips. Vanguard blade and grip guards preserve the source sword silhouette. Arcanist collars, shoulders, hands and staff retain their source layers.
-- The distinct female atlas, `heads-female-distinct-source.png`, was produced with built-in ImageGen using the male atlas for style/alignment, then refined with freckles, a beauty mark and distinct face identities. Generation notes and prompts are in `art/creator/compact-options/README.md`.
+Male art now uses shorter tapered silhouettes, stronger straight brows, smaller eyes without lashes, and angular jaws, with the original compact heroes' contour and cel-shading style. Source: `art/creator/compact-options/heads-male-masculine-source.png`. Built-in ImageGen prompt: `male-redesign-prompts.md` beside it. `heads-source.png` remains a historical style reference. Female head art stays in `heads-female-distinct-source.png`.
 
-The shipped assets are `art/creator/compact-options/v3/`: **324 complete sheets / 1,188 frames**, their semantic masks, masks for the original compact sheets and a versioned manifest. The unversioned derived sheets are historical and unused. Its manifest still supplies original pose landmarks to the offline baker.
+Custom heads use the original painted short neck and original shoulder/collar contours. No synthetic neck is drawn. The Arcanist's isolated shoulder cape is explicitly retained; its short paint component was previously mistaken for head paint, leaving a straight cut edge. This fixes the gap and shoulder cut visible after selecting a face/hair then opening Class. The same baked artwork appears in class cards, preview and gameplay.
 
-Original `art/<class>-compact-*.png` files, gameplay simulation, frame timing, root/feet anchors and body scale remain unchanged. Do not introduce the rejected modular body/limb rendering again.
+Female clothing has subtle waist, chest and hip shaping in the torso's local animation frame (`tools/creator-body.cjs`). The top shoulders/collar remain faithful to the original outfit. Foreground hands/equipment are restored at their original anchors; feet/lower legs stay fixed. This is a small deformation of the original painted outfit, not replacement modular limbs. Original reset still shows the canonical original hero.
 
-## Saves and loading
+## Assets and invariants
 
-Save key remains `brightvale.save.v1`. Names, progress and slots are unchanged. New appearances use `compactVersion: 3` and `gender`, `hairStyle`, `faceStyle`, plus the existing palette indices. Version 2 colors and feature choices are preserved. Old modular color indices migrate as before; a saved gender that differs from the canonical class uses a new complete face/hair pair so the visible gender matches the saved choice. Old modular shapes remain retired.
+`art/creator/compact-options/v3/` contains 324 complete sheets / 1,188 frames and offline semantic masks. Red-channel labels: 1 skin, 2 hair, 3 iris, 4 outfit, 255 preserved. Runtime never guesses mask regions. Male/female annotations are separate in `tools/creator-regions.json`. Ear, lip, brow and freckle paint stays outside the hair mask. Iris bounds follow each face.
 
-Images and masks for the selected complete animation set warm before creation. The runtime image-record cache and recolored-sheet cache are bounded. Preview, class cards, proofs and gameplay all use the same full-sheet renderer.
+Original `art/<class>-compact-*.png` files, SIMULATION, animation timing, root/feet anchors and body scale are unchanged. Female torso clothing is deliberately shaped; do not assert that its torso pixels match the original. Protected equipment and pixels outside the deformation remain checked. Never reintroduce runtime modular head/limb attachments.
 
-## Rebuild and checks
+Save key remains `brightvale.save.v1`. Appearance uses `compactVersion:3` with gender, face/hair indices and independent palette indices. Names, progress, slots and migration behavior are unchanged; previous male indices now select the redesigned alternatives.
 
-1. `npm ci`
-2. `npm run build:creator` builds all assets. `--class=vanguard` builds one class. `--sample` and `--heads-only` are iteration modes; never publish incomplete assets. `--masks-only` is for annotation-only edits against otherwise unchanged finished sheets.
-3. `npm run check:creator` parses inline scripts, verifies the exact index wrapper and exercises appearance migration. `node tools/check-creator.cjs --baseline` also compares SIMULATION with HEAD.
-4. `npm run check:options` checks all sheets/masks, all 18 variants per class/pose, iris coverage, ear/brow/mouth isolation, protected body pixels, standing neck/shoulder and bow/grip areas, Vanguard grip paint and connected Ranger bow material across every front pose.
+## Build and verify
 
-The bow test allows the necessary blend at nearly opaque source edges when a new head is behind the original foreground weapon. Fully opaque protected body pixels remain exact.
+- `npm ci`; `npm run build:creator` builds everything. Target flags: `--class=vanguard`, `--pose=attack`, `--gender=male`. Partial builds must retain complete coverage. `--heads-only` / `--sample` are iteration modes only.
+- `--masks-only` is only for annotation changes against otherwise unchanged geometry.
+- `npm run check:options` checks all 324 sheets / 1,188 frames, irises, safe face regions, neck joins, shoulders/collars, unchanged lower body, held sword/bow, and bounded female tailoring.
+- `node tools/check-creator.cjs --baseline` checks syntax, index wrapper, save migration, distinct choices and SIMULATION against HEAD.
 
-## Real-game checks
+Run `node tools/serve.cjs`, then test `http://localhost:5180/` in the **in-app browser only**. Do not inspect personal apps or email.
 
-Run `node tools/serve.cjs`, then use `http://localhost:5180/` in the **in-app browser**. Do not inspect personal apps or email.
+- `/#creator`: choose face/hair, switch to Class, inspect and select all classes, both genders. Check palettes, reset and narrow layout.
+- `/#featurecheck` and `?gender=female#featurecheck`: all nine combinations per class alongside the original.
+- `?gender=male&class=mage&hair=2&face=2#posecheck`: every frame of idle/walk/run/attack/cast/jump/climb. Classes: warrior/mage/archer. Reload after query/hash changes.
+- `/#colorcheck`: actual shader for 57 original/custom looks; visible blue irises and no out-of-mask color changes.
+- `/#playcheck`: normal press/release input checks with live state/actions. Run, double jump, basic attack, A/S/D/F, climb, reload/continue, and save fresh screenshots.
 
-- `/#creator`: all faces, hairstyles, genders, classes, palette independence, Original reset, animations and desktop/narrow layouts.
-- `/#featurecheck` or `?gender=female#featurecheck`: nine combinations on each class beside the original.
-- `?gender=female&class=mage&hair=2&face=2#posecheck`: every frame of each pose. Class values are warrior/mage/archer. Walk reuses the compact run sheet. Reload after changing hash/query.
-- `/#colorcheck`: tests the actual recolor renderer for 57 original/custom standing looks. Requires visible blue iris changes and no changes outside the selected hair/iris mask.
-- `/#playcheck`: real press/release QA buttons, using game time so input is not lost when the browser is throttled. Prints saved appearance and observed attacks, skills, climbing and double jump. No simulation shortcuts.
+Current redesign evidence belongs in `art/creator/qa-redesign/`. Earlier revision evidence is retained in `qa-v3/` and depicts the previous male designs and unshaped female outfits. The offline comparison is supplementary, not a game screenshot.
 
-Create a character, run, jump/double jump, attack, use A/S/D/F, climb and reload/continue. Save fresh real-game creator, gameplay and pose screenshots when capture is working.
-
-## Verification from this revision
-
-- All 54 creator feature combinations selected through the actual UI; zero selection failures. Male/Female and Original reset checked across class changes.
-- Actual runtime colorcheck: all 57 looks passed, visible iris changes and zero color-region leaks.
-- All 324 sheets / 1,188 frames validated. Neck/shoulder checks pass, 493,776 opaque body pixels and 4,968 standing bow/grip pixels remain unchanged. The front-pose bow guard checks 85,014 source material pixels.
-- Inspected offline standing comparisons and moving-pose sheets for all three styles/classes, including female Twin buns/Angular and male Tied back/Gentle.
-- Continued female Arcanist **Mira** with the new Twin buns/Angular preset, Mint hair and Blue eyes. Reload restored name, gender, face, hair and palette. Normal gameplay recorded climbing, basic attack, double jump and A/S/D/F. The Ranger save **Juniper** also continued through the new renderer.
-- Narrow creator checked at 390 × 844: document width and scroll width both 390; gender choices remain available. Viewport override reset afterward.
-- Final creator browser logs had no errors. Source JavaScript parses, wrapper synchronized, save migrations pass, SIMULATION and original compact PNGs unchanged.
-
-### Fresh real-game captures
-
-Screenshot capture is now working with the in-app browser visible. Fresh creator, male/female feature matrices, gameplay, Ranger bow combat and rear-view climbing captures are saved under `art/creator/qa-v3/`. The canonical `art/creator/check-*.png` files have been refreshed from those real browser captures. All 18 pose captures include every row, including jumping and climbing; their minimum image height is 987 pixels.
-
-The creator UI passed all 54 gender-specific combinations; the real shader passed all 57 original/custom standing looks. All 324 sheets / 1,188 frames, including the distinct female set, pass asset checks. Current asset counts include 119,668 iris pixels. Saved Mira and Juniper appearances continued normally. The original browser tab was left untouched; a separate updated creator preview is open.
-
-Offline comparison `art/creator/v3-proof-options.png` is supplementary art evidence, clearly separate from game screenshots. Generation prompts are in `art/creator/compact-options/female-distinct-prompts.md`.
-
-Commit clearly and push main as Jack requested. Do not use personal apps or email for this work.
+Commit and push main as Jack requested.

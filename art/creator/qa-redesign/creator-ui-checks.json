@@ -1,0 +1,434 @@
+[
+  {
+    "gender": "male",
+    "className": "Vanguard",
+    "hairName": "Close crop",
+    "faceName": "Steady",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Vanguard",
+    "hairName": "Close crop",
+    "faceName": "Rugged",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Vanguard",
+    "hairName": "Close crop",
+    "faceName": "Keen",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Vanguard",
+    "hairName": "Short side part",
+    "faceName": "Steady",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Vanguard",
+    "hairName": "Short side part",
+    "faceName": "Rugged",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Vanguard",
+    "hairName": "Short side part",
+    "faceName": "Keen",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Vanguard",
+    "hairName": "Short spikes",
+    "faceName": "Steady",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Vanguard",
+    "hairName": "Short spikes",
+    "faceName": "Rugged",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Vanguard",
+    "hairName": "Short spikes",
+    "faceName": "Keen",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Arcanist",
+    "hairName": "Close crop",
+    "faceName": "Steady",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Arcanist",
+    "hairName": "Close crop",
+    "faceName": "Rugged",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Arcanist",
+    "hairName": "Close crop",
+    "faceName": "Keen",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Arcanist",
+    "hairName": "Short side part",
+    "faceName": "Steady",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Arcanist",
+    "hairName": "Short side part",
+    "faceName": "Rugged",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Arcanist",
+    "hairName": "Short side part",
+    "faceName": "Keen",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Arcanist",
+    "hairName": "Short spikes",
+    "faceName": "Steady",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Arcanist",
+    "hairName": "Short spikes",
+    "faceName": "Rugged",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Arcanist",
+    "hairName": "Short spikes",
+    "faceName": "Keen",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Ranger",
+    "hairName": "Close crop",
+    "faceName": "Steady",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Ranger",
+    "hairName": "Close crop",
+    "faceName": "Rugged",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Ranger",
+    "hairName": "Close crop",
+    "faceName": "Keen",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Ranger",
+    "hairName": "Short side part",
+    "faceName": "Steady",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Ranger",
+    "hairName": "Short side part",
+    "faceName": "Rugged",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Ranger",
+    "hairName": "Short side part",
+    "faceName": "Keen",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Ranger",
+    "hairName": "Short spikes",
+    "faceName": "Steady",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Ranger",
+    "hairName": "Short spikes",
+    "faceName": "Rugged",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "male",
+    "className": "Ranger",
+    "hairName": "Short spikes",
+    "faceName": "Keen",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Vanguard",
+    "hairName": "Feathered pixie",
+    "faceName": "Freckled",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Vanguard",
+    "hairName": "Feathered pixie",
+    "faceName": "Angular",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Vanguard",
+    "hairName": "Feathered pixie",
+    "faceName": "Heart",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Vanguard",
+    "hairName": "Twin buns",
+    "faceName": "Freckled",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Vanguard",
+    "hairName": "Twin buns",
+    "faceName": "Angular",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Vanguard",
+    "hairName": "Twin buns",
+    "faceName": "Heart",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Vanguard",
+    "hairName": "Crown braid",
+    "faceName": "Freckled",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Vanguard",
+    "hairName": "Crown braid",
+    "faceName": "Angular",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Vanguard",
+    "hairName": "Crown braid",
+    "faceName": "Heart",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Arcanist",
+    "hairName": "Feathered pixie",
+    "faceName": "Freckled",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Arcanist",
+    "hairName": "Feathered pixie",
+    "faceName": "Angular",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Arcanist",
+    "hairName": "Feathered pixie",
+    "faceName": "Heart",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Arcanist",
+    "hairName": "Twin buns",
+    "faceName": "Freckled",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Arcanist",
+    "hairName": "Twin buns",
+    "faceName": "Angular",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Arcanist",
+    "hairName": "Twin buns",
+    "faceName": "Heart",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Arcanist",
+    "hairName": "Crown braid",
+    "faceName": "Freckled",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Arcanist",
+    "hairName": "Crown braid",
+    "faceName": "Angular",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Arcanist",
+    "hairName": "Crown braid",
+    "faceName": "Heart",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Ranger",
+    "hairName": "Feathered pixie",
+    "faceName": "Freckled",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Ranger",
+    "hairName": "Feathered pixie",
+    "faceName": "Angular",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Ranger",
+    "hairName": "Feathered pixie",
+    "faceName": "Heart",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Ranger",
+    "hairName": "Twin buns",
+    "faceName": "Freckled",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Ranger",
+    "hairName": "Twin buns",
+    "faceName": "Angular",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Ranger",
+    "hairName": "Twin buns",
+    "faceName": "Heart",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Ranger",
+    "hairName": "Crown braid",
+    "faceName": "Freckled",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Ranger",
+    "hairName": "Crown braid",
+    "faceName": "Angular",
+    "hair": "true",
+    "face": "true"
+  },
+  {
+    "gender": "female",
+    "className": "Ranger",
+    "hairName": "Crown braid",
+    "faceName": "Heart",
+    "hair": "true",
+    "face": "true"
+  }
+]

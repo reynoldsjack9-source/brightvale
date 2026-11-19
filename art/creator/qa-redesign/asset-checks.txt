@@ -1,0 +1,10 @@
+
+> check:options
+> node tools/check-creator-options.cjs && node tools/check-creator-bow.cjs
+
+PASS: 324 sheets / 1188 frames, both genders and all nine face/hair combinations; 409,068 body, 4,968 bow/grip pixels unchanged; 90,488 iris pixels; ear/brow/mouth masks isolated.
+PASS: 85,014 source bow material pixels retained across all front poses and both genders
+PASS: inline JavaScript parses; index wrapper synchronized
+PASS: legacy, v2 and v3 appearance migration preserves colors and gender
+PASS: each gender has three distinct face and hairstyle choices
+PASS: simulation block unchanged

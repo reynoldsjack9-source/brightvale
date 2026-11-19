@@ -1,0 +1,27 @@
+Live input check: x=245 y=820 / running / warrior / Rowan / {"compactVersion":3,"gender":"male","skin":0,"hairColor":0,"eyeColor":0,"outfit":0,"hairStyle":3,"faceStyle":2} / Observed:
+
+Live input check: x=264 y=820 / idle / warrior / Rowan / {"compactVersion":3,"gender":"male","skin":0,"hairColor":0,"eyeColor":0,"outfit":0,"hairStyle":3,"faceStyle":2} / Observed: basic
+
+Live input check: x=264 y=820 / idle / warrior / Rowan / {"compactVersion":3,"gender":"male","skin":0,"hairColor":0,"eyeColor":0,"outfit":0,"hairStyle":3,"faceStyle":2} / Observed: basic, a
+
+Live input check: x=264 y=820 / idle / warrior / Rowan / {"compactVersion":3,"gender":"male","skin":0,"hairColor":0,"eyeColor":0,"outfit":0,"hairStyle":3,"faceStyle":2} / Observed: basic, a, s
+
+Live input check: x=532 y=689 / airborne / warrior / Rowan / {"compactVersion":3,"gender":"male","skin":0,"hairColor":0,"eyeColor":0,"outfit":0,"hairStyle":3,"faceStyle":2} / Observed: basic, a, s, f, double jump
+
+Live input check: x=680 y=817 / climbing / warrior / Rowan / {"compactVersion":3,"gender":"male","skin":0,"hairColor":0,"eyeColor":0,"outfit":0,"hairStyle":3,"faceStyle":2} / Observed: basic, a, s, f, double jump, climbing
+
+Reload/continue: Live input check: x=230 y=820 / idle / warrior / Rowan / {"compactVersion":3,"gender":"male","skin":0,"hairColor":0,"eyeColor":0,"outfit":0,"hairStyle":3,"faceStyle":2} / Observed:
+
+Female continue: Live input check: x=230 y=820 / idle / mage / Mira / {"compactVersion":3,"gender":"female","skin":0,"hairColor":10,"eyeColor":5,"outfit":0,"hairStyle":2,"faceStyle":2} / Observed:
+
+Live input check: x=230 y=820 / idle / mage / Mira / {"compactVersion":3,"gender":"female","skin":0,"hairColor":10,"eyeColor":5,"outfit":0,"hairStyle":2,"faceStyle":2} / Observed: basic
+
+Live input check: x=230 y=820 / idle / mage / Mira / {"compactVersion":3,"gender":"female","skin":0,"hairColor":10,"eyeColor":5,"outfit":0,"hairStyle":2,"faceStyle":2} / Observed: basic, a
+
+Live input check: x=440 y=820 / idle / mage / Mira / {"compactVersion":3,"gender":"female","skin":0,"hairColor":10,"eyeColor":5,"outfit":0,"hairStyle":2,"faceStyle":2} / Observed: basic, a, d, f
+
+Live input check: x=680 y=814 / climbing / mage / Mira / {"compactVersion":3,"gender":"female","skin":0,"hairColor":10,"eyeColor":5,"outfit":0,"hairStyle":2,"faceStyle":2} / Observed: basic, a, d, f, climbing
+
+Live input check: x=772 y=700 / idle / mage / Mira / {"compactVersion":3,"gender":"female","skin":0,"hairColor":10,"eyeColor":5,"outfit":0,"hairStyle":2,"faceStyle":2} / Observed: basic, a, d, f, climbing, s
+
+Ranger continue/bow skill: Live input check: x=230 y=820 / idle / archer / Juniper / {"compactVersion":2,"skin":0,"hairColor":0,"eyeColor":0,"outfit":0,"hairStyle":2,"faceStyle":2} / Observed: s

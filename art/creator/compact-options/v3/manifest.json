@@ -5,26 +5,26 @@
     "female"
   ],
   "faces": [
-    "Bright",
-    "Bold",
-    "Gentle"
+    "Steady",
+    "Rugged",
+    "Keen"
   ],
   "hairstyles": [
-    "Curly crop",
-    "Side-swept bob",
-    "Tied back"
+    "Close crop",
+    "Short side part",
+    "Short spikes"
   ],
   "featuresByGender": {
     "male": {
       "faces": [
-        "Bright",
-        "Bold",
-        "Gentle"
+        "Steady",
+        "Rugged",
+        "Keen"
       ],
       "hairstyles": [
-        "Curly crop",
-        "Side-swept bob",
-        "Tied back"
+        "Close crop",
+        "Short side part",
+        "Short spikes"
       ]
     },
     "female": {
@@ -64,49 +64,49 @@
         ],
         "coverage": {
           "male-1-1": {
-            "hair": 4607,
-            "skin": 2279,
-            "iris": 183
+            "hair": 2965,
+            "skin": 3442,
+            "iris": 102
           },
           "male-1-2": {
-            "hair": 4658,
-            "skin": 2325,
-            "iris": 168
+            "hair": 2908,
+            "skin": 3395,
+            "iris": 90
           },
           "male-1-3": {
-            "hair": 4617,
-            "skin": 2352,
-            "iris": 186
+            "hair": 2917,
+            "skin": 3455,
+            "iris": 92
           },
           "male-2-1": {
-            "hair": 5679,
-            "skin": 2043,
-            "iris": 189
+            "hair": 2854,
+            "skin": 3361,
+            "iris": 75
           },
           "male-2-2": {
-            "hair": 5644,
-            "skin": 2058,
-            "iris": 146
+            "hair": 2720,
+            "skin": 3417,
+            "iris": 72
           },
           "male-2-3": {
-            "hair": 5695,
-            "skin": 2110,
-            "iris": 190
+            "hair": 2784,
+            "skin": 3448,
+            "iris": 72
           },
           "male-3-1": {
-            "hair": 5340,
-            "skin": 1827,
-            "iris": 113
+            "hair": 2758,
+            "skin": 3192,
+            "iris": 76
           },
           "male-3-2": {
-            "hair": 5326,
-            "skin": 1869,
-            "iris": 108
+            "hair": 2598,
+            "skin": 3066,
+            "iris": 69
           },
           "male-3-3": {
-            "hair": 5322,
-            "skin": 1911,
-            "iris": 121
+            "hair": 2757,
+            "skin": 3239,
+            "iris": 75
           },
           "female-1-1": {
             "hair": 4874,
@@ -257,94 +257,94 @@
         ],
         "coverage": {
           "male-1-1": {
-            "hair": 20239,
-            "skin": 9976,
-            "iris": 814
+            "hair": 13049,
+            "skin": 15172,
+            "iris": 458
           },
           "male-1-2": {
-            "hair": 20505,
-            "skin": 10269,
-            "iris": 733
+            "hair": 12783,
+            "skin": 14914,
+            "iris": 387
           },
           "male-1-3": {
-            "hair": 20194,
-            "skin": 10365,
-            "iris": 827
+            "hair": 12884,
+            "skin": 15128,
+            "iris": 403
           },
           "male-2-1": {
-            "hair": 24905,
-            "skin": 8919,
-            "iris": 855
+            "hair": 12521,
+            "skin": 14796,
+            "iris": 333
           },
           "male-2-2": {
-            "hair": 24807,
-            "skin": 9015,
-            "iris": 633
+            "hair": 11890,
+            "skin": 14986,
+            "iris": 301
           },
           "male-2-3": {
-            "hair": 24979,
-            "skin": 9211,
-            "iris": 835
+            "hair": 12218,
+            "skin": 15169,
+            "iris": 314
           },
           "male-3-1": {
-            "hair": 23371,
-            "skin": 8054,
-            "iris": 486
+            "hair": 12098,
+            "skin": 14000,
+            "iris": 335
           },
           "male-3-2": {
-            "hair": 23350,
-            "skin": 8271,
-            "iris": 480
+            "hair": 11445,
+            "skin": 13390,
+            "iris": 310
           },
           "male-3-3": {
-            "hair": 23396,
-            "skin": 8474,
-            "iris": 530
+            "hair": 11966,
+            "skin": 14230,
+            "iris": 338
           },
           "female-1-1": {
-            "hair": 21429,
-            "skin": 10142,
-            "iris": 826
+            "hair": 21414,
+            "skin": 10140,
+            "iris": 838
           },
           "female-1-2": {
-            "hair": 20913,
-            "skin": 10350,
-            "iris": 560
-          },
-          "female-1-3": {
-            "hair": 20905,
-            "skin": 10177,
-            "iris": 878
-          },
-          "female-2-1": {
-            "hair": 23126,
-            "skin": 9967,
-            "iris": 829
-          },
-          "female-2-2": {
-            "hair": 22674,
-            "skin": 10003,
+            "hair": 20898,
+            "skin": 10338,
             "iris": 555
           },
+          "female-1-3": {
+            "hair": 20930,
+            "skin": 10208,
+            "iris": 868
+          },
+          "female-2-1": {
+            "hair": 23155,
+            "skin": 9960,
+            "iris": 823
+          },
+          "female-2-2": {
+            "hair": 22763,
+            "skin": 10056,
+            "iris": 543
+          },
           "female-2-3": {
-            "hair": 22730,
-            "skin": 9196,
-            "iris": 860
+            "hair": 22720,
+            "skin": 9195,
+            "iris": 847
           },
           "female-3-1": {
-            "hair": 17705,
-            "skin": 12446,
-            "iris": 764
+            "hair": 17689,
+            "skin": 12437,
+            "iris": 763
           },
           "female-3-2": {
-            "hair": 17441,
-            "skin": 12708,
-            "iris": 593
+            "hair": 17436,
+            "skin": 12769,
+            "iris": 598
           },
           "female-3-3": {
-            "hair": 16774,
-            "skin": 12583,
-            "iris": 942
+            "hair": 16818,
+            "skin": 12573,
+            "iris": 926
           }
         }
       },
@@ -418,94 +418,94 @@
         ],
         "coverage": {
           "male-1-1": {
-            "hair": 15009,
-            "skin": 7465,
-            "iris": 598
+            "hair": 9692,
+            "skin": 11300,
+            "iris": 333
           },
           "male-1-2": {
-            "hair": 15211,
-            "skin": 7626,
-            "iris": 552
+            "hair": 9514,
+            "skin": 11123,
+            "iris": 284
           },
           "male-1-3": {
-            "hair": 14999,
-            "skin": 7688,
-            "iris": 630
+            "hair": 9528,
+            "skin": 11291,
+            "iris": 292
           },
           "male-2-1": {
-            "hair": 18252,
-            "skin": 6642,
-            "iris": 659
+            "hair": 9331,
+            "skin": 11011,
+            "iris": 245
           },
           "male-2-2": {
-            "hair": 18159,
-            "skin": 6714,
-            "iris": 476
+            "hair": 8887,
+            "skin": 11180,
+            "iris": 234
           },
           "male-2-3": {
-            "hair": 18288,
-            "skin": 6858,
-            "iris": 634
+            "hair": 9155,
+            "skin": 11300,
+            "iris": 233
           },
           "male-3-1": {
-            "hair": 17417,
-            "skin": 5970,
-            "iris": 362
+            "hair": 9014,
+            "skin": 10422,
+            "iris": 237
           },
           "male-3-2": {
-            "hair": 17391,
-            "skin": 6128,
-            "iris": 352
+            "hair": 8485,
+            "skin": 10012,
+            "iris": 226
           },
           "male-3-3": {
-            "hair": 17427,
-            "skin": 6293,
-            "iris": 391
+            "hair": 8950,
+            "skin": 10586,
+            "iris": 246
           },
           "female-1-1": {
-            "hair": 15868,
-            "skin": 7545,
-            "iris": 621
+            "hair": 15922,
+            "skin": 7579,
+            "iris": 628
           },
           "female-1-2": {
-            "hair": 15523,
-            "skin": 7704,
-            "iris": 427
+            "hair": 15553,
+            "skin": 7732,
+            "iris": 430
           },
           "female-1-3": {
-            "hair": 15566,
-            "skin": 7570,
-            "iris": 663
+            "hair": 15603,
+            "skin": 7583,
+            "iris": 652
           },
           "female-2-1": {
-            "hair": 17273,
-            "skin": 7445,
-            "iris": 601
+            "hair": 17293,
+            "skin": 7435,
+            "iris": 617
           },
           "female-2-2": {
-            "hair": 16931,
-            "skin": 7490,
-            "iris": 409
+            "hair": 16914,
+            "skin": 7471,
+            "iris": 405
           },
           "female-2-3": {
-            "hair": 16999,
-            "skin": 6852,
-            "iris": 641
+            "hair": 16965,
+            "skin": 6855,
+            "iris": 644
           },
           "female-3-1": {
-            "hair": 13106,
-            "skin": 9252,
-            "iris": 563
+            "hair": 13094,
+            "skin": 9266,
+            "iris": 568
           },
           "female-3-2": {
-            "hair": 12778,
-            "skin": 9473,
-            "iris": 429
+            "hair": 12836,
+            "skin": 9508,
+            "iris": 434
           },
           "female-3-3": {
-            "hair": 12392,
-            "skin": 9372,
-            "iris": 686
+            "hair": 12431,
+            "skin": 9360,
+            "iris": 687
           }
         }
       },
@@ -579,94 +579,94 @@
         ],
         "coverage": {
           "male-1-1": {
-            "hair": 11942,
-            "skin": 5342,
-            "iris": 441
+            "hair": 7767,
+            "skin": 8174,
+            "iris": 243
           },
           "male-1-2": {
-            "hair": 12145,
-            "skin": 5458,
-            "iris": 406
+            "hair": 7600,
+            "skin": 7992,
+            "iris": 219
           },
           "male-1-3": {
-            "hair": 11956,
-            "skin": 5515,
-            "iris": 461
+            "hair": 7633,
+            "skin": 8105,
+            "iris": 208
           },
           "male-2-1": {
-            "hair": 14458,
-            "skin": 4835,
-            "iris": 493
+            "hair": 7439,
+            "skin": 7934,
+            "iris": 191
           },
           "male-2-2": {
-            "hair": 14348,
-            "skin": 4861,
-            "iris": 380
+            "hair": 7126,
+            "skin": 8012,
+            "iris": 187
           },
           "male-2-3": {
-            "hair": 14459,
-            "skin": 4939,
-            "iris": 488
+            "hair": 7312,
+            "skin": 8085,
+            "iris": 179
           },
           "male-3-1": {
-            "hair": 13649,
-            "skin": 4337,
-            "iris": 291
+            "hair": 7207,
+            "skin": 7440,
+            "iris": 193
           },
           "male-3-2": {
-            "hair": 13689,
-            "skin": 4387,
-            "iris": 303
+            "hair": 6807,
+            "skin": 7141,
+            "iris": 189
           },
           "male-3-3": {
-            "hair": 13686,
-            "skin": 4545,
-            "iris": 322
+            "hair": 7210,
+            "skin": 7509,
+            "iris": 191
           },
           "female-1-1": {
-            "hair": 12630,
-            "skin": 5420,
-            "iris": 466
+            "hair": 12673,
+            "skin": 5446,
+            "iris": 419
           },
           "female-1-2": {
-            "hair": 12317,
-            "skin": 5523,
-            "iris": 320
+            "hair": 12386,
+            "skin": 5531,
+            "iris": 271
           },
           "female-1-3": {
-            "hair": 12328,
-            "skin": 5424,
-            "iris": 474
-          },
-          "female-2-1": {
-            "hair": 13669,
-            "skin": 5368,
+            "hair": 12387,
+            "skin": 5449,
             "iris": 433
           },
+          "female-2-1": {
+            "hair": 13754,
+            "skin": 5384,
+            "iris": 398
+          },
           "female-2-2": {
-            "hair": 13460,
-            "skin": 5410,
-            "iris": 314
+            "hair": 13499,
+            "skin": 5380,
+            "iris": 271
           },
           "female-2-3": {
-            "hair": 13439,
-            "skin": 4926,
-            "iris": 482
+            "hair": 13538,
+            "skin": 4922,
+            "iris": 428
           },
           "female-3-1": {
-            "hair": 10454,
-            "skin": 6612,
-            "iris": 416
+            "hair": 10438,
+            "skin": 6720,
+            "iris": 374
           },
           "female-3-2": {
-            "hair": 10394,
-            "skin": 6770,
-            "iris": 333
+            "hair": 10327,
+            "skin": 6860,
+            "iris": 283
           },
           "female-3-3": {
-            "hair": 9958,
-            "skin": 6637,
-            "iris": 499
+            "hair": 9975,
+            "skin": 6753,
+            "iris": 453
           }
         }
       },
@@ -724,94 +724,94 @@
         ],
         "coverage": {
           "male-1-1": {
-            "hair": 11590,
-            "skin": 5716,
-            "iris": 460
+            "hair": 7467,
+            "skin": 8724,
+            "iris": 263
           },
           "male-1-2": {
-            "hair": 11776,
-            "skin": 5877,
-            "iris": 419
+            "hair": 7312,
+            "skin": 8589,
+            "iris": 230
           },
           "male-1-3": {
-            "hair": 11615,
-            "skin": 5927,
-            "iris": 474
+            "hair": 7352,
+            "skin": 8753,
+            "iris": 228
           },
           "male-2-1": {
-            "hair": 14271,
-            "skin": 5115,
-            "iris": 505
+            "hair": 7178,
+            "skin": 8497,
+            "iris": 195
           },
           "male-2-2": {
-            "hair": 14194,
-            "skin": 5178,
-            "iris": 370
+            "hair": 6826,
+            "skin": 8593,
+            "iris": 172
           },
           "male-2-3": {
-            "hair": 14311,
-            "skin": 5293,
-            "iris": 484
+            "hair": 7053,
+            "skin": 8694,
+            "iris": 175
           },
           "male-3-1": {
-            "hair": 13437,
-            "skin": 4625,
-            "iris": 276
+            "hair": 6919,
+            "skin": 8022,
+            "iris": 194
           },
           "male-3-2": {
-            "hair": 13432,
-            "skin": 4699,
-            "iris": 268
+            "hair": 6537,
+            "skin": 7693,
+            "iris": 172
           },
           "male-3-3": {
-            "hair": 13436,
-            "skin": 4859,
-            "iris": 299
+            "hair": 6890,
+            "skin": 8146,
+            "iris": 177
           },
           "female-1-1": {
             "hair": 12331,
-            "skin": 5843,
-            "iris": 471
+            "skin": 5828,
+            "iris": 485
           },
           "female-1-2": {
-            "hair": 12009,
-            "skin": 5945,
-            "iris": 323
+            "hair": 12040,
+            "skin": 5946,
+            "iris": 333
           },
           "female-1-3": {
-            "hair": 11998,
-            "skin": 5865,
-            "iris": 509
+            "hair": 12030,
+            "skin": 5853,
+            "iris": 510
           },
           "female-2-1": {
-            "hair": 13277,
-            "skin": 5717,
-            "iris": 473
+            "hair": 13299,
+            "skin": 5734,
+            "iris": 474
           },
           "female-2-2": {
-            "hair": 13047,
-            "skin": 5751,
-            "iris": 319
+            "hair": 13084,
+            "skin": 5768,
+            "iris": 312
           },
           "female-2-3": {
-            "hair": 13057,
-            "skin": 5280,
-            "iris": 493
+            "hair": 13064,
+            "skin": 5304,
+            "iris": 489
           },
           "female-3-1": {
-            "hair": 10170,
-            "skin": 7146,
-            "iris": 426
+            "hair": 10175,
+            "skin": 7121,
+            "iris": 432
           },
           "female-3-2": {
-            "hair": 10027,
-            "skin": 7323,
-            "iris": 343
+            "hair": 10020,
+            "skin": 7329,
+            "iris": 335
           },
           "female-3-3": {
-            "hair": 9654,
-            "skin": 7246,
-            "iris": 528
+            "hair": 9651,
+            "skin": 7229,
+            "iris": 529
           }
         }
       },
@@ -885,47 +885,47 @@
         ],
         "coverage": {
           "male-1-1": {
-            "hair": 19637,
+            "hair": 16227,
             "skin": 0,
             "iris": 0
           },
           "male-1-2": {
-            "hair": 19637,
+            "hair": 16227,
             "skin": 0,
             "iris": 0
           },
           "male-1-3": {
-            "hair": 19637,
+            "hair": 16227,
             "skin": 0,
             "iris": 0
           },
           "male-2-1": {
-            "hair": 21519,
+            "hair": 16762,
             "skin": 0,
             "iris": 0
           },
           "male-2-2": {
-            "hair": 21519,
+            "hair": 16762,
             "skin": 0,
             "iris": 0
           },
           "male-2-3": {
-            "hair": 21519,
+            "hair": 16762,
             "skin": 0,
             "iris": 0
           },
           "male-3-1": {
-            "hair": 19836,
+            "hair": 16430,
             "skin": 0,
             "iris": 0
           },
           "male-3-2": {
-            "hair": 19836,
+            "hair": 16430,
             "skin": 0,
             "iris": 0
           },
           "male-3-3": {
-            "hair": 19836,
+            "hair": 16430,
             "skin": 0,
             "iris": 0
           },
@@ -1000,49 +1000,49 @@
         ],
         "coverage": {
           "male-1-1": {
-            "hair": 3420,
-            "skin": 1688,
-            "iris": 133
+            "hair": 2207,
+            "skin": 2585,
+            "iris": 73
           },
           "male-1-2": {
-            "hair": 3477,
-            "skin": 1731,
-            "iris": 125
+            "hair": 2180,
+            "skin": 2526,
+            "iris": 67
           },
           "male-1-3": {
-            "hair": 3441,
-            "skin": 1751,
-            "iris": 143
+            "hair": 2182,
+            "skin": 2556,
+            "iris": 69
           },
           "male-2-1": {
-            "hair": 4170,
-            "skin": 1524,
-            "iris": 150
+            "hair": 2121,
+            "skin": 2502,
+            "iris": 60
           },
           "male-2-2": {
-            "hair": 4155,
-            "skin": 1532,
-            "iris": 106
+            "hair": 2013,
+            "skin": 2526,
+            "iris": 54
           },
           "male-2-3": {
-            "hair": 4185,
-            "skin": 1579,
-            "iris": 133
+            "hair": 2084,
+            "skin": 2565,
+            "iris": 55
           },
           "male-3-1": {
-            "hair": 3986,
-            "skin": 1364,
-            "iris": 82
+            "hair": 2050,
+            "skin": 2377,
+            "iris": 57
           },
           "male-3-2": {
-            "hair": 3966,
-            "skin": 1393,
-            "iris": 80
+            "hair": 1947,
+            "skin": 2293,
+            "iris": 51
           },
           "male-3-3": {
-            "hair": 3973,
-            "skin": 1432,
-            "iris": 84
+            "hair": 2045,
+            "skin": 2426,
+            "iris": 57
           },
           "female-1-1": {
             "hair": 3613,
@@ -1055,13 +1055,13 @@
             "iris": 101
           },
           "female-1-3": {
-            "hair": 3542,
+            "hair": 3543,
             "skin": 1745,
             "iris": 146
           },
           "female-2-1": {
             "hair": 3942,
-            "skin": 1696,
+            "skin": 1710,
             "iris": 140
           },
           "female-2-2": {
@@ -1076,7 +1076,7 @@
           },
           "female-3-1": {
             "hair": 3013,
-            "skin": 2107,
+            "skin": 2113,
             "iris": 132
           },
           "female-3-2": {
@@ -1193,94 +1193,94 @@
         ],
         "coverage": {
           "male-1-1": {
-            "hair": 23983,
-            "skin": 11821,
-            "iris": 977
+            "hair": 15438,
+            "skin": 17991,
+            "iris": 541
           },
           "male-1-2": {
-            "hair": 24297,
-            "skin": 12137,
-            "iris": 881
+            "hair": 15150,
+            "skin": 17698,
+            "iris": 462
           },
           "male-1-3": {
-            "hair": 24018,
-            "skin": 12232,
-            "iris": 970
+            "hair": 15219,
+            "skin": 18009,
+            "iris": 486
           },
           "male-2-1": {
-            "hair": 29486,
-            "skin": 10596,
-            "iris": 1008
+            "hair": 14815,
+            "skin": 17577,
+            "iris": 394
           },
           "male-2-2": {
-            "hair": 29389,
-            "skin": 10713,
-            "iris": 777
+            "hair": 14106,
+            "skin": 17850,
+            "iris": 360
           },
           "male-2-3": {
-            "hair": 29597,
-            "skin": 10948,
-            "iris": 991
+            "hair": 14566,
+            "skin": 18035,
+            "iris": 374
           },
           "male-3-1": {
-            "hair": 27812,
-            "skin": 9524,
-            "iris": 585
+            "hair": 14291,
+            "skin": 16617,
+            "iris": 401
           },
           "male-3-2": {
-            "hair": 27814,
-            "skin": 9713,
-            "iris": 591
+            "hair": 13561,
+            "skin": 15934,
+            "iris": 354
           },
           "male-3-3": {
-            "hair": 27812,
-            "skin": 10024,
-            "iris": 640
+            "hair": 14270,
+            "skin": 16854,
+            "iris": 400
           },
           "female-1-1": {
-            "hair": 25485,
-            "skin": 12069,
-            "iris": 973
+            "hair": 25491,
+            "skin": 12032,
+            "iris": 976
           },
           "female-1-2": {
-            "hair": 24832,
-            "skin": 12286,
-            "iris": 676
+            "hair": 24809,
+            "skin": 12259,
+            "iris": 666
           },
           "female-1-3": {
-            "hair": 24869,
-            "skin": 12112,
-            "iris": 1064
+            "hair": 24836,
+            "skin": 12128,
+            "iris": 1052
           },
           "female-2-1": {
-            "hair": 27413,
-            "skin": 11864,
-            "iris": 956
+            "hair": 27468,
+            "skin": 11836,
+            "iris": 949
           },
           "female-2-2": {
-            "hair": 26894,
-            "skin": 11922,
-            "iris": 658
+            "hair": 26915,
+            "skin": 11897,
+            "iris": 654
           },
           "female-2-3": {
-            "hair": 26967,
-            "skin": 10913,
-            "iris": 1018
+            "hair": 26921,
+            "skin": 10896,
+            "iris": 1024
           },
           "female-3-1": {
-            "hair": 20988,
-            "skin": 14726,
-            "iris": 911
+            "hair": 21019,
+            "skin": 14663,
+            "iris": 918
           },
           "female-3-2": {
-            "hair": 20726,
-            "skin": 15148,
-            "iris": 698
+            "hair": 20758,
+            "skin": 15104,
+            "iris": 704
           },
           "female-3-3": {
-            "hair": 19947,
-            "skin": 14936,
-            "iris": 1114
+            "hair": 19960,
+            "skin": 14915,
+            "iris": 1112
           }
         }
       },
@@ -1354,93 +1354,93 @@
         ],
         "coverage": {
           "male-1-1": {
-            "hair": 13255,
-            "skin": 6539,
-            "iris": 534
+            "hair": 8530,
+            "skin": 9952,
+            "iris": 308
           },
           "male-1-2": {
-            "hair": 13398,
-            "skin": 6632,
-            "iris": 492
+            "hair": 8372,
+            "skin": 9825,
+            "iris": 257
           },
           "male-1-3": {
-            "hair": 13305,
-            "skin": 6747,
-            "iris": 547
+            "hair": 8414,
+            "skin": 9959,
+            "iris": 264
           },
           "male-2-1": {
-            "hair": 16197,
-            "skin": 5756,
-            "iris": 593
+            "hair": 8202,
+            "skin": 9681,
+            "iris": 213
           },
           "male-2-2": {
-            "hair": 16185,
-            "skin": 5892,
-            "iris": 411
+            "hair": 7800,
+            "skin": 9836,
+            "iris": 193
           },
           "male-2-3": {
-            "hair": 16254,
-            "skin": 5973,
-            "iris": 555
+            "hair": 7996,
+            "skin": 9982,
+            "iris": 210
           },
           "male-3-1": {
-            "hair": 15359,
-            "skin": 5237,
-            "iris": 318
+            "hair": 7894,
+            "skin": 9171,
+            "iris": 224
           },
           "male-3-2": {
-            "hair": 15341,
-            "skin": 5350,
-            "iris": 321
+            "hair": 7477,
+            "skin": 8794,
+            "iris": 191
           },
           "male-3-3": {
-            "hair": 15347,
-            "skin": 5489,
-            "iris": 347
+            "hair": 7831,
+            "skin": 9319,
+            "iris": 210
           },
           "female-1-1": {
-            "hair": 14021,
-            "skin": 6592,
-            "iris": 565
+            "hair": 14047,
+            "skin": 6649,
+            "iris": 563
           },
           "female-1-2": {
-            "hair": 13719,
-            "skin": 6743,
-            "iris": 367
+            "hair": 13736,
+            "skin": 6798,
+            "iris": 351
           },
           "female-1-3": {
-            "hair": 13708,
-            "skin": 6642,
-            "iris": 584
+            "hair": 13736,
+            "skin": 6665,
+            "iris": 585
           },
           "female-2-1": {
-            "hair": 15210,
-            "skin": 6444,
-            "iris": 550
+            "hair": 15173,
+            "skin": 6506,
+            "iris": 545
           },
           "female-2-2": {
-            "hair": 14912,
-            "skin": 6530,
-            "iris": 359
+            "hair": 14903,
+            "skin": 6556,
+            "iris": 352
           },
           "female-2-3": {
-            "hair": 14856,
-            "skin": 6000,
-            "iris": 566
+            "hair": 14881,
+            "skin": 6044,
+            "iris": 564
           },
           "female-3-1": {
-            "hair": 11636,
-            "skin": 8072,
-            "iris": 495
+            "hair": 11664,
+            "skin": 8121,
+            "iris": 497
           },
           "female-3-2": {
-            "hair": 11376,
-            "skin": 8314,
-            "iris": 378
+            "hair": 11396,
+            "skin": 8359,
+            "iris": 374
           },
           "female-3-3": {
-            "hair": 11059,
-            "skin": 8188,
+            "hair": 11033,
+            "skin": 8209,
             "iris": 603
           }
         }
@@ -1515,94 +1515,94 @@
         ],
         "coverage": {
           "male-1-1": {
-            "hair": 8310,
-            "skin": 4064,
-            "iris": 329
+            "hair": 5358,
+            "skin": 6247,
+            "iris": 190
           },
           "male-1-2": {
-            "hair": 8405,
-            "skin": 4182,
-            "iris": 306
+            "hair": 5230,
+            "skin": 6129,
+            "iris": 163
           },
           "male-1-3": {
-            "hair": 8317,
-            "skin": 4194,
-            "iris": 344
+            "hair": 5262,
+            "skin": 6246,
+            "iris": 157
           },
           "male-2-1": {
-            "hair": 10205,
-            "skin": 3653,
-            "iris": 348
+            "hair": 5115,
+            "skin": 6076,
+            "iris": 134
           },
           "male-2-2": {
-            "hair": 10162,
-            "skin": 3693,
-            "iris": 263
+            "hair": 4875,
+            "skin": 6149,
+            "iris": 129
           },
           "male-2-3": {
-            "hair": 10251,
-            "skin": 3784,
-            "iris": 345
+            "hair": 5026,
+            "skin": 6255,
+            "iris": 129
           },
           "male-3-1": {
-            "hair": 9627,
-            "skin": 3252,
-            "iris": 209
+            "hair": 4982,
+            "skin": 5771,
+            "iris": 139
           },
           "male-3-2": {
-            "hair": 9609,
-            "skin": 3360,
-            "iris": 198
+            "hair": 4690,
+            "skin": 5544,
+            "iris": 120
           },
           "male-3-3": {
-            "hair": 9613,
-            "skin": 3448,
-            "iris": 215
+            "hair": 4927,
+            "skin": 5862,
+            "iris": 126
           },
           "female-1-1": {
-            "hair": 8815,
-            "skin": 4127,
-            "iris": 353
+            "hair": 8814,
+            "skin": 4177,
+            "iris": 356
           },
           "female-1-2": {
-            "hair": 8597,
-            "skin": 4245,
-            "iris": 235
+            "hair": 8570,
+            "skin": 4276,
+            "iris": 227
           },
           "female-1-3": {
-            "hair": 8621,
-            "skin": 4162,
-            "iris": 365
+            "hair": 8609,
+            "skin": 4177,
+            "iris": 368
           },
           "female-2-1": {
-            "hair": 9520,
-            "skin": 4029,
-            "iris": 339
+            "hair": 9461,
+            "skin": 4091,
+            "iris": 331
           },
           "female-2-2": {
-            "hair": 9312,
-            "skin": 4094,
-            "iris": 232
+            "hair": 9302,
+            "skin": 4102,
+            "iris": 233
           },
           "female-2-3": {
-            "hair": 9402,
-            "skin": 3762,
-            "iris": 354
+            "hair": 9338,
+            "skin": 3771,
+            "iris": 349
           },
           "female-3-1": {
-            "hair": 7273,
+            "hair": 7287,
             "skin": 5059,
-            "iris": 307
+            "iris": 321
           },
           "female-3-2": {
-            "hair": 7167,
-            "skin": 5231,
-            "iris": 243
+            "hair": 7177,
+            "skin": 5256,
+            "iris": 246
           },
           "female-3-3": {
-            "hair": 6943,
-            "skin": 5158,
-            "iris": 375
+            "hair": 6941,
+            "skin": 5173,
+            "iris": 374
           }
         }
       },
@@ -1660,94 +1660,94 @@
         ],
         "coverage": {
           "male-1-1": {
-            "hair": 10134,
-            "skin": 5005,
-            "iris": 411
+            "hair": 6553,
+            "skin": 7601,
+            "iris": 220
           },
           "male-1-2": {
-            "hair": 10265,
-            "skin": 5133,
-            "iris": 371
+            "hair": 6404,
+            "skin": 7490,
+            "iris": 187
           },
           "male-1-3": {
-            "hair": 10136,
-            "skin": 5193,
-            "iris": 422
+            "hair": 6442,
+            "skin": 7626,
+            "iris": 197
           },
           "male-2-1": {
-            "hair": 12287,
-            "skin": 4467,
-            "iris": 434
+            "hair": 6289,
+            "skin": 7421,
+            "iris": 167
           },
           "male-2-2": {
-            "hair": 12201,
-            "skin": 4516,
-            "iris": 319
+            "hair": 5981,
+            "skin": 7521,
+            "iris": 158
           },
           "male-2-3": {
-            "hair": 12293,
-            "skin": 4619,
-            "iris": 420
+            "hair": 6131,
+            "skin": 7596,
+            "iris": 156
           },
           "male-3-1": {
-            "hair": 11656,
-            "skin": 4020,
-            "iris": 247
+            "hair": 6096,
+            "skin": 7009,
+            "iris": 160
           },
           "male-3-2": {
-            "hair": 11651,
-            "skin": 4139,
-            "iris": 237
+            "hair": 5710,
+            "skin": 6753,
+            "iris": 152
           },
           "male-3-3": {
-            "hair": 11654,
-            "skin": 4253,
-            "iris": 266
+            "hair": 6033,
+            "skin": 7124,
+            "iris": 162
           },
           "female-1-1": {
-            "hair": 10647,
+            "hair": 10668,
             "skin": 5084,
-            "iris": 437
+            "iris": 433
           },
           "female-1-2": {
-            "hair": 10456,
+            "hair": 10463,
             "skin": 5177,
-            "iris": 289
+            "iris": 287
           },
           "female-1-3": {
-            "hair": 10469,
-            "skin": 5105,
-            "iris": 438
+            "hair": 10481,
+            "skin": 5100,
+            "iris": 437
           },
           "female-2-1": {
-            "hair": 11552,
-            "skin": 5011,
-            "iris": 415
+            "hair": 11586,
+            "skin": 5025,
+            "iris": 413
           },
           "female-2-2": {
-            "hair": 11411,
-            "skin": 5020,
-            "iris": 275
+            "hair": 11427,
+            "skin": 5012,
+            "iris": 276
           },
           "female-2-3": {
-            "hair": 11396,
-            "skin": 4639,
+            "hair": 11412,
+            "skin": 4646,
             "iris": 437
           },
           "female-3-1": {
-            "hair": 8880,
-            "skin": 6251,
-            "iris": 380
+            "hair": 8888,
+            "skin": 6252,
+            "iris": 381
           },
           "female-3-2": {
-            "hair": 8732,
-            "skin": 6407,
-            "iris": 299
+            "hair": 8765,
+            "skin": 6413,
+            "iris": 291
           },
           "female-3-3": {
-            "hair": 8417,
-            "skin": 6328,
-            "iris": 473
+            "hair": 8408,
+            "skin": 6327,
+            "iris": 472
           }
         }
       },
@@ -1821,47 +1821,47 @@
         ],
         "coverage": {
           "male-1-1": {
-            "hair": 21508,
+            "hair": 17680,
             "skin": 0,
             "iris": 0
           },
           "male-1-2": {
-            "hair": 21508,
+            "hair": 17680,
             "skin": 0,
             "iris": 0
           },
           "male-1-3": {
-            "hair": 21508,
+            "hair": 17680,
             "skin": 0,
             "iris": 0
           },
           "male-2-1": {
-            "hair": 23367,
+            "hair": 18324,
             "skin": 0,
             "iris": 0
           },
           "male-2-2": {
-            "hair": 23367,
+            "hair": 18324,
             "skin": 0,
             "iris": 0
           },
           "male-2-3": {
-            "hair": 23367,
+            "hair": 18324,
             "skin": 0,
             "iris": 0
           },
           "male-3-1": {
-            "hair": 21548,
+            "hair": 18027,
             "skin": 0,
             "iris": 0
           },
           "male-3-2": {
-            "hair": 21548,
+            "hair": 18027,
             "skin": 0,
             "iris": 0
           },
           "male-3-3": {
-            "hair": 21548,
+            "hair": 18027,
             "skin": 0,
             "iris": 0
           },
@@ -1936,49 +1936,49 @@
         ],
         "coverage": {
           "male-1-1": {
-            "hair": 3864,
-            "skin": 1925,
-            "iris": 160
+            "hair": 2500,
+            "skin": 2928,
+            "iris": 90
           },
           "male-1-2": {
-            "hair": 3934,
-            "skin": 1969,
-            "iris": 147
+            "hair": 2445,
+            "skin": 2881,
+            "iris": 75
           },
           "male-1-3": {
-            "hair": 3881,
-            "skin": 1969,
-            "iris": 161
+            "hair": 2465,
+            "skin": 2912,
+            "iris": 76
           },
           "male-2-1": {
-            "hair": 4796,
-            "skin": 1708,
-            "iris": 168
+            "hair": 2399,
+            "skin": 2837,
+            "iris": 59
           },
           "male-2-2": {
-            "hair": 4761,
-            "skin": 1745,
-            "iris": 119
+            "hair": 2289,
+            "skin": 2874,
+            "iris": 57
           },
           "male-2-3": {
-            "hair": 4794,
-            "skin": 1765,
-            "iris": 165
+            "hair": 2351,
+            "skin": 2921,
+            "iris": 57
           },
           "male-3-1": {
-            "hair": 4502,
-            "skin": 1536,
-            "iris": 89
+            "hair": 2325,
+            "skin": 2695,
+            "iris": 65
           },
           "male-3-2": {
-            "hair": 4485,
-            "skin": 1583,
-            "iris": 89
+            "hair": 2183,
+            "skin": 2569,
+            "iris": 58
           },
           "male-3-3": {
-            "hair": 4492,
-            "skin": 1617,
-            "iris": 98
+            "hair": 2310,
+            "skin": 2716,
+            "iris": 63
           },
           "female-1-1": {
             "hair": 4126,
@@ -2012,7 +2012,7 @@
           },
           "female-3-1": {
             "hair": 3381,
-            "skin": 2396,
+            "skin": 2397,
             "iris": 147
           },
           "female-3-2": {
@@ -2129,94 +2129,94 @@
         ],
         "coverage": {
           "male-1-1": {
-            "hair": 23669,
-            "skin": 11488,
-            "iris": 928
+            "hair": 15274,
+            "skin": 17729,
+            "iris": 520
           },
           "male-1-2": {
-            "hair": 23988,
-            "skin": 11737,
-            "iris": 820
+            "hair": 14937,
+            "skin": 17463,
+            "iris": 458
           },
           "male-1-3": {
-            "hair": 23652,
-            "skin": 11855,
-            "iris": 958
+            "hair": 15037,
+            "skin": 17753,
+            "iris": 462
           },
           "male-2-1": {
-            "hair": 28228,
-            "skin": 10408,
-            "iris": 990
+            "hair": 14664,
+            "skin": 17272,
+            "iris": 387
           },
           "male-2-2": {
-            "hair": 28150,
-            "skin": 10565,
-            "iris": 725
+            "hair": 13973,
+            "skin": 17567,
+            "iris": 355
           },
           "male-2-3": {
-            "hair": 28233,
-            "skin": 10823,
-            "iris": 975
+            "hair": 14373,
+            "skin": 17757,
+            "iris": 363
           },
           "male-3-1": {
-            "hair": 27021,
-            "skin": 9370,
-            "iris": 543
+            "hair": 14179,
+            "skin": 16378,
+            "iris": 384
           },
           "male-3-2": {
-            "hair": 27072,
-            "skin": 9584,
-            "iris": 551
+            "hair": 13324,
+            "skin": 15778,
+            "iris": 352
           },
           "male-3-3": {
-            "hair": 27065,
-            "skin": 9858,
-            "iris": 608
+            "hair": 14104,
+            "skin": 16640,
+            "iris": 377
           },
           "female-1-1": {
-            "hair": 25078,
-            "skin": 11643,
-            "iris": 923
+            "hair": 25167,
+            "skin": 11593,
+            "iris": 945
           },
           "female-1-2": {
-            "hair": 24271,
-            "skin": 12016,
-            "iris": 646
+            "hair": 24484,
+            "skin": 12000,
+            "iris": 653
           },
           "female-1-3": {
-            "hair": 24435,
-            "skin": 11822,
-            "iris": 1003
+            "hair": 24512,
+            "skin": 11728,
+            "iris": 1016
           },
           "female-2-1": {
-            "hair": 27062,
-            "skin": 11381,
-            "iris": 854
+            "hair": 27114,
+            "skin": 11402,
+            "iris": 850
           },
           "female-2-2": {
-            "hair": 26526,
-            "skin": 11514,
-            "iris": 639
+            "hair": 26521,
+            "skin": 11532,
+            "iris": 645
           },
           "female-2-3": {
             "hair": 26614,
-            "skin": 10658,
-            "iris": 996
+            "skin": 10573,
+            "iris": 1000
           },
           "female-3-1": {
-            "hair": 20548,
-            "skin": 14191,
-            "iris": 817
+            "hair": 20764,
+            "skin": 14239,
+            "iris": 816
           },
           "female-3-2": {
-            "hair": 20216,
-            "skin": 14741,
-            "iris": 689
+            "hair": 20460,
+            "skin": 14767,
+            "iris": 688
           },
           "female-3-3": {
-            "hair": 19478,
-            "skin": 14447,
-            "iris": 1071
+            "hair": 19638,
+            "skin": 14491,
+            "iris": 1083
           }
         }
       },
@@ -2290,94 +2290,94 @@
         ],
         "coverage": {
           "male-1-1": {
-            "hair": 13577,
-            "skin": 6688,
-            "iris": 551
+            "hair": 8798,
+            "skin": 10275,
+            "iris": 305
           },
           "male-1-2": {
-            "hair": 13786,
-            "skin": 6859,
-            "iris": 510
+            "hair": 8609,
+            "skin": 10091,
+            "iris": 263
           },
           "male-1-3": {
-            "hair": 13606,
-            "skin": 6911,
-            "iris": 557
+            "hair": 8678,
+            "skin": 10241,
+            "iris": 264
           },
           "male-2-1": {
-            "hair": 16307,
-            "skin": 5976,
-            "iris": 593
+            "hair": 8462,
+            "skin": 10006,
+            "iris": 216
           },
           "male-2-2": {
-            "hair": 16212,
-            "skin": 6059,
-            "iris": 437
+            "hair": 8044,
+            "skin": 10133,
+            "iris": 209
           },
           "male-2-3": {
-            "hair": 16295,
-            "skin": 6184,
-            "iris": 568
+            "hair": 8305,
+            "skin": 10294,
+            "iris": 210
           },
           "male-3-1": {
-            "hair": 15569,
-            "skin": 5368,
-            "iris": 320
+            "hair": 8157,
+            "skin": 9465,
+            "iris": 217
           },
           "male-3-2": {
-            "hair": 15563,
-            "skin": 5485,
-            "iris": 333
+            "hair": 7685,
+            "skin": 9083,
+            "iris": 202
           },
           "male-3-3": {
-            "hair": 15566,
-            "skin": 5641,
-            "iris": 352
+            "hair": 8125,
+            "skin": 9601,
+            "iris": 217
           },
           "female-1-1": {
-            "hair": 14222,
-            "skin": 6789,
-            "iris": 566
+            "hair": 14346,
+            "skin": 6854,
+            "iris": 575
           },
           "female-1-2": {
-            "hair": 14057,
-            "skin": 6960,
-            "iris": 389
+            "hair": 14108,
+            "skin": 7029,
+            "iris": 387
           },
           "female-1-3": {
-            "hair": 14000,
-            "skin": 6840,
-            "iris": 610
+            "hair": 14043,
+            "skin": 6894,
+            "iris": 595
           },
           "female-2-1": {
-            "hair": 15505,
-            "skin": 6699,
-            "iris": 561
+            "hair": 15543,
+            "skin": 6728,
+            "iris": 548
           },
           "female-2-2": {
-            "hair": 15266,
-            "skin": 6730,
+            "hair": 15314,
+            "skin": 6773,
             "iris": 374
           },
           "female-2-3": {
-            "hair": 15317,
-            "skin": 6196,
-            "iris": 583
+            "hair": 15328,
+            "skin": 6239,
+            "iris": 587
           },
           "female-3-1": {
-            "hair": 11904,
-            "skin": 8315,
-            "iris": 516
+            "hair": 11970,
+            "skin": 8374,
+            "iris": 514
           },
           "female-3-2": {
-            "hair": 11781,
-            "skin": 8554,
-            "iris": 389
+            "hair": 11831,
+            "skin": 8621,
+            "iris": 399
           },
           "female-3-3": {
-            "hair": 11339,
-            "skin": 8448,
-            "iris": 627
+            "hair": 11406,
+            "skin": 8495,
+            "iris": 619
           }
         }
       },
@@ -2451,94 +2451,94 @@
         ],
         "coverage": {
           "male-1-1": {
-            "hair": 12486,
-            "skin": 5943,
-            "iris": 504
+            "hair": 8123,
+            "skin": 9318,
+            "iris": 278
           },
           "male-1-2": {
-            "hair": 12665,
-            "skin": 6096,
-            "iris": 458
+            "hair": 7949,
+            "skin": 9160,
+            "iris": 239
           },
           "male-1-3": {
-            "hair": 12523,
-            "skin": 6177,
-            "iris": 510
+            "hair": 8031,
+            "skin": 9299,
+            "iris": 238
           },
           "male-2-1": {
-            "hair": 15101,
-            "skin": 5259,
-            "iris": 544
+            "hair": 7745,
+            "skin": 9118,
+            "iris": 212
           },
           "male-2-2": {
-            "hair": 15046,
-            "skin": 5336,
-            "iris": 408
+            "hair": 7401,
+            "skin": 9222,
+            "iris": 188
           },
           "male-2-3": {
-            "hair": 15161,
-            "skin": 5451,
-            "iris": 520
+            "hair": 7638,
+            "skin": 9346,
+            "iris": 189
           },
           "male-3-1": {
-            "hair": 14414,
-            "skin": 4708,
-            "iris": 307
+            "hair": 7519,
+            "skin": 8591,
+            "iris": 210
           },
           "male-3-2": {
-            "hair": 14367,
-            "skin": 4864,
-            "iris": 287
+            "hair": 7170,
+            "skin": 8227,
+            "iris": 186
           },
           "male-3-3": {
-            "hair": 14376,
-            "skin": 4993,
-            "iris": 317
+            "hair": 7457,
+            "skin": 8731,
+            "iris": 210
           },
           "female-1-1": {
-            "hair": 13206,
-            "skin": 6031,
-            "iris": 529
+            "hair": 13298,
+            "skin": 6156,
+            "iris": 515
           },
           "female-1-2": {
-            "hair": 12892,
-            "skin": 6197,
-            "iris": 368
+            "hair": 12988,
+            "skin": 6313,
+            "iris": 355
           },
           "female-1-3": {
-            "hair": 12945,
-            "skin": 6111,
-            "iris": 528
+            "hair": 12928,
+            "skin": 6221,
+            "iris": 566
           },
           "female-2-1": {
-            "hair": 14195,
-            "skin": 5876,
-            "iris": 498
+            "hair": 14232,
+            "skin": 5978,
+            "iris": 512
           },
           "female-2-2": {
-            "hair": 13959,
-            "skin": 5989,
-            "iris": 336
+            "hair": 13979,
+            "skin": 6093,
+            "iris": 340
           },
           "female-2-3": {
-            "hair": 13940,
-            "skin": 5537,
-            "iris": 540
+            "hair": 13952,
+            "skin": 5658,
+            "iris": 533
           },
           "female-3-1": {
-            "hair": 10931,
-            "skin": 7436,
-            "iris": 471
+            "hair": 10967,
+            "skin": 7539,
+            "iris": 469
           },
           "female-3-2": {
-            "hair": 10723,
-            "skin": 7644,
-            "iris": 364
+            "hair": 10840,
+            "skin": 7818,
+            "iris": 350
           },
           "female-3-3": {
-            "hair": 10374,
-            "skin": 7611,
-            "iris": 573
+            "hair": 10416,
+            "skin": 7700,
+            "iris": 571
           }
         }
       },
@@ -2596,94 +2596,94 @@
         ],
         "coverage": {
           "male-1-1": {
-            "hair": 10738,
-            "skin": 5280,
-            "iris": 424
+            "hair": 6930,
+            "skin": 8077,
+            "iris": 236
           },
           "male-1-2": {
-            "hair": 10882,
-            "skin": 5463,
-            "iris": 389
+            "hair": 6771,
+            "skin": 7926,
+            "iris": 203
           },
           "male-1-3": {
-            "hair": 10747,
-            "skin": 5505,
-            "iris": 445
+            "hair": 6814,
+            "skin": 8086,
+            "iris": 212
           },
           "male-2-1": {
-            "hair": 12877,
-            "skin": 4735,
-            "iris": 470
+            "hair": 6656,
+            "skin": 7882,
+            "iris": 178
           },
           "male-2-2": {
-            "hair": 12777,
-            "skin": 4799,
-            "iris": 344
+            "hair": 6327,
+            "skin": 8002,
+            "iris": 159
           },
           "male-2-3": {
-            "hair": 12895,
-            "skin": 4903,
-            "iris": 439
+            "hair": 6524,
+            "skin": 8066,
+            "iris": 165
           },
           "male-3-1": {
-            "hair": 12353,
-            "skin": 4284,
-            "iris": 248
+            "hair": 6406,
+            "skin": 7468,
+            "iris": 172
           },
           "male-3-2": {
-            "hair": 12350,
-            "skin": 4366,
-            "iris": 265
+            "hair": 6060,
+            "skin": 7170,
+            "iris": 158
           },
           "male-3-3": {
-            "hair": 12360,
-            "skin": 4489,
-            "iris": 274
+            "hair": 6405,
+            "skin": 7580,
+            "iris": 173
           },
           "female-1-1": {
-            "hair": 11305,
-            "skin": 5386,
-            "iris": 457
+            "hair": 11388,
+            "skin": 5399,
+            "iris": 447
           },
           "female-1-2": {
-            "hair": 11094,
-            "skin": 5500,
-            "iris": 310
+            "hair": 11115,
+            "skin": 5508,
+            "iris": 314
           },
           "female-1-3": {
-            "hair": 11118,
-            "skin": 5403,
-            "iris": 469
+            "hair": 11113,
+            "skin": 5413,
+            "iris": 466
           },
           "female-2-1": {
-            "hair": 12289,
-            "skin": 5279,
-            "iris": 435
+            "hair": 12338,
+            "skin": 5252,
+            "iris": 441
           },
           "female-2-2": {
-            "hair": 12061,
-            "skin": 5334,
-            "iris": 291
+            "hair": 12077,
+            "skin": 5330,
+            "iris": 289
           },
           "female-2-3": {
-            "hair": 12080,
-            "skin": 4919,
-            "iris": 459
+            "hair": 12086,
+            "skin": 4897,
+            "iris": 458
           },
           "female-3-1": {
-            "hair": 9296,
-            "skin": 6565,
-            "iris": 408
+            "hair": 9377,
+            "skin": 6589,
+            "iris": 409
           },
           "female-3-2": {
-            "hair": 9120,
-            "skin": 6768,
-            "iris": 309
+            "hair": 9208,
+            "skin": 6773,
+            "iris": 315
           },
           "female-3-3": {
-            "hair": 8808,
-            "skin": 6691,
-            "iris": 495
+            "hair": 8937,
+            "skin": 6695,
+            "iris": 486
           }
         }
       },
@@ -2757,47 +2757,47 @@
         ],
         "coverage": {
           "male-1-1": {
-            "hair": 23493,
+            "hair": 20031,
             "skin": 0,
             "iris": 0
           },
           "male-1-2": {
-            "hair": 23493,
+            "hair": 20031,
             "skin": 0,
             "iris": 0
           },
           "male-1-3": {
-            "hair": 23493,
+            "hair": 20031,
             "skin": 0,
             "iris": 0
           },
           "male-2-1": {
-            "hair": 25654,
+            "hair": 20592,
             "skin": 0,
             "iris": 0
           },
           "male-2-2": {
-            "hair": 25654,
+            "hair": 20592,
             "skin": 0,
             "iris": 0
           },
           "male-2-3": {
-            "hair": 25654,
+            "hair": 20592,
             "skin": 0,
             "iris": 0
           },
           "male-3-1": {
-            "hair": 23045,
+            "hair": 20256,
             "skin": 0,
             "iris": 0
           },
           "male-3-2": {
-            "hair": 23045,
+            "hair": 20256,
             "skin": 0,
             "iris": 0
           },
           "male-3-3": {
-            "hair": 23045,
+            "hair": 20256,
             "skin": 0,
             "iris": 0
           },

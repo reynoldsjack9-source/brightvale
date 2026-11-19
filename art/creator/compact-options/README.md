@@ -4,20 +4,20 @@ The shipped creator reads complete sheets and masks from `v3/`. Each gender has 
 
 | Gender | Faces | Hairstyles |
 | --- | --- | --- |
-| Male | Bright, Bold, Gentle | Curly crop, Side-swept bob, Tied back |
+| Male | Steady, Rugged, Keen | Close crop, Short side part, Short spikes |
 | Female | Freckled, Angular, Heart | Feathered pixie, Twin buns, Crown braid |
 
 Every face/hair combination works on every class: 54 standing looks and **324 sheets / 1,188 animation frames**. The original `art/<class>-compact-*.png` files remain unchanged.
 
 ## Sources and production
 
-`heads-source.png` is the male source atlas. `heads-female-distinct-source.png` is the separate female atlas, generated with built-in ImageGen against the male atlas as a style/alignment reference, then refined with unique facial identities. It has its own pixie, twin-bun and crown-braid silhouettes and corresponding rear views. Freckled has cheek freckles, Angular has a beauty mark and focused features, Heart has a cheerful open smile. These are not eyelash-only copies of the male presets. Full prompts are in `female-distinct-prompts.md`.
+`heads-male-masculine-source.png` is the current male source atlas. Its short tapered hairstyles, straight brows, smaller eyes and angular jaws replace the previous bob/ponytail set. Full built-in ImageGen prompt: `male-redesign-prompts.md`. `heads-source.png` remains a historical style reference. `heads-female-distinct-source.png` is the separate female atlas, generated with built-in ImageGen against the male atlas as a style/alignment reference, then refined with unique facial identities. It has its own pixie, twin-bun and crown-braid silhouettes and corresponding rear views. Freckled has cheek freckles, Angular has a beauty mark and focused features, Heart has a cheerful open smile. These are not eyelash-only copies of the male presets. Full prompts are in `female-distinct-prompts.md`.
 
 Both sources use three columns and four rows: nine front combinations and three rear styles. Generated transparency is retained. The baker normalizes cutouts into `v3/head-*.png`, anchors the actual jaw outline and bakes finished sprites offline. Runtime never attaches heads or limbs.
 
-`tools/creator-regions.json` has separate male/female face, ear and iris annotations. Female iris bounds account for each identity; enclosed skin regions protect freckles and the beauty mark without absorbing the concave fringe. Mask red channel: 1 skin, 2 hair, 3 iris, 4 outfit, 255 preserved ink/paint. Runtime never guesses color regions. Pupils, whites, eyebrows, lips, freckles, marks and equipment stay outside the hair mask.
+`tools/creator-regions.json` has separate male/female face, ear and iris annotations. Iris bounds account for each male and female identity; enclosed skin regions protect freckles and the beauty mark without absorbing the concave fringe. Mask red channel: 1 skin, 2 hair, 3 iris, 4 outfit, 255 preserved ink/paint. Runtime never guesses color regions. Pupils, whites, eyebrows, lips, freckles, marks and equipment stay outside the hair mask.
 
-The baker separates the original body, collar/neck and foreground equipment. Bow, string, held hands, quiver, staff, blade and grip retain source depth. Original pose timing, root/feet anchors, body scale and simulation are unchanged.
+The baker separates the original body, collar/neck and foreground equipment. The original painted short neck and the full shoulder/collar contour are retained. The isolated Arcanist shoulder cape is explicitly protected so it cannot be mistaken for head paint. Female outfits receive subtle chest, waist and hip shaping below the original shoulder line with stationary feet and protected foreground gear via `tools/creator-body.cjs`. Bow, string, held hands, quiver, staff, blade and grip retain source depth. Original pose timing, root/feet anchors, body scale and simulation are unchanged.
 
 ## Reproduce and verify
 
@@ -27,9 +27,9 @@ The baker separates the original body, collar/neck and foreground equipment. Bow
 - `--sample` and `--heads-only` are iteration modes; never ship an incomplete build.
 - `--masks-only` refreshes annotations only. Use only when finished geometry and foregrounds are unchanged.
 - `npm run check:creator` verifies syntax, the exact index wrapper, save migrations and three distinct choices per gender. `node tools/check-creator.cjs --baseline` also compares SIMULATION with HEAD.
-- `npm run check:options` checks complete class/pose/variant coverage, every sheet, iris visibility, face-color isolation, body/shoulder/collar preservation, sword grip and bow material across front poses. Opaque body pixels remain exact; near-opaque foreground edges allow the necessary alpha blend against new hair.
+- `npm run check:options` checks complete class/pose/variant coverage, every sheet, iris visibility, face-color isolation, body/shoulder/collar preservation, sword grip and bow material across front poses. Male body pixels and female body pixels outside the torso deformation remain exact; near-opaque foreground edges allow the necessary alpha blend against new hair.
 
-Real-game routes: `/#creator`, `?gender=female#featurecheck`, `?gender=female&class=mage&hair=2&face=2#posecheck`, `/#colorcheck`, `/#playcheck`. Colorcheck tests 57 original/custom looks through the actual shader. Playcheck uses normal press/release input and prints saved appearance plus observed actions. See `../qa-v3/` for logs and fresh real-game screenshots, including all seven pose rows in 18 full-page captures.
+Real-game routes: `/#creator`, `?gender=female#featurecheck`, `?gender=female&class=mage&hair=2&face=2#posecheck`, `/#colorcheck`, `/#playcheck`. Colorcheck tests 57 original/custom looks through the actual shader. Playcheck uses normal press/release input and prints saved appearance plus observed actions. See `../qa-redesign/` for current evidence; `../qa-v3/` retains earlier logs and screenshots, including all seven pose rows in 18 full-page captures.
 
 Unversioned derived sheets remain historical and unused. The unversioned manifest supplies original pose landmarks to the offline baker.
 

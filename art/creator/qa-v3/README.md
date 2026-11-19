@@ -1,5 +1,7 @@
 # Revision 3 verification — distinct gender sets
 
+Historical evidence from the earlier gender-set revision. Current male designs, original neck/shoulder repair and female outfit shaping are verified in `../qa-redesign/`. The canonical `../check-*.png` images now show that newer revision.
+
 Male: Bright / Bold / Gentle; Curly crop / Side-swept bob / Tied back.
 Female: Freckled / Angular / Heart; Feathered pixie / Twin buns / Crown braid.
 

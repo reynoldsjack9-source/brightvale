@@ -4,6 +4,7 @@
 const fs = require('node:fs');
 const sharp = require('sharp');
 const {PNG} = require('pngjs');
+const {femaleBody} = require('./creator-body.cjs');
 const ROOT = 'art/creator/compact-options';
 const OUT = ROOT + '/v3';
 const MASKS_ONLY=process.argv.includes('--masks-only');
@@ -105,6 +106,12 @@ function sourceData(p,cls,pose,f) {
   }
   for(const a of skin){const b=box(a);if(b.y1>chin[1]+8&&b.y0>fb.y0+12&&!(b.cx>fb.x0&&b.cx<fb.x1&&b.y0<fb.y1))for(const q of a)bodyPaint[q]=1;}
   if(cls==='vanguard')for(const a of parts(p,(d,i)=>{const[h,s,l]=hsl(d[i],d[i+1],d[i+2]);return d[i+3]>40&&(h<15||h>340)&&s>.3&&l>.2;}))if(box(a).y1>chin[1]+18)for(const q of a)bodyPaint[q]=1;
+  if(cls==='arcanist'&&!rear){
+    // The isolated shoulder cape is separated from the long robe by gold trim;
+    // it must not be rejected merely because that paint component is short.
+    const a=angle*Math.PI/180,c=Math.cos(a),s=Math.sin(a);
+    for(let q=0;q<bodyPaint.length;q++){const x=q%N-chin[0],y=Math.floor(q/N)-chin[1],u=c*x+s*y,v=-s*x+c*y,i=q*4,[h,ss,l]=hsl(d[i],d[i+1],d[i+2]);if(u>-52&&u<18&&v>=-5&&v<30&&d[i+3]>40&&isBody(cls,h,ss,l)&&!(h>250&&h<310&&l>.64))bodyPaint[q]=1;}
+  }
   const bodyEdges=dilate(bodyPaint,3);for(let q=0;q<body.length;q++)body[q]=bodyEdges[q];
   // Remove the bandana tails separately from the long body cape.
   if(cls==='vanguard')for(const a of parts(p,(d,i)=>{const[h,s,l]=hsl(d[i],d[i+1],d[i+2]);return d[i+3]>50&&(h<15||h>340)&&s>.35&&l>.25;}))if(box(a).y1<chin[1]+18){const m=new Uint8Array(N*N);for(const q of a)m[q]=1;const ink=dilate(m,3);for(let q=0;q<erase.length;q++)if(ink[q]){erase[q]=1;fg[q]=0;body[q]=0;}}
@@ -165,13 +172,28 @@ function sourceData(p,cls,pose,f) {
   if(cls==='vanguard')for(const a of parts(p,(d,i)=>{const[h,s,l]=hsl(d[i],d[i+1],d[i+2]);return d[i+3]>70&&s<.3&&l>.4;})){
     const b=box(a);if(a.length>100&&b.y1-b.y0>28){const blade=new Uint8Array(N*N);fill(blade,hull(a));const ink=dilate(blade,2);for(let q=0;q<fg.length;q++)if(ink[q])fg[q]=1;}
   }
+  // Head retirement must never shave the source outfit's upper contour.
+  // Restore connected clothing paint and its ink after the head-only cuts.
+  for(let q=0;q<body.length;q++){
+    const i=q*4,[h,s,l]=hsl(d[i],d[i+1],d[i+2]),a=angle*Math.PI/180,v=-Math.sin(a)*(q%N-chin[0])+Math.cos(a)*(Math.floor(q/N)-chin[1]);
+    if((bodyPaint[q]&&isBody(cls,h,s,l))||(bodyEdges[q]&&l<.2&&Math.floor(q/N)>chin[1]-6&&!faceArea[q])){body[q]=1;if(v<18)fg[q]=1;retired[q]=0;}
+  }
+  if(!rear){
+    // Reuse the original painted short neck, including its original edge ink.
+    // It sits behind the replacement face; no synthetic neck shape is added.
+    const neck=new Uint8Array(N*N),rad=angle*Math.PI/180,c=Math.cos(rad),s=Math.sin(rad);
+    for(let q=0;q<neck.length;q++){const x=q%N-chin[0],y=Math.floor(q/N)-chin[1],u=c*x+s*y,v=-s*x+c*y;if(u>=-17&&u<=-2&&v>=-10&&v<=5&&isSkin(d,q*4))neck[q]=1;}
+    const edge=dilate(neck,1);for(let q=0;q<neck.length;q++)if(neck[q]||(edge[q]&&d[q*4]<100&&d[q*4+1]<100&&d[q*4+2]<110)){body[q]=1;fg[q]=0;}
+  }
+  // Keep the Ranger's complete holding sleeve/hand silhouette stationary.
+  if(cls==='ranger'&&pose==='idle')for(let y=119;y<210;y++)for(let x=151;x<189;x++)fg[y*N+x]=1;
   // Foreground silhouettes are copied exactly; face pixels are never restored.
   return {chin,angle:rear?0:angle,scale:rear?1:scale,face:fb,raw:erase,erase,fg,body,cap,faceArea,rear,retired};
 }
 function headSemantic(p,style,rear,gender,faceIndex) {
   const w=p.width,h=p.height,r=(gender==='female'?REGIONS.female:REGIONS.heads)[style-1],sx=w/r.size[0],sy=h/r.size[1],face=r.face.map(([x,y])=>[x*sx,y*sy]),mask=new Uint8Array(w*h),faceRegion=new Uint8Array(w*h),eyes=(r.eyesByFace?.[faceIndex-1]||r.eyes).map(e=>[e[0]*sx,e[1]*sy,e[2]*sx,e[3]*sy]);
   if(!rear){fill(faceRegion,face,w,h);for(const e of r.ears)ellipse(faceRegion,e[0]*sx,e[1]*sy,e[2]*sx,e[3]*sy,w,h);}
-  if(!rear&&gender==='female'){
+  if(!rear){
     // Include each identity's actual cheek contour and enclosed freckles/marks.
     // Flooding enclosed skin holes keeps the concave fringe outside the face.
     const skinParts=parts(p,(d,i)=>{const[hu,s,l]=hsl(d[i],d[i+1],d[i+2]);return d[i+3]>30&&hu>8&&hu<40&&s>.18&&l>.58&&d[i+2]/d[i]>.46;}),paint=new Uint8Array(w*h);
@@ -197,7 +219,7 @@ function headSemantic(p,style,rear,gender,faceIndex) {
   return {mask,faceRegion,anchor:[ax,ay],eyes};
 }
 async function prepareHeads(gender) {
-  const input=ROOT+(gender==='female'?'/heads-female-distinct-source.png':'/heads-source.png'),m=await sharp(input).metadata(),out=[];
+  const input=ROOT+(gender==='female'?'/heads-female-distinct-source.png':'/heads-male-masculine-source.png'),m=await sharp(input).metadata(),out=[];
   for(let row=0;row<4;row++)for(let col=0;col<3;col++){
     const left=Math.round(col*m.width/3),top=Math.round(row*m.height/4),width=Math.round((col+1)*m.width/3)-left,height=Math.round((row+1)*m.height/4)-top;
     const cell=PNG.sync.read(await sharp(input).extract({left,top,width,height}).png().toBuffer()),points=[];
@@ -226,10 +248,15 @@ function originalLabels(p,cls,meta){
 }
 function frame(p,f){const out=new PNG({width:N,height:N});PNG.bitblt(p,out,f*N,0,N,N,0,0);return out;}
 function maskPNG(labels,width,height){const out=new PNG({width,height});for(let q=0;q<labels.length;q++)if(labels[q]){out.data[q*4]=labels[q];out.data[q*4+3]=255;}return PNG.sync.write(out);}
+async function writeSheet(path,buffer){
+  // Publish complete PNGs atomically while the local game is reading assets.
+  const encoded=await sharp(buffer).png({compressionLevel:6}).toBuffer(),temp=path+'.tmp';
+  fs.writeFileSync(temp,encoded);fs.renameSync(temp,path);
+}
 (async()=>{
   fs.mkdirSync(OUT,{recursive:true});const heads={male:await prepareHeads('male'),female:await prepareHeads('female')};if(process.argv.includes('--heads-only'))return;
   const oldManifest=fs.existsSync(OUT+'/manifest.json')?JSON.parse(fs.readFileSync(OUT+'/manifest.json','utf8')):null;
-  const manifest={version:3,genders:['male','female'],faces:['Bright','Bold','Gentle'],hairstyles:['Curly crop','Side-swept bob','Tied back'],featuresByGender:{male:{faces:['Bright','Bold','Gentle'],hairstyles:['Curly crop','Side-swept bob','Tied back']},female:{faces:['Freckled','Angular','Heart'],hairstyles:['Feathered pixie','Twin buns','Crown braid']}},classes:oldManifest?.classes?structuredClone(oldManifest.classes):{}};
+  const manifest={version:3,genders:['male','female'],faces:['Steady','Rugged','Keen'],hairstyles:['Close crop','Short side part','Short spikes'],featuresByGender:{male:{faces:['Steady','Rugged','Keen'],hairstyles:['Close crop','Short side part','Short spikes']},female:{faces:['Freckled','Angular','Heart'],hairstyles:['Feathered pixie','Twin buns','Crown braid']}},classes:oldManifest?.classes?structuredClone(oldManifest.classes):{}};
   const only=process.argv.find(a=>a.startsWith('--class='))?.split('=')[1],onlyPose=process.argv.find(a=>a.startsWith('--pose='))?.split('=')[1],onlyGender=process.argv.find(a=>a.startsWith('--gender='))?.split('=')[1];
   if(onlyGender&&!manifest.genders.includes(onlyGender))throw Error('Unknown gender: '+onlyGender);
   if(only&&!CLASSES.includes(only))throw Error('Unknown class: '+only);
@@ -247,6 +274,13 @@ function maskPNG(labels,width,height){const out=new PNG({width,height});for(let 
     }
     await sharp(maskPNG(baseMask,original.width,N)).png().toFile(`${OUT}/base-${cls}-${pose}-mask.png`);
     manifest.classes[cls][pose]={frames:count,landmarks:meta.map(m=>({chin:m.chin,angle:m.angle,scale:m.scale,face:m.face})),coverage:onlyGender?{...oldManifest?.classes?.[cls]?.[pose]?.coverage}:{}};
+    const female=src.map((p,f)=>femaleBody(p,meta[f],pose,cls)),femaleBase=[],femaleForeground=[],femaleLabels=[];
+    for(let f=0;f<count;f++){
+      const p=female[f],m=meta[f],b=PNG.sync.read(PNG.sync.write(p)),fg=new PNG({width:N,height:N});
+      for(let q=0;q<N*N;q++){if(m.erase[q])b.data[q*4+3]=0;if(m.fg[q]||!m.erase[q])p.data.copy(fg.data,q*4,q*4,q*4+4);}
+      for(let q=0;q<N*N;q++)if(m.body[q])p.data.copy(b.data,q*4,q*4,q*4+4);
+      femaleBase.push(PNG.sync.write(b));femaleForeground.push(PNG.sync.write(fg));femaleLabels.push(originalLabels(p,cls,m));
+    }
     for(const gender of manifest.genders)for(let hair=1;hair<=3;hair++)for(let face=1;face<=3;face++){
       if(onlyGender&&gender!==onlyGender)continue;
       if(process.argv.includes('--sample')&&(hair!==1||face!==1))continue;
@@ -256,19 +290,23 @@ function maskPNG(labels,width,height){const out=new PNG({width,height});for(let 
         const m=meta[f],head=heads[gender][pose==='climb'?9+hair-1:(hair-1)*3+face-1];
         let height=(pose==='climb'?{vanguard:90,arcanist:94,ranger:101}:{vanguard:110,arcanist:95,ranger:101})[cls]*m.scale;
         height=Math.min(height,m.chin[1]-5);const scale=height/head.p.height,rad=m.angle*Math.PI/180,cos=Math.cos(rad),sin=Math.sin(rad),uri=head.buffer.toString('base64');
-        const svg=Buffer.from(`<svg width="256" height="256" xmlns="http://www.w3.org/2000/svg"><g transform="translate(${m.chin[0]} ${m.chin[1]}) rotate(${m.angle}) scale(${scale})"><image href="data:image/png;base64,${uri}" x="${-head.anchor[0]}" y="${-head.anchor[1]}" width="${head.p.width}" height="${head.p.height}"/></g></svg>`),headLayer=await sharp(svg).png().toBuffer(),hp=PNG.sync.read(headLayer);
-        const fp=existing?frame(existing,f):PNG.sync.read(await sharp(base[f]).composite([{input:headLayer},{input:foreground[f]}]).png().toBuffer());
+        // Match the original short-neck attachment; the original neck and
+        // shoulder contours are preserved behind this whole replacement head.
+        const joinY=m.chin[1]-(pose==='climb'?0:4)*m.scale;
+        const svg=Buffer.from(`<svg width="256" height="256" xmlns="http://www.w3.org/2000/svg"><g transform="translate(${m.chin[0]} ${joinY}) rotate(${m.angle}) scale(${scale})"><image href="data:image/png;base64,${uri}" x="${-head.anchor[0]}" y="${-head.anchor[1]}" width="${head.p.width}" height="${head.p.height}"/></g></svg>`),headLayer=await sharp(svg).png().toBuffer(),hp=PNG.sync.read(headLayer);
+        const bodyBase=gender==='female'?femaleBase:base,bodyForeground=gender==='female'?femaleForeground:foreground,bodySource=gender==='female'?female:src,bodyLabels=gender==='female'?femaleLabels:baseLabels;
+        const fp=existing?frame(existing,f):PNG.sync.read(await sharp(bodyBase[f]).composite([{input:headLayer},{input:bodyForeground[f]}]).png().toBuffer());
         for(const a of parts(fp,(d,i,x,y)=>d[i+3]>8,1)){const b=box(a);if(a.length<24&&b.x1<m.face.x1+5&&b.y1<m.chin[1]+5&&!a.some(q=>m.fg[q]))for(const q of a)fp.data[q*4+3]=0;}
         PNG.bitblt(fp,out,0,0,N,N,f*N,0);
         for(let q=0;q<N*N;q++){
           const i=q*4,x=q%N,y=Math.floor(q/N),global=y*original.width+f*N+x;if(!fp.data[i+3])continue;
-          const originalVisible=(m.fg[q]||!m.erase[q]||m.body[q]&&hp.data[i+3]<30)&&src[f].data[i+3]>20;
-          if(originalVisible){labels[global]=baseLabels[f][q]||255;continue;}
-          if(hp.data[i+3]>30){const dx=(x-m.chin[0])/scale,dy=(y-m.chin[1])/scale,sx=Math.round(cos*dx+sin*dy+head.anchor[0]),sy=Math.round(-sin*dx+cos*dy+head.anchor[1]);if(sx>=0&&sx<head.p.width&&sy>=0&&sy<head.p.height){const kind=head.mask[sy*head.p.width+sx];labels[global]=kind||255;if(kind===1)coverage.skin++;if(kind===2)coverage.hair++;if(kind===3)coverage.iris++;}}
+          const originalVisible=(m.fg[q]||!m.erase[q]||m.body[q]&&hp.data[i+3]<30)&&bodySource[f].data[i+3]>20;
+          if(originalVisible){labels[global]=bodyLabels[f][q]||255;continue;}
+          if(hp.data[i+3]>30){const dx=(x-m.chin[0])/scale,dy=(y-joinY)/scale,sx=Math.round(cos*dx+sin*dy+head.anchor[0]),sy=Math.round(-sin*dx+cos*dy+head.anchor[1]);if(sx>=0&&sx<head.p.width&&sy>=0&&sy<head.p.height){const kind=head.mask[sy*head.p.width+sx];labels[global]=kind||255;if(kind===1)coverage.skin++;if(kind===2)coverage.hair++;if(kind===3)coverage.iris++;}}
         }
       }
-      if(!MASKS_ONLY)await sharp(PNG.sync.write(out)).png({compressionLevel:9}).toFile(`${OUT}/${key}.png`);
-      await sharp(maskPNG(labels,original.width,N)).png({compressionLevel:9}).toFile(`${OUT}/${key}-mask.png`);
+      if(!MASKS_ONLY)await writeSheet(`${OUT}/${key}.png`,PNG.sync.write(out));
+      await writeSheet(`${OUT}/${key}-mask.png`,maskPNG(labels,original.width,N));
       manifest.classes[cls][pose].coverage[`${gender}-${hair}-${face}`]=coverage;
     }
     console.log('Built',cls,pose,count,'frames for',onlyGender||'both genders');

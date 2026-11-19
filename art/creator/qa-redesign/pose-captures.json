@@ -1,0 +1,182 @@
+[
+  {
+    "gender": "male",
+    "class": "warrior",
+    "style": 1,
+    "file": "male-warrior-1.jpg",
+    "title": "posecheck ready",
+    "width": 1086,
+    "height": 891,
+    "fullPage": true
+  },
+  {
+    "gender": "male",
+    "class": "warrior",
+    "style": 2,
+    "file": "male-warrior-2.jpg",
+    "title": "posecheck ready",
+    "width": 1086,
+    "height": 891,
+    "fullPage": true
+  },
+  {
+    "gender": "male",
+    "class": "warrior",
+    "style": 3,
+    "file": "male-warrior-3.jpg",
+    "title": "posecheck ready",
+    "width": 1086,
+    "height": 891,
+    "fullPage": true
+  },
+  {
+    "gender": "male",
+    "class": "mage",
+    "style": 1,
+    "file": "male-mage-1.jpg",
+    "title": "posecheck ready",
+    "width": 1086,
+    "height": 891,
+    "fullPage": true
+  },
+  {
+    "gender": "male",
+    "class": "mage",
+    "style": 2,
+    "file": "male-mage-2.jpg",
+    "title": "posecheck ready",
+    "width": 1086,
+    "height": 891,
+    "fullPage": true
+  },
+  {
+    "gender": "male",
+    "class": "mage",
+    "style": 3,
+    "file": "male-mage-3.jpg",
+    "title": "posecheck ready",
+    "width": 1086,
+    "height": 891,
+    "fullPage": true
+  },
+  {
+    "gender": "male",
+    "class": "archer",
+    "style": 1,
+    "file": "male-archer-1.jpg",
+    "title": "posecheck ready",
+    "width": 1086,
+    "height": 891,
+    "fullPage": true
+  },
+  {
+    "gender": "male",
+    "class": "archer",
+    "style": 2,
+    "file": "male-archer-2.jpg",
+    "title": "posecheck ready",
+    "width": 1086,
+    "height": 891,
+    "fullPage": true
+  },
+  {
+    "gender": "male",
+    "class": "archer",
+    "style": 3,
+    "file": "male-archer-3.jpg",
+    "title": "posecheck ready",
+    "width": 1086,
+    "height": 891,
+    "fullPage": true
+  },
+  {
+    "gender": "female",
+    "class": "warrior",
+    "style": 1,
+    "file": "female-warrior-1.jpg",
+    "title": "posecheck ready",
+    "width": 1086,
+    "height": 891,
+    "fullPage": true
+  },
+  {
+    "gender": "female",
+    "class": "warrior",
+    "style": 2,
+    "file": "female-warrior-2.jpg",
+    "title": "posecheck ready",
+    "width": 1086,
+    "height": 891,
+    "fullPage": true
+  },
+  {
+    "gender": "female",
+    "class": "warrior",
+    "style": 3,
+    "file": "female-warrior-3.jpg",
+    "title": "posecheck ready",
+    "width": 1086,
+    "height": 891,
+    "fullPage": true
+  },
+  {
+    "gender": "female",
+    "class": "mage",
+    "style": 1,
+    "file": "female-mage-1.jpg",
+    "title": "posecheck ready",
+    "width": 1086,
+    "height": 891,
+    "fullPage": true
+  },
+  {
+    "gender": "female",
+    "class": "mage",
+    "style": 2,
+    "file": "female-mage-2.jpg",
+    "title": "posecheck ready",
+    "width": 1086,
+    "height": 891,
+    "fullPage": true
+  },
+  {
+    "gender": "female",
+    "class": "mage",
+    "style": 3,
+    "file": "female-mage-3.jpg",
+    "title": "posecheck ready",
+    "width": 1086,
+    "height": 891,
+    "fullPage": true
+  },
+  {
+    "gender": "female",
+    "class": "archer",
+    "style": 1,
+    "file": "female-archer-1.jpg",
+    "title": "posecheck ready",
+    "width": 1086,
+    "height": 891,
+    "fullPage": true
+  },
+  {
+    "gender": "female",
+    "class": "archer",
+    "style": 2,
+    "file": "female-archer-2.jpg",
+    "title": "posecheck ready",
+    "width": 1086,
+    "height": 891,
+    "fullPage": true
+  },
+  {
+    "gender": "female",
+    "class": "archer",
+    "style": 3,
+    "file": "female-archer-3.jpg",
+    "title": "posecheck ready",
+    "width": 1086,
+    "height": 891,
+    "fullPage": true
+  }
+]
