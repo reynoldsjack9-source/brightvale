@@ -1,142 +1,276 @@
 'use strict';
-// Bake finished face/hair drawings into complete compact animation sheets.
-// No runtime head rig, no body rescaling, and no changes to original hero PNGs.
-const fs=require('node:fs'),path=require('node:path'),sharp=require('sharp'),{PNG}=require('pngjs');
-const DIR='art/creator/compact-options',CLASSES=['vanguard','arcanist','ranger'],POSES=['idle','run','attack','cast','jump','climb'];
-const hsl=(r,g,b)=>{r/=255;g/=255;b/=255;const hi=Math.max(r,g,b),lo=Math.min(r,g,b),d=hi-lo,l=(hi+lo)/2;return[d?60*(hi===r?(g-b)/d+(g<b?6:0):hi===g?(b-r)/d+2:(r-g)/d+4):0,d/(1-Math.abs(2*l-1))||0,l];};
-function skin(d,i){const r=d[i],g=d[i+1],b=d[i+2];return d[i+3]>100&&r>190&&g>125&&b>90&&r>g&&g>b&&g/r>.65&&b/r>.52&&b/r<.87&&(g-b)/(r-b)<.62;}
-function components(p,predicate){const w=p.width,h=p.height,good=new Uint8Array(w*h),seen=new Uint8Array(w*h),parts=[];for(let i=0;i<good.length;i++)good[i]=predicate(p.data,i*4,i%w,Math.floor(i/w))?1:0;for(let i=0;i<good.length;i++)if(good[i]&&!seen[i]){const pts=[i];seen[i]=1;for(let j=0;j<pts.length;j++){const q=pts[j],x=q%w;for(const n of [x?q-1:-1,x<w-1?q+1:-1,q-w,q+w])if(n>=0&&n<good.length&&good[n]&&!seen[n]){seen[n]=1;pts.push(n);}}if(pts.length>3)parts.push(pts);}return parts.sort((a,b)=>b.length-a.length);}
-const bounds=(pts,w)=>{let x0=w,y0=1e6,x1=0,y1=0;for(const p of pts){const x=p%w,y=Math.floor(p/w);x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}return{x0,y0,x1,y1};};
-function hull(points){points.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);const cross=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]),lo=[],hi=[];for(const p of points){while(lo.length>1&&cross(lo.at(-2),lo.at(-1),p)<=0)lo.pop();lo.push(p);}for(const p of points.slice().reverse()){while(hi.length>1&&cross(hi.at(-2),hi.at(-1),p)<=0)hi.pop();hi.push(p);}return lo.slice(0,-1).concat(hi.slice(0,-1));}
-function inside(x,y,poly){let yes=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])yes=!yes;}return yes;}
-const framePNG=(p,f)=>{const out=new PNG({width:256,height:256});PNG.bitblt(p,out,f*256,0,256,256,0,0);return out;};
-function landmarks(p,cls,pose,frame){
-  const rear=pose==='climb',parts=components(p,(d,i,x,y)=>y<190&&skin(d,i)),face=parts[0],fb=face?bounds(face,256):null;
-  let chin,angle=0,scale,points=[];
+// Whole-sprite baker. Source head paint, body paint and foreground equipment
+// are tracked independently; a bounding box is never used to cut out a head.
+const fs = require('node:fs');
+const sharp = require('sharp');
+const {PNG} = require('pngjs');
+const ROOT = 'art/creator/compact-options';
+const OUT = ROOT + '/v3';
+const MASKS_ONLY=process.argv.includes('--masks-only');
+const CLASSES = ['vanguard','arcanist','ranger'];
+const POSES = ['idle','run','attack','cast','jump','climb'];
+const REGIONS = JSON.parse(fs.readFileSync('tools/creator-regions.json','utf8'));
+const OLD = JSON.parse(fs.readFileSync(ROOT + '/manifest.json','utf8'));
+const N = 256;
+function hsl(r,g,b) {
+  r/=255;g/=255;b/=255;const hi=Math.max(r,g,b),lo=Math.min(r,g,b),d=hi-lo,l=(hi+lo)/2;
+  return [d?60*(hi===r?(g-b)/d+(g<b?6:0):hi===g?(b-r)/d+2:(r-g)/d+4):0,d/(1-Math.abs(2*l-1))||0,l];
+}
+function parts(p, fn, min=4) {
+  const w=p.width,h=p.height,eligible=new Uint8Array(w*h),seen=new Uint8Array(w*h),out=[];
+  for(let q=0;q<eligible.length;q++)eligible[q]=fn(p.data,q*4,q%w,Math.floor(q/w))?1:0;
+  for(let q=0;q<eligible.length;q++)if(eligible[q]&&!seen[q]) {
+    const a=[q];seen[q]=1;
+    for(let j=0;j<a.length;j++){const v=a[j],x=v%w;for(const t of [x?v-1:-1,x<w-1?v+1:-1,v-w,v+w])if(t>=0&&t<seen.length&&eligible[t]&&!seen[t]){seen[t]=1;a.push(t);}}
+    if(a.length>=min)out.push(a);
+  }
+  return out.sort((a,b)=>b.length-a.length);
+}
+function box(a,w=N) {let x0=w,y0=1e6,x1=0,y1=0;for(const q of a){x0=Math.min(x0,q%w);x1=Math.max(x1,q%w);y0=Math.min(y0,Math.floor(q/w));y1=Math.max(y1,Math.floor(q/w));}return{x0,y0,x1,y1,cx:(x0+x1)/2,cy:(y0+y1)/2};}
+function inside(x,y,a) {let yes=false;for(let i=0,j=a.length-1;i<a.length;j=i++)if((a[i][1]>y)!==(a[j][1]>y)&&x<(a[j][0]-a[i][0])*(y-a[i][1])/(a[j][1]-a[i][1])+a[i][0])yes=!yes;return yes;}
+function hull(a,w=N) {
+  const p=a.map(q=>[q%w,Math.floor(q/w)]).sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+  const cross=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]),lo=[],hi=[];
+  for(const v of p){while(lo.length>1&&cross(lo.at(-2),lo.at(-1),v)<=0)lo.pop();lo.push(v);}
+  for(const v of p.slice().reverse()){while(hi.length>1&&cross(hi.at(-2),hi.at(-1),v)<=0)hi.pop();hi.push(v);}
+  return lo.slice(0,-1).concat(hi.slice(0,-1));
+}
+function dilate(mask,r,w=N,h=N) {const out=new Uint8Array(mask.length);for(let q=0;q<mask.length;q++)if(mask[q]){const x=q%w,y=Math.floor(q/w);for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++)if(dx*dx+dy*dy<=r*r+1&&x+dx>=0&&x+dx<w&&y+dy>=0&&y+dy<h)out[(y+dy)*w+x+dx]=1;}return out;}
+function fill(mask,poly,w=N,h=N){const b=poly.reduce((b,p)=>[Math.min(b[0],p[0]),Math.min(b[1],p[1]),Math.max(b[2],p[0]),Math.max(b[3],p[1])],[w,h,0,0]);for(let y=Math.max(0,Math.floor(b[1]));y<=Math.min(h-1,Math.ceil(b[3]));y++)for(let x=Math.max(0,Math.floor(b[0]));x<=Math.min(w-1,Math.ceil(b[2]));x++)if(inside(x,y,poly))mask[y*w+x]=1;}
+function isSkin(d,i) {const [h,s,l]=hsl(d[i],d[i+1],d[i+2]);return d[i+3]>100&&h>8&&h<36&&l>.58&&s>.2&&d[i+2]/d[i]>.52;}
+function isBody(cls,h,s,l) {return s>.25&&l>.24&&(cls==='vanguard'?h>207&&h<240:cls==='arcanist'?(h>250&&h<320)||(h>36&&h<65):h>55&&h<140||(h>32&&h<58&&l>.65));}
+function ellipse(mask,cx,cy,rx,ry,w=N,h=N){for(let y=Math.max(0,Math.floor(cy-ry));y<=Math.min(h-1,Math.ceil(cy+ry));y++)for(let x=Math.max(0,Math.floor(cx-rx));x<=Math.min(w-1,Math.ceil(cx+rx));x++)if(((x-cx)/rx)**2+((y-cy)/ry)**2<=1)mask[y*w+x]=1;}
+function segmentDistance(x,y,a,b){const dx=b[0]-a[0],dy=b[1]-a[1],t=Math.max(0,Math.min(1,((x-a[0])*dx+(y-a[1])*dy)/(dx*dx+dy*dy||1)));return Math.hypot(x-a[0]-t*dx,y-a[1]-t*dy);}
+function sourceData(p,cls,pose,f) {
+  const rear=pose==='climb',d=p.data,old=OLD.classes[cls][pose].landmarks[f],skin=parts(p,(d,i,x,y)=>y<190&&isSkin(d,i));
+  const expected=[old.chin[0]-7,old.chin[1]-20];
+  const candidates=skin.filter(a=>{const b=box(a);return b.x1-b.x0>20&&b.y1-b.y0>14;});
+  candidates.sort((a,b)=>{const x=box(a),y=box(b);return Math.hypot(x.cx-expected[0],x.cy-expected[1])-Math.hypot(y.cx-expected[0],y.cy-expected[1]);});
+  let fb=candidates.length?box(candidates[0]):{x0:old.chin[0]-40,x1:old.chin[0]+25,y0:old.chin[1]-40,y1:old.chin[1]-3,cx:old.chin[0]-7,cy:old.chin[1]-20};
+  if(cls==='vanguard'&&pose==='jump'&&f===1)fb={x0:101,x1:164,y0:73,y1:102,cx:132.5,cy:87.5};
+  if(cls==='vanguard'&&pose==='cast'&&f===1)fb={x0:99,x1:151,y0:108,y1:143,cx:125,cy:125.5};
+  if(cls==='ranger'&&pose==='cast'&&f===2)fb={x0:106,x1:160,y0:88,y1:117,cx:133,cy:102.5};
+  const chin=[old.chin[0],old.chin[1]+4],angle=old.angle,scale=old.scale,erase=new Uint8Array(N*N),fg=new Uint8Array(N*N),cap=new Uint8Array(N*N),faceArea=new Uint8Array(N*N),body=new Uint8Array(N*N);
   if(!rear){
-    if(!face||face.length<200)throw Error(`Face missing: ${cls}/${pose}/${frame}`);
-    const low=face.filter(q=>Math.floor(q/256)>=fb.y1-2);chin=[low.reduce((s,q)=>s+q%256,0)/low.length,fb.y1+3];
-    const whites=components(p,(d,i,x,y)=>x>fb.x0&&x<fb.x1&&y>fb.y0&&y<fb.y1-5&&d[i]>215&&d[i+1]>215&&d[i+2]>215&&d[i+3]>120).filter(a=>a.length>7).slice(0,2);
-    if(whites.length===2){const centers=whites.map(a=>[a.reduce((s,q)=>s+q%256,0)/a.length,a.reduce((s,q)=>s+Math.floor(q/256),0)/a.length]).sort((a,b)=>a[0]-b[0]);angle=Math.atan2(centers[1][1]-centers[0][1],centers[1][0]-centers[0][0])*180/Math.PI-3;angle=Math.max(-18,Math.min(20,angle));}
-    const idleWidth={vanguard:76,arcanist:55,ranger:60}[cls];scale=(fb.x1-fb.x0)/idleWidth;
-    // Raised weapons can occlude part of a face: use nearby intact frame scale.
-    if(cls==='vanguard'&&pose==='cast')scale=[.84,.84,.79,.80][frame];
-    if(cls==='ranger'&&pose==='cast'){scale=.90;angle=0;}
-    scale=Math.max(.72,Math.min(1.15,scale));
-    for(let y=0;y<=Math.min(230,chin[1]+8);y++)for(let x=0;x<256;x++){
-      const i=(y*256+x)*4,d=p.data;if(d[i+3]<80)continue;const [h,s,l]=hsl(d[i],d[i+1],d[i+2]);
-      if(x<fb.x0-65||x>fb.x1+38)continue;
-      const head=cls==='vanguard'?((h>15&&h<42&&d[i]>d[i+1]*1.32&&l>.32)||(h<10&&s>.45&&x<fb.x0+7&&y<chin[1]+5)):
-        cls==='arcanist'?(h>260&&h<315&&s>.25&&y<chin[1]-1):
-        ((h>5&&h<38&&l>.22&&l<.65)||(h>55&&h<130&&s>.3&&y<chin[1]-2)||(h>30&&h<55&&l>.65&&y<fb.y0));
-      if(head||face.includes(y*256+x))points.push([x,y]);
-    }
-    // Include the complete face silhouette; chin stays on the original collar.
-    for(const q of face)points.push([q%256,Math.floor(q/256)]);
+    fill(faceArea,[[fb.x0,fb.y0],[fb.x1,fb.y0],[fb.x1,fb.y1],[fb.x0,fb.y1]]);
+    const tail=cls==='ranger'?17:cls==='arcanist'?7:0;
+    const left=cls==='arcanist'?fb.x0-70:cls==='ranger'?fb.x0-57:fb.x0-85,right=fb.x1+(cls==='arcanist'?40:25);
+    fill(erase,[[left,0],[right,0],[right,fb.y0+12],[fb.x1+4,fb.y1-10],[fb.x1+3,fb.y1],[chin[0]+2,chin[1]+1],[chin[0]-13,chin[1]+1],[fb.x0-4,fb.y1+tail],[cls==='ranger'?fb.x0-40:fb.x0-18,fb.y1+tail],[left,fb.y0+(cls==='vanguard'?20:13)]]);
   }else{
-    const cutoff={vanguard:99,arcanist:123,ranger:128}[cls],hair=components(p,(d,i,x,y)=>{if(y>cutoff||d[i+3]<100)return false;const [h,s,l]=hsl(d[i],d[i+1],d[i+2]);return cls==='vanguard'?h>15&&h<42&&d[i]>d[i+1]*1.32&&l>.32:cls==='arcanist'?h>260&&h<315&&s>.25:h>5&&h<135&&s>.25&&l>.2&&x<165;})[0];
-    const hb=bounds(hair,256);chin=[(hb.x0+hb.x1)/2,{vanguard:98,arcanist:124,ranger:126}[cls]];
-    if(cls==='vanguard'){chin[1]=hb.y1+15;scale=(hb.x1-hb.x0)/105;}
-    else if(cls==='arcanist'){chin[1]=hb.y1+2;scale=(hb.x1-hb.x0)/93;}
-    else{chin[1]=hb.y1-1;scale=(hb.x1-hb.x0)/80;}
-    scale=Math.max(.8,Math.min(1.15,scale));for(const q of hair)points.push([q%256,Math.floor(q/256)]);
-    // Headgear belongs to the old hairstyle; include its full outline/feather.
-    for(let y=0;y<chin[1];y++)for(let x=0;x<256;x++){const i=(y*256+x)*4;if(p.data[i+3]<100)continue;const [h,s,l]=hsl(...p.data.subarray(i,i+3));if(cls==='vanguard'&&h<10&&s>.4&&x>hb.x0&&x<hb.x1)points.push([x,y]);if(cls==='arcanist'&&x>hb.x0-4&&x<hb.x1+10&&y>hb.y0&&y<hb.y1)points.push([x,y]);if(cls==='ranger'&&x>hb.x0-5&&x<hb.x1+5&&y<hb.y1)points.push([x,y]);}
+    const anchors={vanguard:[[120,100],[120,105],[131,104],[126.5,103]],arcanist:[[128,124],[127,126],[128,123],[133,120]],ranger:[[119,127],[124,134],[119,127],[122,134]]};chin[0]=anchors[cls][f][0];chin[1]=anchors[cls][f][1];
+    const w=cls==='arcanist'?62:58;
+    fill(erase,[[chin[0]-w,0],[chin[0]+w,0],[chin[0]+w,chin[1]-20],[chin[0]+25,chin[1]+2],[chin[0]-25,chin[1]+2],[chin[0]-w,chin[1]-20]]);
   }
-  if(rear){
-    const anchors={vanguard:[[120,95],[120,100],[131,99],[126.5,98]],arcanist:[[128,122],[127,124],[128,120],[133,117]],ranger:[[119,123],[124,130],[119,123],[122,130]]};
-    chin=anchors[cls][frame];scale=1;points=[];
-    const range=cls==='ranger'?[55,180]:cls==='arcanist'?[75,185]:[50,190];
-    for(let y=0;y<=chin[1]+2;y++)for(let x=range[0];x<=range[1];x++)if(p.data[(y*256+x)*4+3]>0)points.push([x,y]);
+  for(let q=0;q<cap.length;q++)cap[q]=erase[q]&&!faceArea[q]?1:0;
+  const protect=poly=>fill(fg,poly);
+  if(cls==='vanguard'){
+    // Cape and sword are independent authored foreground regions.
+    for(const a of parts(p,(d,i)=>{const[h,s,l]=hsl(d[i],d[i+1],d[i+2]);return d[i+3]>50&&(h<15||h>340)&&s>.35&&l>.25;}))if(box(a).y1>chin[1]+18){const m=new Uint8Array(N*N);for(const q of a)m[q]=1;const ink=dilate(m,3);for(let q=0;q<fg.length;q++)if(ink[q])fg[q]=1;}
+    for(const a of parts(p,(d,i)=>{const[h,s,l]=hsl(d[i],d[i+1],d[i+2]);return d[i+3]>70&&s<.3&&l>.4;}))if(a.length>100&&box(a).y1-box(a).y0>28){const b=box(a);protect([[b.x0-14,b.y0-14],[b.x1+14,b.y0-14],[b.x1+14,b.y1+14],[b.x0-14,b.y1+14]]);}
+    if(pose==='cast'&&f===1){protect([[102,100],[154,100],[158,120],[145,125],[113,122],[102,116]]);protect([[98,116],[114,116],[115,143],[98,143]]);protect([[149,115],[165,115],[165,143],[149,143]]);}
+    if(rear)for(const a of parts(p,(d,i,x,y)=>{const[h,s,l]=hsl(d[i],d[i+1],d[i+2]);return d[i+3]>70&&h>210&&h<240&&s>.25&&Math.abs(x-chin[0])>34&&y<chin[1]+10;})){const m=new Uint8Array(N*N);for(const q of a)m[q]=1;const ink=dilate(m,3);for(let q=0;q<fg.length;q++)if(ink[q])fg[q]=1;}
   }
-  // Cover the full old head silhouette, including antialiased hair tips,
-  // accessories and ink. Foreground equipment is restored separately below.
-  if(!rear){points=[];for(let y=0;y<=chin[1]+2;y++)for(let x=Math.max(0,fb.x0-75);x<=Math.min(255,fb.x1+45);x++)if(p.data[(y*256+x)*4+3]>0)points.push([x,y]);}
-  else {const xs=points.map(p=>p[0]),x0=Math.max(0,Math.min(...xs)-18),x1=Math.min(255,Math.max(...xs)+18);points=[];for(let y=0;y<chin[1]+2;y++)for(let x=x0;x<=x1;x++)if(p.data[(y*256+x)*4+3]>0)points.push([x,y]);}
-  let poly=hull(points),center=poly.reduce((s,p)=>[s[0]+p[0]/poly.length,s[1]+p[1]/poly.length],[0,0]);poly=poly.map(([x,y])=>[x+(x<center[0]?-3:3),y+(y<center[1]?-3:2)]);
-  const accessories=new Set();
-  if(cls==='vanguard'&&!rear)for(const part of components(p,(d,i)=>{if(d[i+3]<100)return false;const [h,s,l]=hsl(d[i],d[i+1],d[i+2]);return (h<12||h>345)&&s>.4&&l>.28;})){const b=bounds(part,256);if(b.y0<fb.y0+35&&b.y1<chin[1]+8&&b.x1<fb.x0+12)for(const q of part){const x=q%256,y=Math.floor(q/256);for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)if(x+dx>=0&&x+dx<256&&y+dy>=0&&y+dy<256)accessories.add((y+dy)*256+x+dx);}}
-  if(cls==='arcanist'&&!rear)for(const part of components(p,(d,i)=>{if(d[i+3]<100)return false;const [h,s]=hsl(d[i],d[i+1],d[i+2]);return h>250&&h<320&&s>.25;})){
-    const b=bounds(part,256);if(b.y0<fb.y0+4&&b.y1<chin[1]+25&&(b.x0+b.x1)/2<fb.x1-5)for(const q of part){const x=q%256,y=Math.floor(q/256);for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)if(x+dx>=0&&x+dx<256&&y+dy>=0&&y+dy<256)accessories.add((y+dy)*256+x+dx);}
+  if(cls==='arcanist'){
+    const regions={idle:[[[158,83],[190,83],[190,240],[148,240],[152,126]]],run:[[[195,91],[229,91],[229,132],[190,160],[157,165],[155,144],[185,120],[185,113]]],attack:[[[23,82],[57,82],[65,112],[159,193],[147,206],[52,129],[23,123]],[[163,121],[245,121],[245,163],[164,163]],[[159,117],[255,117],[255,162],[156,162]],[[158,83],[189,83],[189,239],[148,239]]],cast:[[[153,140],[181,140],[181,174],[140,198],[96,239],[84,231],[132,170]],[[147,52],[175,52],[175,81],[169,85],[174,115],[170,138],[147,157],[142,146],[154,127],[156,83],[146,78]],[[120,0],[239,0],[239,84],[180,84],[178,145],[158,148],[160,80],[120,72]],[[139,33],[211,33],[211,86],[175,88],[173,146],[153,152],[155,90],[139,80]]],jump:[[[153,80],[190,80],[190,230],[149,230]],[[170,22],[207,22],[207,158],[163,158]],[[170,58],[211,58],[211,213],[163,213]]],climb:[[[74,97],[111,97],[125,204],[99,204]],[[73,98],[111,98],[124,209],[96,209]],[[70,100],[106,100],[124,211],[97,211]],[[83,94],[119,94],[136,211],[106,211]]]};
+    let v=regions[pose];if(pose==='idle'||pose==='run')protect(v[0]);else protect(v[f]);
+    // Hands and sleeves raised alongside the head remain in front of the hair.
+    if(pose==='jump'&&f>0)protect(f===1?[[46,70],[79,70],[90,101],[65,112],[46,101]]:[[49,94],[79,94],[91,123],[67,133],[48,122]]);
+    if(pose==='attack'&&f===2)protect([[84,137],[191,137],[191,160],[82,163]]);
+    if(rear){protect([[58,75],[84,75],[104,105],[108,121],[88,133],[62,106]]);if(f>1)protect([[155,68],[183,68],[189,105],[159,125],[150,108]]);}
   }
-  const weaponPixels=new Set();
-  if(cls==='arcanist'&&pose==='cast')for(const part of components(p,(d,i)=>{if(d[i+3]<140)return false;const [h,s,l]=hsl(d[i],d[i+1],d[i+2]);return (h>20&&h<70&&s>.25&&l>.28)||(s<.25&&l>.8);})){if(part.some(q=>{const x=q%256,y=Math.floor(q/256);return frame===0?x>156&&y>150&&y<168:x>150&&y<68;}))for(const q of part)weaponPixels.add(q);}
-  if(cls==='arcanist'&&!rear){
-    const faceCenter=(fb.x0+fb.x1)/2;
-    for(const part of components(p,(d,i)=>{if(d[i+3]<150)return false;const [h,s,l]=hsl(d[i],d[i+1],d[i+2]);return h>30&&h<65&&s>.3&&l>.35;})){
-      const b=bounds(part,256),w=b.x1-b.x0+1,h=b.y1-b.y0+1,cx=(b.x0+b.x1)/2,cy=(b.y0+b.y1)/2;
-      if(w>6&&h>6&&w/h>.5&&w/h<1.8&&cx>faceCenter+18&&cy<chin[1]+12)for(let y=Math.max(0,b.y0-3);y<=Math.min(255,b.y1+3);y++)for(let x=Math.max(0,b.x0-3);x<=Math.min(255,b.x1+3);x++)if(((x-cx)/(w/2+3))**2+((y-cy)/(h/2+3))**2<=1)weaponPixels.add(y*256+x);
+  if(cls==='ranger'){
+    // The complete bow/string/held hand is copied verbatim from the source.
+    const right=fb.x1+(pose==='cast'&&f===2?1:3);
+    if(!rear){
+      if(pose==='cast'&&f===2)protect([[163,42],[188,42],[218,76],[236,127],[204,182],[168,182],[190,129],[182,93],[163,66]]);
+      else if(pose==='cast'&&f===3)protect([[119,46],[140,46],[161,76],[181,130],[156,188],[123,188],[147,129],[140,91],[119,65]]);
+      else protect([[right,fb.y0-7],[255,fb.y0-7],[255,255],[right,255]]);
     }
-    for(const part of components(p,(d,i)=>{if(d[i+3]<150)return false;const [h,s,l]=hsl(d[i],d[i+1],d[i+2]);return h>10&&h<35&&s>.3&&l>.25&&l<.6;})){
-      const b=bounds(part,256);if(b.y1-b.y0>18&&b.x1-b.x0<25&&(b.x0+b.x1)/2>faceCenter+22)for(const q of part)weaponPixels.add(q);
+    if(!rear){
+      // White arrow feathers in the shoulder quiver, distinct from hat feather.
+      for(const a of parts(p,(d,i,x,y)=>{const[h,s,l]=hsl(d[i],d[i+1],d[i+2]);return d[i+3]>60&&x>fb.x0-24&&x<fb.x0+18&&y>fb.y1-9&&y<fb.y1+25&&h>25&&h<65&&l>.65;})){const b=box(a);protect([[b.x0-2,b.y0-2],[b.x1+2,b.y0-2],[b.x1+2,b.y1+2],[b.x0-2,b.y1+2]]);}
+      if(pose==='attack'&&f===2)protect([[44,110],[82,110],[82,136],[44,136]]);
+    }else{
+      protect([[chin[0]+27,29],[chin[0]+62,29],[chin[0]+62,153],[chin[0]+18,153],[chin[0]+18,114]]);
+      protect([[chin[0]-11,110],[chin[0]+34,106],[chin[0]+34,180],[chin[0]-15,180]]);
+      protect([[chin[0]-41,128],[chin[0]-20,128],[chin[0]-16,181],[chin[0]-44,181]]);
     }
   }
-  return{accessories,weaponPixels,chin,angle,scale,poly,frame,face:rear?null:fb,facePoints:rear?[]:face,skinParts:parts};
+  // Preserve connected body paint beneath the new head, including its outline.
+  // A robe/shoulder component extends into the body; a hat component does not.
+  const bodyPaint=new Uint8Array(N*N);
+  for(const a of parts(p,(d,i)=>{const[h,s,l]=hsl(d[i],d[i+1],d[i+2]);return d[i+3]>60&&isBody(cls,h,s,l);}))if(box(a).y1>chin[1]+18)for(const q of a)bodyPaint[q]=1;
+  if(cls==='ranger'&&!rear){
+    for(const a of parts(p,(d,i,x,y)=>{const[h,s,l]=hsl(d[i],d[i+1],d[i+2]);return d[i+3]>60&&x>fb.x0-27&&x<fb.x0+18&&y>fb.y1-10&&y<fb.y1+30&&h>25&&h<65&&l>.65;}))for(const q of a)bodyPaint[q]=1;
+  }
+  for(const a of skin){const b=box(a);if(b.y1>chin[1]+8&&b.y0>fb.y0+12&&!(b.cx>fb.x0&&b.cx<fb.x1&&b.y0<fb.y1))for(const q of a)bodyPaint[q]=1;}
+  if(cls==='vanguard')for(const a of parts(p,(d,i)=>{const[h,s,l]=hsl(d[i],d[i+1],d[i+2]);return d[i+3]>40&&(h<15||h>340)&&s>.3&&l>.2;}))if(box(a).y1>chin[1]+18)for(const q of a)bodyPaint[q]=1;
+  const bodyEdges=dilate(bodyPaint,3);for(let q=0;q<body.length;q++)body[q]=bodyEdges[q];
+  // Remove the bandana tails separately from the long body cape.
+  if(cls==='vanguard')for(const a of parts(p,(d,i)=>{const[h,s,l]=hsl(d[i],d[i+1],d[i+2]);return d[i+3]>50&&(h<15||h>340)&&s>.35&&l>.25;}))if(box(a).y1<chin[1]+18){const m=new Uint8Array(N*N);for(const q of a)m[q]=1;const ink=dilate(m,3);for(let q=0;q<erase.length;q++)if(ink[q]){erase[q]=1;fg[q]=0;body[q]=0;}}
+  // Retire all original head paint, including disconnected curls, cap feathers
+  // and bandana ink. Whole connected patches distinguish it from long weapons.
+  const retired=new Uint8Array(N*N);
+  for(const a of parts(p,(d,i,x,y)=>{
+    const[h,s,l]=hsl(d[i],d[i+1],d[i+2]);if(d[i+3]<35||s<.2)return false;
+    if(cls==='vanguard')return h>12&&h<42&&d[i]>d[i+1]*1.3&&l>.23;
+    if(cls==='arcanist')return h>248&&h<322&&l>.24||h>32&&h<68&&l>.35;
+    return h>4&&h<145&&l>.18;
+  })){
+    const b=box(a);let select=false;
+    if(cls==='vanguard')select=b.y0<fb.y0-8&&b.y1<chin[1]+6;
+    else if(cls==='arcanist'){
+      const i=a[Math.floor(a.length/2)]*4,h=hsl(d[i],d[i+1],d[i+2])[0];let n=0;for(const q of a)if(fg[q])n++;
+      select=b.y1<chin[1]+7&&b.y0<(rear?chin[1]-20:fb.y0+16)&&Math.abs(b.cx-chin[0])<130&&(h>240?(!rear||b.y0<chin[1]-35||Math.abs(b.cx-chin[0])<28):(rear?b.y1<chin[1]-15:b.x0<fb.x1-4&&n/a.length<.65));
+    }else select=b.y0<(rear?chin[1]-30:fb.y0+7)&&b.y1<chin[1]+18&&Math.abs(b.cx-chin[0])<95&&(rear?b.cx<chin[0]+36:b.cx<fb.x1-2);
+    if(select)for(const q of a)retired[q]=1;
+  }
+  const retiredInk=dilate(retired,4);
+  for(let q=0;q<erase.length;q++)if(retiredInk[q]){erase[q]=1;fg[q]=0;body[q]=0;}
+  if(!rear){
+    const faceInk=dilate(faceArea,2);
+    for(let q=0;q<fg.length;q++)if(faceInk[q]){
+      const x=q%N,y=Math.floor(q/N);
+      if(!(cls==='vanguard'&&pose==='cast'&&f===1&&(y<123||x<115||x>152)))fg[q]=0;
+    }
+  }
+  if(!rear){
+    for(const a of skin){const b=box(a);if(b.y0>=fb.y1-3&&b.y1>=fb.y1&&b.y1<chin[1]+10&&b.x1-b.x0<35&&Math.abs(b.cx-(chin[0]-12))<18)for(const q of a)body[q]=1;}
+    if(cls==='vanguard'){
+      const offset={idle:[10],run:[-5,-5,-5,-5,-5,-5],attack:[10,0,-28,14],cast:[15,15,-20,-12],jump:[1,13,-14]}[pose][f];
+      for(let q=0;q<body.length;q++){const x=q%N,y=Math.floor(q/N);if(x<fb.x0-7&&y>=fb.y1+offset)body[q]=1;}
+      const tails=new Uint8Array(N*N);for(let q=0;q<tails.length;q++){const i=q*4,x=q%N,y=Math.floor(q/N),[h,s,l]=hsl(d[i],d[i+1],d[i+2]);if(x<fb.x0-7&&y<fb.y1+offset&&d[i+3]>10&&(h<16||h>339)&&s>.25)tails[q]=1;}
+      const ink=dilate(tails,4);for(let q=0;q<ink.length;q++)if(ink[q]&&Math.floor(q/N)<fb.y1+offset){const i=q*4,[h,s,l]=hsl(d[i],d[i+1],d[i+2]);if(fg[q]&&((h>38&&h<68&&s>.3)||(h>207&&h<245&&s>.3)||(s<.25&&l>.35)))continue;erase[q]=1;body[q]=0;fg[q]=0;}
+
+    }
+    if(cls==='arcanist'&&pose==='cast')for(let q=0;q<erase.length;q++){const x=q%N,y=Math.floor(q/N);if(x<fb.x0-4&&y>fb.y1-8&&y<chin[1]+4&&!body[q]){erase[q]=1;fg[q]=0;}}
+    for(let q=0;q<erase.length;q++)if(q%N<fb.x1+12&&Math.floor(q/N)<fb.y0-10&&!fg[q])erase[q]=1;
+  }
+  // Final bow guard: connected wood extends far below the jaw, unlike hair.
+  // Keep its original outline above the head too, including raised bow tips.
+  if(cls==='ranger'&&!rear)for(const a of parts(p,(d,i)=>d[i+3]>100&&d[i]>d[i+1]*1.15&&d[i+1]>d[i+2]*1.2&&d[i]>80&&d[i]<240&&d[i+1]>40&&d[i+1]<190&&d[i+2]<130)){
+    const b=box(a);if(a.length>20&&b.y1-b.y0>35&&b.cx>chin[0]+18){const wood=new Uint8Array(N*N);for(const q of a)wood[q]=1;const outline=dilate(wood,2);for(let q=0;q<fg.length;q++)if(outline[q])fg[q]=1;}
+  }
+  if(cls==='ranger'&&!rear)for(const a of parts(p,(d,i)=>{const[h,s,l]=hsl(d[i],d[i+1],d[i+2]);return d[i+3]>60&&h>5&&h<38&&s>.25&&l>.17&&l<.63;})){
+    const b=box(a);if(b.y0>fb.y1-6&&b.y1>chin[1]+7){const glove=new Uint8Array(N*N);for(const q of a)glove[q]=1;const ink=dilate(glove,2);for(let q=0;q<fg.length;q++)if(ink[q])fg[q]=1;}
+  }
+  if(cls==='vanguard'&&pose==='attack'&&f===0){
+    const grip=new Uint8Array(N*N);
+    for(const a of parts(p,(d,i)=>{const[h,s,l]=hsl(d[i],d[i+1],d[i+2]);return d[i+3]>40&&h>22&&h<68&&s>.25;})){
+      const b=box(a);if(b.x0>=36&&b.x1<=87&&b.y0>=96&&b.y1<=145)for(const q of a)grip[q]=1;
+    }
+    for(let y=96;y<=145;y++)for(let x=36;x<=87;x++){const i=(y*N+x)*4,[h,s,l]=hsl(d[i],d[i+1],d[i+2]);if(d[i+3]>40&&h>207&&h<245&&s>.04)grip[y*N+x]=1;}
+    const ink=dilate(grip,3);for(let q=0;q<fg.length;q++)if(ink[q]){const i=q*4,[h,s,l]=hsl(d[i],d[i+1],d[i+2]);if(grip[q]||(d[i]<95&&d[i+1]<95&&d[i+2]<110)||(h>207&&h<245&&s>.12))fg[q]=1;}
+  }
+  if(cls==='vanguard')for(const a of parts(p,(d,i)=>{const[h,s,l]=hsl(d[i],d[i+1],d[i+2]);return d[i+3]>70&&s<.3&&l>.4;})){
+    const b=box(a);if(a.length>100&&b.y1-b.y0>28){const blade=new Uint8Array(N*N);fill(blade,hull(a));const ink=dilate(blade,2);for(let q=0;q<fg.length;q++)if(ink[q])fg[q]=1;}
+  }
+  // Foreground silhouettes are copied exactly; face pixels are never restored.
+  return {chin,angle:rear?0:angle,scale:rear?1:scale,face:fb,raw:erase,erase,fg,body,cap,faceArea,rear,retired};
 }
-async function prepareHeads(){
-  const source=await sharp(`${DIR}/heads-source.png`).metadata(),heads=[];
+function headSemantic(p,style,rear,gender,faceIndex) {
+  const w=p.width,h=p.height,r=(gender==='female'?REGIONS.female:REGIONS.heads)[style-1],sx=w/r.size[0],sy=h/r.size[1],face=r.face.map(([x,y])=>[x*sx,y*sy]),mask=new Uint8Array(w*h),faceRegion=new Uint8Array(w*h),eyes=(r.eyesByFace?.[faceIndex-1]||r.eyes).map(e=>[e[0]*sx,e[1]*sy,e[2]*sx,e[3]*sy]);
+  if(!rear){fill(faceRegion,face,w,h);for(const e of r.ears)ellipse(faceRegion,e[0]*sx,e[1]*sy,e[2]*sx,e[3]*sy,w,h);}
+  if(!rear&&gender==='female'){
+    // Include each identity's actual cheek contour and enclosed freckles/marks.
+    // Flooding enclosed skin holes keeps the concave fringe outside the face.
+    const skinParts=parts(p,(d,i)=>{const[hu,s,l]=hsl(d[i],d[i+1],d[i+2]);return d[i+3]>30&&hu>8&&hu<40&&s>.18&&l>.58&&d[i+2]/d[i]>.46;}),paint=new Uint8Array(w*h);
+    for(const a of skinParts){const b=box(a,w);if(a===skinParts[0]||r.ears.some(e=>((b.cx-e[0]*sx)/(e[2]*sx))**2+((b.cy-e[1]*sy)/(e[3]*sy))**2<1))for(const q of a)paint[q]=1;}
+    const outside=new Uint8Array(w*h),queue=[];
+    const seed=q=>{if(!paint[q]&&!outside[q]){outside[q]=1;queue.push(q);}};
+    for(let x=0;x<w;x++){seed(x);seed((h-1)*w+x);}for(let y=0;y<h;y++){seed(y*w);seed(y*w+w-1);}
+    for(let j=0;j<queue.length;j++){const q=queue[j],x=q%w;for(const n of [x?q-1:-1,x<w-1?q+1:-1,q-w,q+w])if(n>=0&&n<paint.length)seed(n);}
+    for(let q=0;q<paint.length;q++)if(!outside[q])paint[q]=1;
+    const edge=dilate(paint,1,w,h);for(let q=0;q<faceRegion.length;q++)if(edge[q])faceRegion[q]=1;
+  }
+  for(let q=0;q<mask.length;q++){
+    const i=q*4,d=p.data;if(d[i+3]<20)continue;const x=q%w,y=Math.floor(q/w),[hue,s,l]=hsl(d[i],d[i+1],d[i+2]);let kind=255;
+    if(!rear&&eyes.some(e=>((x-e[0])/e[2])**2+((y-e[1])/e[3])**2<=1)&&hue>5&&hue<55&&s>.25&&l>.13&&l<.7&&d[i+1]/d[i]<.85&&d[i+2]/d[i]<.72)kind=3;
+    else if(!rear&&faceRegion[q]){if(hue>5&&hue<45&&s>.18&&l>.4&&d[i]>d[i+1]&&d[i+1]>d[i+2])kind=1;}
+    else if(hue>3&&hue<40&&s>.25&&l>.19&&l<.68)kind=2;
+    mask[q]=kind;
+  }
+  // The jaw anchor is the actual outline, not a thresholded skin pixel. Hair
+  // tips outside the centre jaw range cannot move the chin attachment point.
+  let ay=h-1,ax=w/2;
+  if(!rear){let maxY=0,points=[];for(let y=Math.floor(h*.75);y<h;y++)for(let x=Math.floor(w*.48);x<Math.ceil(w*.8);x++)if(p.data[(y*w+x)*4+3]>100){if(y>maxY){maxY=y;points=[];}if(y>=maxY)points.push(x);}const low=[];for(let y=maxY-1;y<=maxY;y++)for(let x=Math.floor(w*.48);x<Math.ceil(w*.8);x++)if(p.data[(y*w+x)*4+3]>100)low.push(x);ay=maxY+1;ax=low.reduce((a,b)=>a+b,0)/low.length;}
+  return {mask,faceRegion,anchor:[ax,ay],eyes};
+}
+async function prepareHeads(gender) {
+  const input=ROOT+(gender==='female'?'/heads-female-distinct-source.png':'/heads-source.png'),m=await sharp(input).metadata(),out=[];
   for(let row=0;row<4;row++)for(let col=0;col<3;col++){
-    const x0=Math.round(col*source.width/3),x1=Math.round((col+1)*source.width/3),y0=Math.round(row*source.height/4),y1=Math.round((row+1)*source.height/4);
-    const png=PNG.sync.read(await sharp(`${DIR}/heads-source.png`).extract({left:x0,top:y0,width:x1-x0,height:y1-y0}).png().toBuffer()),pts=[];
-    for(let q=0;q<png.width*png.height;q++)if(png.data[q*4+3]>60)pts.push(q);const b=bounds(pts,png.width);
-    const crop=await sharp(PNG.sync.write(png)).extract({left:b.x0,top:b.y0,width:b.x1-b.x0+1,height:b.y1-b.y0+1}).png().toBuffer();
-    const cp=PNG.sync.read(crop),skinPart=components(cp,(d,i)=>skin(d,i))[0];let anchor=[cp.width/2,cp.height-1];
-    if(row<3){const sb=bounds(skinPart,cp.width),low=skinPart.filter(q=>Math.floor(q/cp.width)>=sb.y1-2);anchor=[low.reduce((s,q)=>s+q%cp.width,0)/low.length,sb.y1+2];}
-    const head={buffer:crop,width:cp.width,height:cp.height,anchor};heads.push(head);await sharp(crop).toFile(`${DIR}/head-${row<3?(row+1)+'-'+(col+1):'rear-'+(col+1)}.png`);
-  }return heads;
+    const left=Math.round(col*m.width/3),top=Math.round(row*m.height/4),width=Math.round((col+1)*m.width/3)-left,height=Math.round((row+1)*m.height/4)-top;
+    const cell=PNG.sync.read(await sharp(input).extract({left,top,width,height}).png().toBuffer()),points=[];
+    for(let q=0;q<cell.width*cell.height;q++)if(cell.data[q*4+3]>40)points.push(q);const b=box(points,cell.width),buffer=await sharp(PNG.sync.write(cell)).extract({left:b.x0,top:b.y0,width:b.x1-b.x0+1,height:b.y1-b.y0+1}).png().toBuffer(),p=PNG.sync.read(buffer),style=row<3?row+1:col+1;
+    const semantic=headSemantic(p,style,row===3,gender,col+1);out.push({p,buffer,...semantic});
+    await sharp(buffer).png().toFile(`${OUT}/head-${gender}-${row<3?style+'-'+(col+1):'rear-'+style}.png`);
+    const labels=new PNG({width:p.width,height:p.height});for(let q=0;q<semantic.mask.length;q++)if(semantic.mask[q]){labels.data[q*4]=semantic.mask[q];labels.data[q*4+3]=255;}
+    await sharp(PNG.sync.write(labels)).png().toFile(`${OUT}/head-${gender}-${row<3?style+'-'+(col+1):'rear-'+style}-mask.png`);
+  }return out;
 }
-function preserve(p,lm,cls,pose){
-  const out=new PNG({width:256,height:256}),d=p.data,keep=new Uint8Array(65536),fb=lm.face;
-  const faceSet=new Set(lm.facePoints);
-  for(const part of lm.skinParts)for(const q of part){if(cls==='ranger'&&(fb||(!(q%256>=157)&&Math.floor(q/256)<110)))continue;const x=q%256,y=Math.floor(q/256);if((fb&&(x<fb.x0-5||x>fb.x1+5)&&y>fb.y0-22)||(!fb&&(x<lm.chin[0]-40||x>lm.chin[0]+40)))keep[q]=1;}
-  for(let q=0;q<65536;q++){const i=q*4,x=q%256,y=Math.floor(q/256);if(d[i+3]<160)continue;const [h,s,l]=hsl(d[i],d[i+1],d[i+2]);
-    // Foreground arms and weapons remain in front of the new finished drawing.
-    if(cls==='vanguard'&&((h>210&&h<240&&s>.35)||(s<.3&&l>.4&&(!fb||x<fb.x0-2||x>fb.x1+2||y<fb.y0-3))||(h>38&&h<62&&s>.5)))keep[q]=1;
-    if(cls==='arcanist'&&fb&&x>fb.x1+12&&y>fb.y0+8)keep[q]=1;
-    if(cls==='arcanist'&&pose==='cast'&&lm.frame>0&&fb&&x>fb.x1+3&&h>10&&h<35&&y<fb.y0+10)keep[q]=1;
-    if(cls==='ranger'&&fb){const weaponX={attack:[163,163,163,163],cast:[164,159,171,125]}[pose]?.[lm.frame];if(weaponX&&x>=weaponX)keep[q]=1;}
-    if(!fb&&cls==='arcanist'){
-      if((lm.chin[0]<131&&x<87&&y>73)||(x>176&&y>87))keep[q]=1;
-    }
-    if(!fb&&cls==='ranger'&&((x>=133&&y>=104)||(x>=161&&y>=35)||(x>=153&&y<75&&y>35)))keep[q]=1;
-    // Below the face/neck seam is untouched body art, including the collar.
-    if(y>lm.chin[1]-1)keep[q]=1;
+function originalLabels(p,cls,meta){
+  const mask=new Uint8Array(N*N),d=p.data,fb=meta.face;
+  for(let q=0;q<mask.length;q++){const i=q*4;if(d[i+3]<10)continue;const [h,s,l]=hsl(d[i],d[i+1],d[i+2]);if(l<.17||s<.15)continue;
+    if(isSkin(d,i)||(!meta.rear&&meta.faceArea[q]&&h>5&&h<40&&l>.48))mask[q]=1;
+    else if(s>.25&&l>.24&&(cls==='vanguard'?h>207&&h<240:cls==='arcanist'?h>250&&h<320:h>65&&h<140))mask[q]=4;
+    if(meta.retired[q]&&!meta.fg[q]&&!meta.faceArea[q]&&l>.2){if(cls==='vanguard'&&h>15&&h<42&&d[i]>d[i+1]*1.32)mask[q]=2;else if(cls==='arcanist'&&h>250&&h<300&&l>.57&&Math.floor(q/N)>(meta.rear?meta.chin[1]-35:fb.y0-19))mask[q]=2;else if(cls==='ranger'&&h>5&&h<38&&l<.65)mask[q]=2;}
   }
-  for(const q of lm.weaponPixels)keep[q]=1;
-  const wide=new Uint8Array(65536);for(let q=0;q<65536;q++)if(keep[q]){const x=q%256,y=Math.floor(q/256);for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){if(x+dx>=0&&x+dx<256&&y+dy>=0&&y+dy<256)wide[(y+dy)*256+x+dx]=1;}}
-  for(let q=0;q<65536;q++)if(wide[q]&&!lm.accessories.has(q)&&inside(q%256,Math.floor(q/256),lm.poly))d.copy(out.data,q*4,q*4,q*4+4);
-  return PNG.sync.write(out);
+  if(!meta.rear){
+    const w=fb.x1-fb.x0,h=fb.y1-fb.y0,e=cls==='arcanist'?[[.68,.44,.09,.25],[.93,.39,.07,.23]]:cls==='vanguard'?[[.58,.55,.085,.25],[.86,.52,.065,.23]]:[[.57,.55,.085,.25],[.9,.48,.065,.23]];
+    for(const a of e){const eye=new Uint8Array(N*N);ellipse(eye,fb.x0+a[0]*w,fb.y0+a[1]*h,a[2]*w,a[3]*h);for(let q=0;q<eye.length;q++)if(eye[q]){const i=q*4,[hue,s,l]=hsl(d[i],d[i+1],d[i+2]);if(d[i+3]>80&&s>.25&&l>.13&&l<.74&&(cls==='arcanist'?hue>240&&hue<310:hue>5&&hue<55))mask[q]=3;}}
+  }
+  // Foreground hands and equipment can pass through the original eye bounds
+  // during attacks. They retain skin/gear paint rather than inheriting iris dye.
+  for(let q=0;q<mask.length;q++)if(meta.fg[q]&&mask[q]===3)mask[q]=isSkin(d,q*4)?1:0;
+  return mask;
 }
+function frame(p,f){const out=new PNG({width:N,height:N});PNG.bitblt(p,out,f*N,0,N,N,0,0);return out;}
+function maskPNG(labels,width,height){const out=new PNG({width,height});for(let q=0;q<labels.length;q++)if(labels[q]){out.data[q*4]=labels[q];out.data[q*4+3]=255;}return PNG.sync.write(out);}
 (async()=>{
-  fs.mkdirSync(DIR,{recursive:true});const heads=await prepareHeads(),manifest={version:1,classes:fs.existsSync(`${DIR}/manifest.json`)?JSON.parse(fs.readFileSync(`${DIR}/manifest.json`,'utf8')).classes:{},faces:['Bright','Bold','Gentle'],hairstyles:['Curly crop','Side-swept bob','Tied back']};
-  for(const cls of CLASSES){const only=process.argv.find(a=>a.startsWith('--class='))?.split('=')[1];if(only&&cls!==only)continue;manifest.classes[cls]={};for(const pose of POSES){
-    const source=PNG.sync.read(fs.readFileSync(`art/${cls}-compact-${pose}.png`)),frames=source.width/256,lms=[],bases=[],front=[];
-    for(let f=0;f<frames;f++){const original=framePNG(source,f),lm=landmarks(original,cls,pose,f);lms.push(lm);front.push(preserve(original,lm,cls,pose));const base=PNG.sync.read(PNG.sync.write(original));for(let q=0;q<65536;q++)if(inside(q%256,Math.floor(q/256),lm.poly)||lm.accessories.has(q))base.data[q*4+3]=0;bases.push(PNG.sync.write(base));}
-    manifest.classes[cls][pose]={frames,headBounds:[],landmarks:lms.map(l=>({chin:l.chin,angle:l.angle,scale:l.scale,poly:l.poly}))};
-    for(let hair=1;hair<=3;hair++)for(let face=1;face<=3;face++){
-      if(process.argv.includes('--sample')&&(hair!==1||face!==1))continue;
-      const out=new PNG({width:source.width,height:256}),partMask=new PNG({width:source.width,height:256});
-      for(let f=0;f<frames;f++){
-        const lm=lms[f],head=heads[pose==='climb'?9+hair-1:(hair-1)*3+face-1],height=(pose==='climb'?{vanguard:88,arcanist:92,ranger:102}:{vanguard:110,arcanist:98,ranger:102})[cls]*lm.scale,fitHeight=(cls==='arcanist'&&pose==='jump')?Math.min(height,lm.chin[1]-6):height,scale=fitHeight/head.height;
-        const uri=head.buffer.toString('base64'),svg=Buffer.from(`<svg width="256" height="256" xmlns="http://www.w3.org/2000/svg"><g transform="translate(${lm.chin[0]} ${lm.chin[1]}) rotate(${lm.angle}) scale(${scale})"><image href="data:image/png;base64,${uri}" x="${-head.anchor[0]}" y="${-head.anchor[1]}" width="${head.width}" height="${head.height}"/></g></svg>`);
-        const headLayer=await sharp(svg).png().toBuffer();
-        const finished=await sharp(bases[f]).composite([{input:headLayer},{input:front[f]}]).png().toBuffer();const fp=PNG.sync.read(finished),hp=PNG.sync.read(headLayer);PNG.bitblt(fp,out,0,0,256,256,f*256,0);
-        for(let q=0;q<65536;q++){
-          const i=q*4,d=hp.data;if(d[i+3]<100||Math.abs(fp.data[i]-d[i])+Math.abs(fp.data[i+1]-d[i+1])+Math.abs(fp.data[i+2]-d[i+2])>25)continue;
-          const [h,s,l]=hsl(d[i],d[i+1],d[i+2]);let kind=255,white=false;
-          if(l>.24&&s>.28){
-            const x=q%256,y=Math.floor(q/256);for(let dy=-3;dy<=3&&!white;dy++)for(let dx=-3;dx<=3;dx++){const k=((y+dy)*256+x+dx)*4;if(d[k]>225&&d[k+1]>225&&d[k+2]>225&&d[k+3]>200){white=true;break;}}
-            if(white&&h>15&&h<43&&l<.61)kind=3;
-            else if(skin(d,i))kind=1;
-            else if(h>3&&h<40&&l<.7)kind=2;
-          }
-          const mi=(Math.floor(q/256)*source.width+f*256+q%256)*4;partMask.data[mi]=kind;partMask.data[mi+3]=255;
-        }
-        if(hair===1&&face===1){manifest.classes[cls][pose].headBounds.push([lm.chin[0]-height*.9,lm.chin[1]-height*1.1,lm.chin[0]+height*.7,lm.chin[1]+5]);}
-      }
-      await sharp(PNG.sync.write(out)).png({compressionLevel:9}).toFile(`${DIR}/${cls}-${hair}-${face}-${pose}.png`);
-      await sharp(PNG.sync.write(partMask)).png({palette:true,compressionLevel:9}).toFile(`${DIR}/${cls}-${hair}-${face}-${pose}-mask.png`);
+  fs.mkdirSync(OUT,{recursive:true});const heads={male:await prepareHeads('male'),female:await prepareHeads('female')};if(process.argv.includes('--heads-only'))return;
+  const oldManifest=fs.existsSync(OUT+'/manifest.json')?JSON.parse(fs.readFileSync(OUT+'/manifest.json','utf8')):null;
+  const manifest={version:3,genders:['male','female'],faces:['Bright','Bold','Gentle'],hairstyles:['Curly crop','Side-swept bob','Tied back'],featuresByGender:{male:{faces:['Bright','Bold','Gentle'],hairstyles:['Curly crop','Side-swept bob','Tied back']},female:{faces:['Freckled','Angular','Heart'],hairstyles:['Feathered pixie','Twin buns','Crown braid']}},classes:oldManifest?.classes?structuredClone(oldManifest.classes):{}};
+  const only=process.argv.find(a=>a.startsWith('--class='))?.split('=')[1],onlyPose=process.argv.find(a=>a.startsWith('--pose='))?.split('=')[1],onlyGender=process.argv.find(a=>a.startsWith('--gender='))?.split('=')[1];
+  if(onlyGender&&!manifest.genders.includes(onlyGender))throw Error('Unknown gender: '+onlyGender);
+  if(only&&!CLASSES.includes(only))throw Error('Unknown class: '+only);
+  if(onlyPose&&!POSES.includes(onlyPose))throw Error('Unknown pose: '+onlyPose);
+  for(const cls of CLASSES){if(only&&cls!==only)continue;if(!onlyPose||!manifest.classes[cls])manifest.classes[cls]={};for(const pose of POSES){if(onlyPose&&pose!==onlyPose)continue;
+    const original=PNG.sync.read(fs.readFileSync(`art/${cls}-compact-${pose}.png`)),count=original.width/N,src=[],base=[],foreground=[],meta=[],baseLabels=[],baseMask=new Uint8Array(original.width*N);
+    for(let f=0;f<count;f++){
+      const p=frame(original,f),m=sourceData(p,cls,pose,f),b=PNG.sync.read(PNG.sync.write(p)),fg=new PNG({width:N,height:N});meta.push(m);src.push(p);
+      for(let q=0;q<N*N;q++){if(m.erase[q])b.data[q*4+3]=0;if(m.fg[q]||!m.erase[q])p.data.copy(fg.data,q*4,q*4,q*4+4);}
+      // Body paint accidentally touched by an ink expansion is restored before
+      // the new face; equipment/quiver is restored again as the foreground.
+      for(let q=0;q<N*N;q++)if(m.body[q])p.data.copy(b.data,q*4,q*4,q*4+4);
+      base.push(PNG.sync.write(b));foreground.push(PNG.sync.write(fg));baseLabels.push(originalLabels(p,cls,m));
+      for(let q=0;q<N*N;q++)baseMask[Math.floor(q/N)*original.width+f*N+q%N]=baseLabels[f][q];
     }
-    console.log('Baked',cls,pose,frames,'frames');
-  }}fs.writeFileSync(`${DIR}/manifest.json`,JSON.stringify(manifest,null,2)+'\n');
+    await sharp(maskPNG(baseMask,original.width,N)).png().toFile(`${OUT}/base-${cls}-${pose}-mask.png`);
+    manifest.classes[cls][pose]={frames:count,landmarks:meta.map(m=>({chin:m.chin,angle:m.angle,scale:m.scale,face:m.face})),coverage:onlyGender?{...oldManifest?.classes?.[cls]?.[pose]?.coverage}:{}};
+    for(const gender of manifest.genders)for(let hair=1;hair<=3;hair++)for(let face=1;face<=3;face++){
+      if(onlyGender&&gender!==onlyGender)continue;
+      if(process.argv.includes('--sample')&&(hair!==1||face!==1))continue;
+      const key=`${cls}-${gender}-${hair}-${face}-${pose}`,existing=MASKS_ONLY?PNG.sync.read(fs.readFileSync(`${OUT}/${key}.png`)):null;
+      const out=new PNG({width:original.width,height:N}),labels=new Uint8Array(original.width*N),coverage={hair:0,skin:0,iris:0};
+      for(let f=0;f<count;f++){
+        const m=meta[f],head=heads[gender][pose==='climb'?9+hair-1:(hair-1)*3+face-1];
+        let height=(pose==='climb'?{vanguard:90,arcanist:94,ranger:101}:{vanguard:110,arcanist:95,ranger:101})[cls]*m.scale;
+        height=Math.min(height,m.chin[1]-5);const scale=height/head.p.height,rad=m.angle*Math.PI/180,cos=Math.cos(rad),sin=Math.sin(rad),uri=head.buffer.toString('base64');
+        const svg=Buffer.from(`<svg width="256" height="256" xmlns="http://www.w3.org/2000/svg"><g transform="translate(${m.chin[0]} ${m.chin[1]}) rotate(${m.angle}) scale(${scale})"><image href="data:image/png;base64,${uri}" x="${-head.anchor[0]}" y="${-head.anchor[1]}" width="${head.p.width}" height="${head.p.height}"/></g></svg>`),headLayer=await sharp(svg).png().toBuffer(),hp=PNG.sync.read(headLayer);
+        const fp=existing?frame(existing,f):PNG.sync.read(await sharp(base[f]).composite([{input:headLayer},{input:foreground[f]}]).png().toBuffer());
+        for(const a of parts(fp,(d,i,x,y)=>d[i+3]>8,1)){const b=box(a);if(a.length<24&&b.x1<m.face.x1+5&&b.y1<m.chin[1]+5&&!a.some(q=>m.fg[q]))for(const q of a)fp.data[q*4+3]=0;}
+        PNG.bitblt(fp,out,0,0,N,N,f*N,0);
+        for(let q=0;q<N*N;q++){
+          const i=q*4,x=q%N,y=Math.floor(q/N),global=y*original.width+f*N+x;if(!fp.data[i+3])continue;
+          const originalVisible=(m.fg[q]||!m.erase[q]||m.body[q]&&hp.data[i+3]<30)&&src[f].data[i+3]>20;
+          if(originalVisible){labels[global]=baseLabels[f][q]||255;continue;}
+          if(hp.data[i+3]>30){const dx=(x-m.chin[0])/scale,dy=(y-m.chin[1])/scale,sx=Math.round(cos*dx+sin*dy+head.anchor[0]),sy=Math.round(-sin*dx+cos*dy+head.anchor[1]);if(sx>=0&&sx<head.p.width&&sy>=0&&sy<head.p.height){const kind=head.mask[sy*head.p.width+sx];labels[global]=kind||255;if(kind===1)coverage.skin++;if(kind===2)coverage.hair++;if(kind===3)coverage.iris++;}}
+        }
+      }
+      if(!MASKS_ONLY)await sharp(PNG.sync.write(out)).png({compressionLevel:9}).toFile(`${OUT}/${key}.png`);
+      await sharp(maskPNG(labels,original.width,N)).png({compressionLevel:9}).toFile(`${OUT}/${key}-mask.png`);
+      manifest.classes[cls][pose].coverage[`${gender}-${hair}-${face}`]=coverage;
+    }
+    console.log('Built',cls,pose,count,'frames for',onlyGender||'both genders');
+  }}fs.writeFileSync(OUT+'/manifest.json',JSON.stringify(manifest,null,2)+'\n');
 })().catch(e=>{console.error(e);process.exitCode=1;});

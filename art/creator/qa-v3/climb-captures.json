@@ -1,0 +1,14 @@
+[
+  {
+    "file": "check-climb-1.jpg",
+    "status": "Live input check: x=680 y=673 / climbing / archer / Juniper / {\"compactVersion\":2,\"skin\":0,\"hairColor\":0,\"eyeColor\":0,\"outfit\":0,\"hairStyle\":2,\"faceStyle\":2} / Observed: s, climbing"
+  },
+  {
+    "file": "check-climb-2.jpg",
+    "status": "Live input check: x=680 y=653 / climbing / archer / Juniper / {\"compactVersion\":2,\"skin\":0,\"hairColor\":0,\"eyeColor\":0,\"outfit\":0,\"hairStyle\":2,\"faceStyle\":2} / Observed: s, climbing"
+  },
+  {
+    "file": "check-climb-3.jpg",
+    "status": "Live input check: x=680 y=641 / climbing / archer / Juniper / {\"compactVersion\":2,\"skin\":0,\"hairColor\":0,\"eyeColor\":0,\"outfit\":0,\"hairStyle\":2,\"faceStyle\":2} / Observed: s, climbing"
+  }
+]

@@ -1,0 +1,7 @@
+Live input check: x=680 y=749 / climbing / mage / Mira / {"compactVersion":3,"gender":"female","skin":0,"hairColor":10,"eyeColor":5,"outfit":0,"hairStyle":2,"faceStyle":2} / Observed: basic, double jump, a, s, d, f, climbing
+Live input check: x=577 y=820 / running / mage / Mira / {"compactVersion":3,"gender":"female","skin":0,"hairColor":10,"eyeColor":5,"outfit":0,"hairStyle":2,"faceStyle":2} / Observed: basic, double jump, a, s, d, f, climbing
+Live input check: x=760 y=700 / idle / mage / Mira / {"compactVersion":3,"gender":"female","skin":0,"hairColor":10,"eyeColor":5,"outfit":0,"hairStyle":2,"faceStyle":2} / Observed: basic, double jump, a, s, d, f, climbing
+Live input check: x=680 y=641 / climbing / archer / Juniper / {"compactVersion":2,"skin":0,"hairColor":0,"eyeColor":0,"outfit":0,"hairStyle":2,"faceStyle":2} / Observed: s, climbing
+Live input check: x=230 y=820 / idle / archer / Juniper / {"compactVersion":2,"skin":0,"hairColor":0,"eyeColor":0,"outfit":0,"hairStyle":2,"faceStyle":2} / Observed: s
+Reloaded saved female appearance: Live input check: x=265 y=820 / running / mage / Mira / {"compactVersion":3,"gender":"female","skin":0,"hairColor":10,"eyeColor":5,"outfit":0,"hairStyle":2,"faceStyle":2} / Observed:
+Final reload persistence: Live input check: x=432 y=820 / idle / mage / Mira / {"compactVersion":3,"gender":"female","skin":0,"hairColor":10,"eyeColor":5,"outfit":0,"hairStyle":2,"faceStyle":2} / Observed:

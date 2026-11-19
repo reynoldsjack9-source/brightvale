@@ -1,0 +1,600 @@
+{
+  "combinations": 54,
+  "failures": [],
+  "checks": [
+    {
+      "class": "Vanguard",
+      "gender": "Male",
+      "face": "Bright",
+      "hair": "Curly crop",
+      "selected": [
+        "Male",
+        "Bright",
+        "Curly crop"
+      ]
+    },
+    {
+      "class": "Vanguard",
+      "gender": "Male",
+      "face": "Bright",
+      "hair": "Side-swept bob",
+      "selected": [
+        "Male",
+        "Bright",
+        "Side-swept bob"
+      ]
+    },
+    {
+      "class": "Vanguard",
+      "gender": "Male",
+      "face": "Bright",
+      "hair": "Tied back",
+      "selected": [
+        "Male",
+        "Bright",
+        "Tied back"
+      ]
+    },
+    {
+      "class": "Vanguard",
+      "gender": "Male",
+      "face": "Bold",
+      "hair": "Curly crop",
+      "selected": [
+        "Male",
+        "Bold",
+        "Curly crop"
+      ]
+    },
+    {
+      "class": "Vanguard",
+      "gender": "Male",
+      "face": "Bold",
+      "hair": "Side-swept bob",
+      "selected": [
+        "Male",
+        "Bold",
+        "Side-swept bob"
+      ]
+    },
+    {
+      "class": "Vanguard",
+      "gender": "Male",
+      "face": "Bold",
+      "hair": "Tied back",
+      "selected": [
+        "Male",
+        "Bold",
+        "Tied back"
+      ]
+    },
+    {
+      "class": "Vanguard",
+      "gender": "Male",
+      "face": "Gentle",
+      "hair": "Curly crop",
+      "selected": [
+        "Male",
+        "Gentle",
+        "Curly crop"
+      ]
+    },
+    {
+      "class": "Vanguard",
+      "gender": "Male",
+      "face": "Gentle",
+      "hair": "Side-swept bob",
+      "selected": [
+        "Male",
+        "Gentle",
+        "Side-swept bob"
+      ]
+    },
+    {
+      "class": "Vanguard",
+      "gender": "Male",
+      "face": "Gentle",
+      "hair": "Tied back",
+      "selected": [
+        "Male",
+        "Gentle",
+        "Tied back"
+      ]
+    },
+    {
+      "class": "Vanguard",
+      "gender": "Female",
+      "face": "Freckled",
+      "hair": "Feathered pixie",
+      "selected": [
+        "Female",
+        "Freckled",
+        "Feathered pixie"
+      ]
+    },
+    {
+      "class": "Vanguard",
+      "gender": "Female",
+      "face": "Freckled",
+      "hair": "Twin buns",
+      "selected": [
+        "Female",
+        "Freckled",
+        "Twin buns"
+      ]
+    },
+    {
+      "class": "Vanguard",
+      "gender": "Female",
+      "face": "Freckled",
+      "hair": "Crown braid",
+      "selected": [
+        "Female",
+        "Freckled",
+        "Crown braid"
+      ]
+    },
+    {
+      "class": "Vanguard",
+      "gender": "Female",
+      "face": "Angular",
+      "hair": "Feathered pixie",
+      "selected": [
+        "Female",
+        "Angular",
+        "Feathered pixie"
+      ]
+    },
+    {
+      "class": "Vanguard",
+      "gender": "Female",
+      "face": "Angular",
+      "hair": "Twin buns",
+      "selected": [
+        "Female",
+        "Angular",
+        "Twin buns"
+      ]
+    },
+    {
+      "class": "Vanguard",
+      "gender": "Female",
+      "face": "Angular",
+      "hair": "Crown braid",
+      "selected": [
+        "Female",
+        "Angular",
+        "Crown braid"
+      ]
+    },
+    {
+      "class": "Vanguard",
+      "gender": "Female",
+      "face": "Heart",
+      "hair": "Feathered pixie",
+      "selected": [
+        "Female",
+        "Heart",
+        "Feathered pixie"
+      ]
+    },
+    {
+      "class": "Vanguard",
+      "gender": "Female",
+      "face": "Heart",
+      "hair": "Twin buns",
+      "selected": [
+        "Female",
+        "Heart",
+        "Twin buns"
+      ]
+    },
+    {
+      "class": "Vanguard",
+      "gender": "Female",
+      "face": "Heart",
+      "hair": "Crown braid",
+      "selected": [
+        "Female",
+        "Heart",
+        "Crown braid"
+      ]
+    },
+    {
+      "class": "Arcanist",
+      "gender": "Male",
+      "face": "Bright",
+      "hair": "Curly crop",
+      "selected": [
+        "Male",
+        "Bright",
+        "Curly crop"
+      ]
+    },
+    {
+      "class": "Arcanist",
+      "gender": "Male",
+      "face": "Bright",
+      "hair": "Side-swept bob",
+      "selected": [
+        "Male",
+        "Bright",
+        "Side-swept bob"
+      ]
+    },
+    {
+      "class": "Arcanist",
+      "gender": "Male",
+      "face": "Bright",
+      "hair": "Tied back",
+      "selected": [
+        "Male",
+        "Bright",
+        "Tied back"
+      ]
+    },
+    {
+      "class": "Arcanist",
+      "gender": "Male",
+      "face": "Bold",
+      "hair": "Curly crop",
+      "selected": [
+        "Male",
+        "Bold",
+        "Curly crop"
+      ]
+    },
+    {
+      "class": "Arcanist",
+      "gender": "Male",
+      "face": "Bold",
+      "hair": "Side-swept bob",
+      "selected": [
+        "Male",
+        "Bold",
+        "Side-swept bob"
+      ]
+    },
+    {
+      "class": "Arcanist",
+      "gender": "Male",
+      "face": "Bold",
+      "hair": "Tied back",
+      "selected": [
+        "Male",
+        "Bold",
+        "Tied back"
+      ]
+    },
+    {
+      "class": "Arcanist",
+      "gender": "Male",
+      "face": "Gentle",
+      "hair": "Curly crop",
+      "selected": [
+        "Male",
+        "Gentle",
+        "Curly crop"
+      ]
+    },
+    {
+      "class": "Arcanist",
+      "gender": "Male",
+      "face": "Gentle",
+      "hair": "Side-swept bob",
+      "selected": [
+        "Male",
+        "Gentle",
+        "Side-swept bob"
+      ]
+    },
+    {
+      "class": "Arcanist",
+      "gender": "Male",
+      "face": "Gentle",
+      "hair": "Tied back",
+      "selected": [
+        "Male",
+        "Gentle",
+        "Tied back"
+      ]
+    },
+    {
+      "class": "Arcanist",
+      "gender": "Female",
+      "face": "Freckled",
+      "hair": "Feathered pixie",
+      "selected": [
+        "Female",
+        "Freckled",
+        "Feathered pixie"
+      ]
+    },
+    {
+      "class": "Arcanist",
+      "gender": "Female",
+      "face": "Freckled",
+      "hair": "Twin buns",
+      "selected": [
+        "Female",
+        "Freckled",
+        "Twin buns"
+      ]
+    },
+    {
+      "class": "Arcanist",
+      "gender": "Female",
+      "face": "Freckled",
+      "hair": "Crown braid",
+      "selected": [
+        "Female",
+        "Freckled",
+        "Crown braid"
+      ]
+    },
+    {
+      "class": "Arcanist",
+      "gender": "Female",
+      "face": "Angular",
+      "hair": "Feathered pixie",
+      "selected": [
+        "Female",
+        "Angular",
+        "Feathered pixie"
+      ]
+    },
+    {
+      "class": "Arcanist",
+      "gender": "Female",
+      "face": "Angular",
+      "hair": "Twin buns",
+      "selected": [
+        "Female",
+        "Angular",
+        "Twin buns"
+      ]
+    },
+    {
+      "class": "Arcanist",
+      "gender": "Female",
+      "face": "Angular",
+      "hair": "Crown braid",
+      "selected": [
+        "Female",
+        "Angular",
+        "Crown braid"
+      ]
+    },
+    {
+      "class": "Arcanist",
+      "gender": "Female",
+      "face": "Heart",
+      "hair": "Feathered pixie",
+      "selected": [
+        "Female",
+        "Heart",
+        "Feathered pixie"
+      ]
+    },
+    {
+      "class": "Arcanist",
+      "gender": "Female",
+      "face": "Heart",
+      "hair": "Twin buns",
+      "selected": [
+        "Female",
+        "Heart",
+        "Twin buns"
+      ]
+    },
+    {
+      "class": "Arcanist",
+      "gender": "Female",
+      "face": "Heart",
+      "hair": "Crown braid",
+      "selected": [
+        "Female",
+        "Heart",
+        "Crown braid"
+      ]
+    },
+    {
+      "class": "Ranger",
+      "gender": "Male",
+      "face": "Bright",
+      "hair": "Curly crop",
+      "selected": [
+        "Male",
+        "Bright",
+        "Curly crop"
+      ]
+    },
+    {
+      "class": "Ranger",
+      "gender": "Male",
+      "face": "Bright",
+      "hair": "Side-swept bob",
+      "selected": [
+        "Male",
+        "Bright",
+        "Side-swept bob"
+      ]
+    },
+    {
+      "class": "Ranger",
+      "gender": "Male",
+      "face": "Bright",
+      "hair": "Tied back",
+      "selected": [
+        "Male",
+        "Bright",
+        "Tied back"
+      ]
+    },
+    {
+      "class": "Ranger",
+      "gender": "Male",
+      "face": "Bold",
+      "hair": "Curly crop",
+      "selected": [
+        "Male",
+        "Bold",
+        "Curly crop"
+      ]
+    },
+    {
+      "class": "Ranger",
+      "gender": "Male",
+      "face": "Bold",
+      "hair": "Side-swept bob",
+      "selected": [
+        "Male",
+        "Bold",
+        "Side-swept bob"
+      ]
+    },
+    {
+      "class": "Ranger",
+      "gender": "Male",
+      "face": "Bold",
+      "hair": "Tied back",
+      "selected": [
+        "Male",
+        "Bold",
+        "Tied back"
+      ]
+    },
+    {
+      "class": "Ranger",
+      "gender": "Male",
+      "face": "Gentle",
+      "hair": "Curly crop",
+      "selected": [
+        "Male",
+        "Gentle",
+        "Curly crop"
+      ]
+    },
+    {
+      "class": "Ranger",
+      "gender": "Male",
+      "face": "Gentle",
+      "hair": "Side-swept bob",
+      "selected": [
+        "Male",
+        "Gentle",
+        "Side-swept bob"
+      ]
+    },
+    {
+      "class": "Ranger",
+      "gender": "Male",
+      "face": "Gentle",
+      "hair": "Tied back",
+      "selected": [
+        "Male",
+        "Gentle",
+        "Tied back"
+      ]
+    },
+    {
+      "class": "Ranger",
+      "gender": "Female",
+      "face": "Freckled",
+      "hair": "Feathered pixie",
+      "selected": [
+        "Female",
+        "Freckled",
+        "Feathered pixie"
+      ]
+    },
+    {
+      "class": "Ranger",
+      "gender": "Female",
+      "face": "Freckled",
+      "hair": "Twin buns",
+      "selected": [
+        "Female",
+        "Freckled",
+        "Twin buns"
+      ]
+    },
+    {
+      "class": "Ranger",
+      "gender": "Female",
+      "face": "Freckled",
+      "hair": "Crown braid",
+      "selected": [
+        "Female",
+        "Freckled",
+        "Crown braid"
+      ]
+    },
+    {
+      "class": "Ranger",
+      "gender": "Female",
+      "face": "Angular",
+      "hair": "Feathered pixie",
+      "selected": [
+        "Female",
+        "Angular",
+        "Feathered pixie"
+      ]
+    },
+    {
+      "class": "Ranger",
+      "gender": "Female",
+      "face": "Angular",
+      "hair": "Twin buns",
+      "selected": [
+        "Female",
+        "Angular",
+        "Twin buns"
+      ]
+    },
+    {
+      "class": "Ranger",
+      "gender": "Female",
+      "face": "Angular",
+      "hair": "Crown braid",
+      "selected": [
+        "Female",
+        "Angular",
+        "Crown braid"
+      ]
+    },
+    {
+      "class": "Ranger",
+      "gender": "Female",
+      "face": "Heart",
+      "hair": "Feathered pixie",
+      "selected": [
+        "Female",
+        "Heart",
+        "Feathered pixie"
+      ]
+    },
+    {
+      "class": "Ranger",
+      "gender": "Female",
+      "face": "Heart",
+      "hair": "Twin buns",
+      "selected": [
+        "Female",
+        "Heart",
+        "Twin buns"
+      ]
+    },
+    {
+      "class": "Ranger",
+      "gender": "Female",
+      "face": "Heart",
+      "hair": "Crown braid",
+      "selected": [
+        "Female",
+        "Heart",
+        "Crown braid"
+      ]
+    }
+  ]
+}

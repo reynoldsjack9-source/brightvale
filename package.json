@@ -4,7 +4,7 @@
   "scripts": {
     "build:creator": "node tools/build-creator-options.cjs",
     "check:creator": "node tools/check-creator.cjs",
-    "check:options": "node tools/check-creator-options.cjs"
+    "check:options": "node tools/check-creator-options.cjs && node tools/check-creator-bow.cjs"
   },
   "devDependencies": {
     "pngjs": "7.0.0",

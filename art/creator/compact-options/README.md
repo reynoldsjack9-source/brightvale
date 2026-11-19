@@ -1,27 +1,37 @@
-# Compact character options
+# Compact creator art — distinct gender sets
 
-Three new faces (Bright, Bold, Gentle) and three new hairstyles (Curly crop, Side-swept bob, Tied back), available in all nine combinations for Vanguard, Arcanist and Ranger.
+The shipped creator reads complete sheets and masks from `v3/`. Each gender has **three independent faces and three independent hairstyles**:
 
-`heads-source.png` was generated and refined with the built-in ImageGen tool, using our original `art/vanguard-compact-idle.png` as a strict style reference. `head-*.png` are normalized source cutouts. The existing compact hero PNGs remain unchanged.
+| Gender | Faces | Hairstyles |
+| --- | --- | --- |
+| Male | Bright, Bold, Gentle | Curly crop, Side-swept bob, Tied back |
+| Female | Freckled, Angular, Heart | Feathered pixie, Twin buns, Crown braid |
 
-`<class>-<hair 1..3>-<face 1..3>-<pose>.png` are **complete finished animation sheets**, not runtime pieces. There are 162 sheets / 594 animation frames. The body, frame layout, weapons, pose timing, root and feet anchors come from the approved compact sheets. Each complete face/hair drawing is registered to its pose offline; foreground hands, arms and equipment retain their original depth. Rear drawings are used for climbing. No bones or detached limbs are animated.
+Every face/hair combination works on every class: 54 standing looks and **324 sheets / 1,188 animation frames**. The original `art/<class>-compact-*.png` files remain unchanged.
 
-Matching `-mask.png` files contain exact authored color regions for the new drawings: red channel 1 = skin, 2 = hair, 3 = iris, 255 = untouched ink/white. Transparent pixels leave the existing body color masks in charge. These ensure hair dye never paints a staff, bandana or glove and skin colors include hands.
+## Sources and production
 
-## Rebuild and verify
+`heads-source.png` is the male source atlas. `heads-female-distinct-source.png` is the separate female atlas, generated with built-in ImageGen against the male atlas as a style/alignment reference, then refined with unique facial identities. It has its own pixie, twin-bun and crown-braid silhouettes and corresponding rear views. Freckled has cheek freckles, Angular has a beauty mark and focused features, Heart has a cheerful open smile. These are not eyelash-only copies of the male presets. Full prompts are in `female-distinct-prompts.md`.
 
-Install the pinned dev dependencies with `npm ci`, then `npm run build:creator`. The game itself remains a static site and needs no npm runtime.
+Both sources use three columns and four rows: nine front combinations and three rear styles. Generated transparency is retained. The baker normalizes cutouts into `v3/head-*.png`, anchors the actual jaw outline and bakes finished sprites offline. Runtime never attaches heads or limbs.
 
-`node tools/build-creator-options.cjs --class=vanguard` rebuilds one class. `--sample` builds only the Curly crop / Bright sample for art iteration; do not publish a sample-only folder.
+`tools/creator-regions.json` has separate male/female face, ear and iris annotations. Female iris bounds account for each identity; enclosed skin regions protect freckles and the beauty mark without absorbing the concave fringe. Mask red channel: 1 skin, 2 hair, 3 iris, 4 outfit, 255 preserved ink/paint. Runtime never guesses color regions. Pupils, whites, eyebrows, lips, freckles, marks and equipment stay outside the hair mask.
 
-Run `npm run check:creator` and `npm run check:options`. The latter checks all 162 sheets and masks, all frame counts and protected opaque body pixels against the unchanged compact originals.
+The baker separates the original body, collar/neck and foreground equipment. Bow, string, held hands, quiver, staff, blade and grip retain source depth. Original pose timing, root/feet anchors, body scale and simulation are unchanged.
 
-In-game verification routes:
+## Reproduce and verify
 
-- `/#featurecheck`: all nine combinations on all three classes beside each original.
-- `?hair=2&face=3#posecheck`: every pose/frame for the selected combination, all three classes. Optional `class=warrior`, `class=mage`, or `class=archer` isolates a class.
-- `/#creator`: the real creator, now opening on Features.
-- `/#playcheck`: normal-input QA buttons, including movement, skills, rope seeking and climbing.
+- `npm ci`, then `npm run build:creator`.
+- `--class=vanguard` rebuilds a class; `--pose=attack` limits an existing complete build to one pose.
+- `--gender=female` refreshes the female set while retaining male coverage in the existing manifest.
+- `--sample` and `--heads-only` are iteration modes; never ship an incomplete build.
+- `--masks-only` refreshes annotations only. Use only when finished geometry and foregrounds are unchanged.
+- `npm run check:creator` verifies syntax, the exact index wrapper, save migrations and three distinct choices per gender. `node tools/check-creator.cjs --baseline` also compares SIMULATION with HEAD.
+- `npm run check:options` checks complete class/pose/variant coverage, every sheet, iris visibility, face-color isolation, body/shoulder/collar preservation, sword grip and bow material across front poses. Opaque body pixels remain exact; near-opaque foreground edges allow the necessary alpha blend against new hair.
+
+Real-game routes: `/#creator`, `?gender=female#featurecheck`, `?gender=female&class=mage&hair=2&face=2#posecheck`, `/#colorcheck`, `/#playcheck`. Colorcheck tests 57 original/custom looks through the actual shader. Playcheck uses normal press/release input and prints saved appearance plus observed actions. See `../qa-v3/` for logs and fresh real-game screenshots, including all seven pose rows in 18 full-page captures.
+
+Unversioned derived sheets remain historical and unused. The unversioned manifest supplies original pose landmarks to the offline baker.
 
 ## Generation prompts
 

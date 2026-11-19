@@ -1583,82 +1583,52 @@ const CREATOR=(()=>{
   const OUTFIT=[['Original',null],['Ocean','#448bdf'],['Berry','#ce4d80'],['Forest','#4b965c'],['Violet','#9c64d8'],['Ember','#df6d43'],['Ivory','#dfd6b8']];
   const PRESETS=[['Classic',{skin:0,hairColor:0,eyeColor:0,outfit:0}],['Sunbeam',{skin:2,hairColor:5,eyeColor:4,outfit:5}],['Moonlit',{skin:1,hairColor:6,eyeColor:7,outfit:1}],['Briar',{skin:5,hairColor:2,eyeColor:3,outfit:3}],['Rose',{skin:4,hairColor:7,eyeColor:6,outfit:2}],['Storm',{skin:6,hairColor:9,eyeColor:5,outfit:4}]];
   const POSES=['idle','walk','run','attack','cast','jump','climb'];
-  const DEFAULT={compactVersion:2,skin:0,hairColor:0,eyeColor:0,outfit:0,hairStyle:0,faceStyle:0};
-  const FACES=['Bright','Bold','Gentle'], HAIRSTYLES=['Curly crop','Side-swept bob','Tied back'];
+  const DEFAULT={compactVersion:3,gender:'male',skin:0,hairColor:0,eyeColor:0,outfit:0,hairStyle:0,faceStyle:0};
+  const FACES={male:['Bright','Bold','Gentle'],female:['Freckled','Angular','Heart']}, HAIRSTYLES={male:['Curly crop','Side-swept bob','Tied back'],female:['Feathered pixie','Twin buns','Crown braid']};
   const SLUG={warrior:'vanguard',mage:'arcanist',archer:'ranger'};
-  const normalize=o=>o&&o.compactVersion===2?{...DEFAULT,...o}:{...DEFAULT,...o,compactVersion:2,skin:clamp((o?.skin??1)+1,1,6),hairColor:clamp((o?.hairColor??3)+1,1,10),eyeColor:clamp((o?.eyeColor??0)+1,1,8),outfit:0};
+  const canonicalGender=k=>k==='archer'?'female':'male';
+  function normalize(o,k='warrior'){
+    const canonical=canonicalGender(k),gender=o?.gender==='female'?'female':o?.gender==='male'?'male':canonical,base={...DEFAULT,gender};
+    if(!o)return base;
+    const look=o.compactVersion>=2?{...base,...o,compactVersion:3,gender}:{...base,...o,compactVersion:3,gender,skin:clamp((o.skin??1)+1,1,6),hairColor:clamp((o.hairColor??3)+1,1,10),eyeColor:clamp((o.eyeColor??0)+1,1,8),outfit:0};
+    if(!activeFeatures(look)&&gender!==canonical)look.hairStyle=look.faceStyle=1;
+    return look;
+  }
   // These are finished animation sheets baked offline, not runtime head parts.
   const OPTIONS=new Map(); let optionManifest=null,repaintTimer=0;
   const activeFeatures=o=>Number.isInteger(o.hairStyle)&&o.hairStyle>0&&o.hairStyle<=3&&Number.isInteger(o.faceStyle)&&o.faceStyle>0&&o.faceStyle<=3;
   function repaintOptions(){clearTimeout(repaintTimer);repaintTimer=setTimeout(()=>{if(!el.hidden)draw();},80);}
-  fetch('art/creator/compact-options/manifest.json').then(r=>{if(!r.ok)throw Error('Option manifest');return r.json();}).then(m=>{optionManifest=m;repaintOptions();}).catch(e=>console.error(e));
+  fetch('art/creator/compact-options/v3/manifest.json').then(r=>{if(!r.ok)throw Error('Option manifest');return r.json();}).then(m=>{optionManifest=m;repaintOptions();}).catch(e=>console.error(e));
   function requestOption(cls,o,pose){
-    if(!activeFeatures(o))return null; if(pose==='walk')pose='run';
-    const key=SLUG[cls]+'-'+o.hairStyle+'-'+o.faceStyle+'-'+pose;
-    if(OPTIONS.has(key))return OPTIONS.get(key);
+    if(pose==='walk')pose='run';
+    const custom=activeFeatures(o),key=custom?SLUG[cls]+'-'+(o.gender||'male')+'-'+o.hairStyle+'-'+o.faceStyle+'-'+pose:'base-'+SLUG[cls]+'-'+pose;
+    if(OPTIONS.has(key)){const r=OPTIONS.get(key);OPTIONS.delete(key);OPTIONS.set(key,r);return r;}
+    if(OPTIONS.size>=96)OPTIONS.delete(OPTIONS.keys().next().value);
     const record={key,image:null,mask:null,error:false};OPTIONS.set(key,record);
-    const load=(suffix,field)=>{const im=new Image();im.onload=()=>{record[field]=im;repaintOptions();};im.onerror=()=>{record.error=true;console.error('Character look failed to load',key+suffix);};im.src='art/creator/compact-options/'+key+suffix+'.png';};
-    load('','image');load('-mask','mask');return record;
+    const load=(suffix,field)=>{const im=new Image();im.onload=()=>{record[field]=im;repaintOptions();};im.onerror=()=>{record.error=true;console.error('Character look failed to load',key+suffix);};im.src='art/creator/compact-options/v3/'+key+suffix+'.png';};
+    if(custom)load('','image');load('-mask','mask');return record;
   }
-  function warmOptions(cls,o){if(activeFeatures(o))for(const p of ['idle','run','attack','cast','jump','climb'])requestOption(cls,o,p);}
-  const optionsReady=(cls,o)=>!activeFeatures(o)||!!optionManifest&&['idle','run','attack','cast','jump','climb'].every(p=>{const r=requestOption(cls,o,p);return r&&r.image&&r.mask;});
+  function warmOptions(cls,o){for(const p of ['idle','run','attack','cast','jump','climb'])requestOption(cls,o,p);}
+  const optionsReady=(cls,o)=>!!optionManifest&&['idle','run','attack','cast','jump','climb'].every(p=>{const r=requestOption(cls,o,p);return r&&(!activeFeatures(o)||r.image)&&r.mask;});
   function variantSheet(sh,cls,o){
-    if(!activeFeatures(o))return sh;const pose=sh.pose||'idle',r=requestOption(cls,o,pose);
-    if(!r||!r.image||!r.mask)return sh;
-    if(!r.sheet)r.sheet={...sh,img:r.image,partMask:r.mask};return r.sheet;
+    const pose=sh.pose||'idle',r=requestOption(cls,o,pose);
+    if(!r||!r.mask||activeFeatures(o)&&!r.image)return sh;
+    if(!r.sheet)r.sheet={...sh,img:r.image||sh.img,partMask:r.mask};return r.sheet;
   }
-  for(const k of Object.keys(CLASSES))if(saves.slots[k]?.look)warmOptions(k,normalize(saves.slots[k].look));
+  for(const k of Object.keys(CLASSES))if(saves.slots[k]?.look)warmOptions(k,normalize(saves.slots[k].look,k));
   const rgb2hsl=(r,g,b)=>{r/=255;g/=255;b/=255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,d=mx-mn;let h=0,s=0;if(d){s=d/(1-Math.abs(2*l-1));h=(mx===r?(g-b)/d+(g<b?6:0):mx===g?(b-r)/d+2:(r-g)/d+4)/6;}return[h,s,l];};
   const hsl2rgb=(h,s,l)=>{const a=s*Math.min(l,1-l),f=n=>{const k=(n+h*12)%12;return (l-a*Math.max(-1,Math.min(k-3,9-k,1)))*255;};return[f(0),f(8),f(4)];};
   const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
   const cache=new Map();
   // A bounded cache holds full-color sheets; no pixel work takes place per frame.
-  // Masks are derived once from the authored colors and their semantic regions.
+  // Offline semantic masks are decoded once; runtime never guesses color regions.
   const masks=new WeakMap();
   function sheetMasks(sh,cls){
     if(masks.has(sh))return masks.get(sh);
     const cv=document.createElement('canvas');cv.width=sh.img.width;cv.height=sh.img.height;const c=cv.getContext('2d',{willReadFrequently:true});c.drawImage(sh.img,0,0);
     const data=c.getImageData(0,0,cv.width,cv.height),d=data.data,mask=new Uint8Array(d.length/4),reference=[[],[],[],[]];
-    for(let frame=0;frame<sh.frames;frame++){
-      let top=sh.fh,bottom=0;
-      for(let y=0;y<sh.fh;y++)for(let x=0;x<sh.fw;x++)if(d[(y*cv.width+frame*sh.fw+x)*4+3]>100){top=Math.min(top,y);bottom=Math.max(bottom,y);}
-      const height=bottom-top;
-      // Find the face as the largest connected patch of skin in the upper
-      // silhouette. This excludes staff orbs and hands from the eye mask.
-      const skin=new Uint8Array(sh.fw*sh.fh),seen=new Uint8Array(skin.length);let face=[];
-      for(let y=top;y<top+height*.55;y++)for(let x=0;x<sh.fw;x++){
-        const i=(y*cv.width+frame*sh.fw+x)*4,r=d[i],g=d[i+1],b=d[i+2],[h,s,l]=rgb2hsl(r,g,b);
-        if(d[i+3]>100&&h*360>12&&h*360<37&&l>.6&&s>.28&&b/r>.53)skin[y*sh.fw+x]=1;
-      }
-      for(let p=0;p<skin.length;p++)if(skin[p]&&!seen[p]){
-        const part=[p];seen[p]=1;for(let j=0;j<part.length;j++){const q=part[j],x=q%sh.fw;for(const n of [x>0?q-1:-1,x<sh.fw-1?q+1:-1,q-sh.fw,q+sh.fw])if(n>=0&&n<skin.length&&skin[n]&&!seen[n]){seen[n]=1;part.push(n);}}
-        if(part.length>face.length)face=part;
-      }
-      const fx=face.map(p=>p%sh.fw),fy=face.map(p=>Math.floor(p/sh.fw)),bounds=face.length?[Math.min(...fx),Math.min(...fy),Math.max(...fx),Math.max(...fy)]:[0,0,0,0];
-      for(let y=top;y<=bottom;y++)for(let x=0;x<sh.fw;x++){
-        const pixel=y*cv.width+frame*sh.fw+x,i=pixel*4;if(d[i+3]<16)continue;
-        const r=d[i],g=d[i+1],b=d[i+2],[h,s,l]=rgb2hsl(r,g,b),deg=h*360,ry=(y-top)/height;let kind=0;
-        if(l<.24||s<.28)continue; // ink, whites, steel and their edge pixels stay authored
-        let nearWhite=false;
-        if(x>bounds[0]&&x<bounds[2]&&y>bounds[1]&&y<bounds[1]+(bounds[3]-bounds[1])*.8){
-          for(let dy=-3;dy<=3&&!nearWhite;dy++)for(let dx=-3;dx<=3;dx++){const wi=((y+dy)*cv.width+frame*sh.fw+x+dx)*4;if(d[wi]>225&&d[wi+1]>225&&d[wi+2]>225&&d[wi+3]>200){nearWhite=true;break;}}
-        }
-        if(nearWhite&&deg>18&&deg<43&&l>.27&&l<.61&&s>.45)kind=3;
-        else if(deg>12&&deg<37&&l>.60&&b/r>.53)kind=1; // face and exposed hands together
-        else if(cls==='warrior'&&deg>18&&deg<43&&r>g*1.35&&l>.34&&ry<.58)kind=2;
-        else if(cls==='mage'&&deg>260&&deg<285&&l>.59&&ry>.19&&ry<.53)kind=2;
-        else if(cls==='archer'&&deg>7&&deg<31&&l<.61&&l>.27&&ry<.57)kind=2;
-        else if((cls==='warrior'&&deg>210&&deg<236)||(cls==='mage'&&deg>270&&deg<310)||(cls==='archer'&&deg>65&&deg<125))kind=4;
-        if(kind){mask[pixel]=kind;reference[kind-1].push(l);}
-      }
-    }
-    if(sh.partMask){
-      // All hair and iris pixels in a baked look come from its authored mask.
-      // The body classifier must not dye leather gloves or gold equipment.
-      for(let q=0;q<mask.length;q++)if(mask[q]===2||mask[q]===3)mask[q]=0;
-      const oc=document.createElement('canvas');oc.width=cv.width;oc.height=cv.height;const ox=oc.getContext('2d',{willReadFrequently:true});ox.drawImage(sh.partMask,0,0);const od=ox.getImageData(0,0,oc.width,oc.height).data;
-      for(let q=0;q<mask.length;q++)if(od[q*4+3])mask[q]=od[q*4]===255?0:od[q*4];
-      for(const a of reference)a.length=0;for(let q=0;q<mask.length;q++)if(mask[q])reference[mask[q]-1].push(rgb2hsl(d[q*4],d[q*4+1],d[q*4+2])[2]);
+    if(sh.partMask){c.clearRect(0,0,cv.width,cv.height);c.drawImage(sh.partMask,0,0);const labels=c.getImageData(0,0,cv.width,cv.height).data;
+      for(let q=0;q<mask.length;q++){const kind=labels[q*4];if(labels[q*4+3]&&kind>=1&&kind<=4){mask[q]=kind;reference[kind-1].push(rgb2hsl(d[q*4],d[q*4+1],d[q*4+2])[2]);}}
     }
     const mid=reference.map(a=>{a.sort((x,y)=>x-y);return a[Math.floor(a.length*.65)]||.5;});
     const out={data,mask,mid};masks.set(sh,out);return out;
@@ -1666,7 +1636,7 @@ const CREATOR=(()=>{
   function coloredSheet(sh,cls,o){
     sh=variantSheet(sh,cls,o);
     const colors=[SKIN[o.skin]?.[1],HAIRC[o.hairColor]?.[1],EYEC[o.eyeColor]?.[1],OUTFIT[o.outfit]?.[1]];
-    if(colors.every(c=>!c))return sh;
+    if(colors.every(c=>!c)||!sh.partMask)return sh;
     const key=cls+sh.img.src+colors.join('/');if(cache.has(key))return cache.get(key);
     const {data,mask,mid}=sheetMasks(sh,cls),cv=document.createElement('canvas');cv.width=sh.img.width;cv.height=sh.img.height;
     const c=cv.getContext('2d'),id=c.createImageData(cv.width,cv.height);id.data.set(data.data);const d=id.data,targets=colors.map(h=>h?rgb2hsl(...hex(h)):null);
@@ -1678,7 +1648,7 @@ const CREATOR=(()=>{
   }
   // The sole pose selector is shared with drawHeroSprite, including double jumps,
   // casting, breathing, climbing and every original frame/anchor/scale.
-  function drawGame(c,cls,s){return drawHeroSprite(c,cls,s,normalize(s.look));}
+  function drawGame(c,cls,s){return drawHeroSprite(c,cls,s,normalize(s.look,cls));}
   function drawLook(c,cls,o,pose='idle',frame=0,zoom=1){
     const sp=SPR[cls],sh=sp&&(sp[pose]||sp[pose==='walk'?'run':'idle']);if(!sh)return;
     c.save();c.scale(zoom,zoom);drawSheet(c,coloredSheet(sh,cls,o),frame,false);c.restore();
@@ -1701,11 +1671,12 @@ const CREATOR=(()=>{
       const box=group('Finished looks');for(const [name,palette]of PRESETS)option(box,name,Object.keys(palette).every(k=>look[k]===palette[k]),()=>{look={...look,...palette};},thumb({...look,...palette}));
       const poses=group('Preview animation');for(const p of ['idle','run','attack','cast','jump','climb'])option(poses,p[0].toUpperCase()+p.slice(1),previewPose===p,()=>{previewPose=p;});
     }else if(tab==='Features'){
-      const reset=group('Original hero');option(reset,'Use original face and hair',!activeFeatures(look),()=>{look.hairStyle=look.faceStyle=0;},thumb({...look,hairStyle:0,faceStyle:0}));
-      const faces=group('Face');FACES.forEach((label,i)=>{const next={...look,hairStyle:look.hairStyle||1,faceStyle:i+1};option(faces,label,look.faceStyle===i+1,()=>{look={...next};},featureThumb(next));});
-      const hair=group('Hairstyle');HAIRSTYLES.forEach((label,i)=>{const next={...look,hairStyle:i+1,faceStyle:look.faceStyle||1};option(hair,label,look.hairStyle===i+1,()=>{look={...next};},featureThumb(next));});
+      const genders=group('Gender');for(const gender of ['male','female'])option(genders,gender[0].toUpperCase()+gender.slice(1),look.gender===gender,()=>{look={...look,gender,hairStyle:look.hairStyle||1,faceStyle:look.faceStyle||1};});
+      const reset=group('Original hero');option(reset,'Use original face and hair',!activeFeatures(look),()=>{look.hairStyle=look.faceStyle=0;look.gender=canonicalGender(cls);},thumb({...look,hairStyle:0,faceStyle:0}));
+      const faces=group('Face');FACES[look.gender].forEach((label,i)=>{const next={...look,hairStyle:look.hairStyle||1,faceStyle:i+1};option(faces,label,look.faceStyle===i+1,()=>{look={...next};},featureThumb(next));});
+      const hair=group('Hairstyle');HAIRSTYLES[look.gender].forEach((label,i)=>{const next={...look,hairStyle:i+1,faceStyle:look.faceStyle||1};option(hair,label,look.hairStyle===i+1,()=>{look={...next};},featureThumb(next));});
     }else if(tab==='Colors'){swatches('Skin tone','skin',SKIN);swatches('Hair color','hairColor',HAIRC);swatches('Eye color','eyeColor',EYEC);swatches('Outfit color','outfit',OUTFIT);}
-    else {const box=group('Class');for(const k of Object.keys(CLASSES))option(box,CLASSES[k].name,cls===k,()=>{cls=k;},(()=>{const cv=document.createElement('canvas');cv.width=112;cv.height=132;const c=cv.getContext('2d');c.translate(56,126);drawLook(c,k,look,'idle',0,1.65);return cv;})());}
+    else {const box=group('Class');for(const k of Object.keys(CLASSES))option(box,CLASSES[k].name,cls===k,()=>{cls=k;if(!activeFeatures(look))look.gender=canonicalGender(k);},(()=>{const cv=document.createElement('canvas');cv.width=112;cv.height=132;const c=cv.getContext('2d');c.translate(56,126);drawLook(c,k,look,'idle',0,1.65);return cv;})());}
   }
   function tick(){document.getElementById('crCreate').disabled=!optionsReady(cls,look);if(!artReady&&Object.keys(CLASSES).every(k=>SPR[k]?.idle)){artReady=true;draw();}const t=clock,sp=SPR[cls],sh=sp&&(sp[previewPose]||sp.idle);stage.clearRect(0,0,512,512);stage.fillStyle='#5cc44a';stage.beginPath();stage.ellipse(256,459,170,30,0,0,Math.PI*2);stage.fill();stage.fillStyle='rgba(40,60,40,.2)';stage.beginPath();stage.ellipse(256,458,62,10,0,0,Math.PI*2);stage.fill();
     stage.save();stage.translate(256,456);const fr=sh?Math.floor(t*(previewPose==='run'?14:6))%sh.frames:0;drawLook(stage,cls,look,previewPose,fr,4.7);stage.restore();
@@ -1713,9 +1684,9 @@ const CREATOR=(()=>{
   }
   nameEl.addEventListener('input',()=>{errEl.textContent='';changed();});
   document.getElementById('crBack').onclick=()=>{el.hidden=true;onBack&&onBack();};
-  document.getElementById('crRand').onclick=()=>{const palette=PRESETS[Math.floor(Math.random()*PRESETS.length)][1];look={...DEFAULT,...palette,hairStyle:1+Math.floor(Math.random()*3),faceStyle:1+Math.floor(Math.random()*3)};if(!nameEl.value.trim())nameEl.value=['Rowan','Juniper','Bram','Wren','Clover'][Math.floor(Math.random()*5)];errEl.textContent='';changed();draw();};
+  document.getElementById('crRand').onclick=()=>{const palette=PRESETS[Math.floor(Math.random()*PRESETS.length)][1];look={...DEFAULT,...palette,gender:Math.random()<.5?'male':'female',hairStyle:1+Math.floor(Math.random()*3),faceStyle:1+Math.floor(Math.random()*3)};if(!nameEl.value.trim())nameEl.value=['Rowan','Juniper','Bram','Wren','Clover'][Math.floor(Math.random()*5)];errEl.textContent='';changed();draw();};
   document.getElementById('crCreate').onclick=()=>{const name=nameEl.value.trim();if(!optionsReady(cls,look)){errEl.textContent='Your look is still loading. Try again in a moment.';return;}if(name.length<2){errEl.textContent='Enter a name of at least 2 letters.';nameEl.focus();return;}if(!/^[A-Za-z0-9 ]+$/.test(name)){errEl.textContent='Use letters, numbers and spaces only.';nameEl.focus();return;}const old=saves.slots[cls];if(old&&!confirmReplace){confirmReplace=true;doneEl.textContent='This replaces your Lv '+old.level+' '+(old.name||CLASSES[cls].name)+'. Click Create again to replace it.';return;}el.hidden=true;onCreate&&onCreate(cls,name,{...look});};
-  function open(startCls,cb,back){cls=startCls||'warrior';look={...DEFAULT};tab='Features';previewPose='idle';nameEl.value='';errEl.textContent='';onCreate=cb;onBack=back;changed();draw();el.hidden=false;nameEl.focus();}
+  function open(startCls,cb,back){cls=startCls||'warrior';look={...DEFAULT,gender:canonicalGender(cls)};tab='Features';previewPose='idle';nameEl.value='';errEl.textContent='';onCreate=cb;onBack=back;changed();draw();el.hidden=false;nameEl.focus();}
   // In-game visual proofs. Every whole sprite frame, plus a matrix of complete
   // palettes at exactly the same world scale as the untouched compact original.
   function proofSheet(cls,looks,poses){const cell=150,cv=document.createElement('canvas');cv.width=cell*9;cv.height=poses.length*looks.length*cell;const c=cv.getContext('2d');c.fillStyle='#cfe9ff';c.fillRect(0,0,cv.width,cv.height);
@@ -1726,17 +1697,35 @@ const CREATOR=(()=>{
   }
     function featureGallery(cls){
     const cell=150,cv=document.createElement('canvas');cv.width=cell*10;cv.height=cell;const c=cv.getContext('2d');c.fillStyle='#cfe9ff';c.fillRect(0,0,cv.width,cv.height);
-    const looks=[['Original',DEFAULT]];for(let h=1;h<=3;h++)for(let f=1;f<=3;f++)looks.push([HAIRSTYLES[h-1]+' / '+FACES[f-1],{...DEFAULT,hairStyle:h,faceStyle:f}]);
+    const gender=new URLSearchParams(location.search).get('gender')==='female'?'female':'male',looks=[['Original',DEFAULT]];for(let h=1;h<=3;h++)for(let f=1;f<=3;f++)looks.push([HAIRSTYLES[gender][h-1]+' / '+FACES[gender][f-1],{...DEFAULT,gender,hairStyle:h,faceStyle:f}]);
     looks.forEach(([name,o],i)=>{c.fillStyle='#2b2140';c.font='bold 11px sans-serif';c.fillText(name,i*cell+4,15);c.save();c.translate((i+.5)*cell,140);drawLook(c,cls,o,'idle',0,1.6);c.restore();});return cv;
+  }
+  // Opt-in real-renderer color regression check; does not alter saves or play.
+  if(location.hash==='#colorcheck'){
+    const box=document.createElement('div');box.id='colorcheck-results';box.style.cssText='position:absolute;inset:0;z-index:60;background:#cfe9ff;color:#2b2140;padding:16px;overflow:auto;white-space:pre-wrap';box.textContent='Loading color checks…';document.body.append(box);
+    const timer=setInterval(()=>{
+      if(!optionManifest||!Object.keys(CLASSES).every(k=>SPR[k]?.idle))return;
+      let ready=true;for(const k of Object.keys(CLASSES)){requestOption(k,DEFAULT,'idle');for(const gender of ['male','female'])for(let h=1;h<=3;h++)for(let f=1;f<=3;f++){const r=requestOption(k,{...DEFAULT,gender,hairStyle:h,faceStyle:f},'idle');if(!r.image||!r.mask)ready=false;}if(!requestOption(k,DEFAULT,'idle').mask)ready=false;}
+      if(!ready)return;clearInterval(timer);
+      const pixels=sh=>{const cv=document.createElement('canvas');cv.width=sh.img.width;cv.height=sh.img.height;const c=cv.getContext('2d');c.drawImage(sh.img,0,0);return c.getImageData(0,0,cv.width,cv.height).data;},results=[];let failed=0;
+      for(const k of Object.keys(CLASSES)){
+        const looks=[DEFAULT];for(const gender of ['male','female'])for(let h=1;h<=3;h++)for(let f=1;f<=3;f++)looks.push({...DEFAULT,gender,hairStyle:h,faceStyle:f});
+        for(const o of looks){const sh=variantSheet(SPR[k].idle,k,o),mask=sheetMasks(sh,k).mask,base=pixels(sh),eye=pixels(coloredSheet(SPR[k].idle,k,{...o,eyeColor:5})),hair=pixels(coloredSheet(SPR[k].idle,k,{...o,hairColor:10}));let iris=0,leaks=0,blue=0;
+          for(let q=0;q<mask.length;q++){const i=q*4,ec=eye[i]!==base[i]||eye[i+1]!==base[i+1]||eye[i+2]!==base[i+2],hc=hair[i]!==base[i]||hair[i+1]!==base[i+1]||hair[i+2]!==base[i+2];if(ec){iris++;if(mask[q]!==3)leaks++;if(eye[i+2]>eye[i]*1.2)blue++;}if(hc&&mask[q]!==2)leaks++;}
+          const pass=iris>25&&blue>20&&leaks===0;if(!pass)failed++;results.push((pass?'PASS ':'FAIL ')+k+' '+(activeFeatures(o)?o.gender+' '+o.hairStyle+'/'+o.faceStyle:'original')+': '+iris+' iris pixels, '+leaks+' color leaks');
+        }
+      }
+      box.textContent=(failed?'FAIL':'PASS')+' — '+results.length+' rendered looks checked\n'+results.join('\n');document.title='colorcheck '+(failed?'FAIL':'PASS');
+    },100);
   }
   if(['#posecheck','#lookcheck','#featurecheck'].includes(location.hash)){
     const box=document.createElement('div');box.style.cssText='position:absolute;top:0;left:0;z-index:50;background:#fff;padding:8px;box-sizing:border-box;width:100%;min-height:100vh';document.body.style.overflow='auto';document.body.append(box);
-    const params=new URLSearchParams(location.search),proofLook={...DEFAULT,hairStyle:clamp(Number(params.get('hair'))||1,1,3),faceStyle:clamp(Number(params.get('face'))||1,1,3)};
+    const params=new URLSearchParams(location.search),proofLook={...DEFAULT,gender:params.get('gender')==='female'?'female':'male',hairStyle:clamp(Number(params.get('hair'))||1,1,3),faceStyle:clamp(Number(params.get('face'))||1,1,3)};
     const timer=setInterval(()=>{
       let ready=!!optionManifest;
       for(const k of Object.keys(CLASSES)){
         if(location.hash==='#posecheck'){warmOptions(k,proofLook);ready=ready&&optionsReady(k,proofLook);}
-        if(location.hash==='#featurecheck')for(let h=1;h<=3;h++)for(let f=1;f<=3;f++){const r=requestOption(k,{hairStyle:h,faceStyle:f},'idle');if(!r.image||!r.mask)ready=false;}
+        if(location.hash==='#featurecheck')for(let h=1;h<=3;h++)for(let f=1;f<=3;f++){const r=requestOption(k,{gender:proofLook.gender,hairStyle:h,faceStyle:f},'idle');if(!r.image||!r.mask)ready=false;}
       }
       if(!ready)return;
       if(!Object.keys(CLASSES).every(k=>SPR[k]&&['idle','run','attack','cast','jump','climb'].every(p=>SPR[k][p])))return;clearInterval(timer);
@@ -1819,17 +1808,17 @@ document.getElementById('classBtn').addEventListener('click',()=>{
 if(location.hash==='#playcheck'){
   const panel=document.createElement('div'); panel.style.cssText='position:fixed;top:4px;left:4px;z-index:80;background:white;border:2px solid #2b2140;border-radius:8px;padding:6px;font:12px sans-serif;max-width:95vw';
   const status=document.createElement('div');status.id='playcheck-status';panel.append(status);document.body.append(panel);
-  let stopAt=0,seek=false;
-  const clear=()=>{for(const k in held)release(k);stopAt=0;seek=false;};
+  let stopAt=0,seek=false,pendingJump=0;const observed=new Set();
+  const clear=()=>{for(const k in held)release(k);stopAt=0;seek=false;pendingJump=0;};
   const button=(label,fn)=>{const b=document.createElement('button');b.textContent=label;b.onclick=()=>{clear();fn();};panel.append(b);};
-  button('Right 250ms',()=>{press('right');stopAt=performance.now()+250;});
-  button('Left 250ms',()=>{press('left');stopAt=performance.now()+250;});
-  button('Seek rope right',()=>{press('right');press('up');seek=true;stopAt=performance.now()+4000;});
-  button('Climb 1s',()=>{press('up');stopAt=performance.now()+1000;});
-  button('Jump',()=>{if(me()?.rope){press('right');setTimeout(()=>{press('jump');release('right');release('jump');},60);}else press('jump');});button('Attack',()=>{press('basic');stopAt=performance.now()+400;});
-  for(const k of ['a','s','d','f'])button('Skill '+k.toUpperCase(),()=>{press(k);stopAt=performance.now()+400;});
+  button('Right 250ms',()=>{press('right');stopAt=clock+.25;});
+  button('Left 250ms',()=>{press('left');stopAt=clock+.25;});
+  button('Seek rope right',()=>{press('right');press('up');seek=true;stopAt=clock+4;});
+  button('Climb 1s',()=>{press('up');stopAt=clock+1;});
+  button('Jump',()=>{if(me()?.rope){press('right');pendingJump=clock+.15;stopAt=clock+.5;}else press('jump');});button('Attack',()=>{press('basic');stopAt=clock+.4;});
+  for(const k of ['a','s','d','f'])button('Skill '+k.toUpperCase(),()=>{press(k);stopAt=clock+.4;});
   button('MP potion',()=>press('mp'));button('Stop',clear);
-  setInterval(()=>{const p=running?me():null;if(seek&&p?.rope){release('right');seek=false;stopAt=performance.now()+1000;}if(stopAt&&performance.now()>stopAt)clear();status.textContent=p?'Live input check: x='+p.x.toFixed(0)+' y='+p.y.toFixed(0)+' / '+(p.rope?'climbing':!p.onGround?'airborne':Math.abs(p.vx)>25?'running':'idle')+' / '+p.cls+' / '+p.name:'Create a character to begin.';},30);
+  setInterval(()=>{const p=running?me():null;if(pendingJump&&clock>=pendingJump){pendingJump=0;press('jump');}if(p?.act)observed.add(p.act);if(p?.rope)observed.add('climbing');if(p?.usedDouble)observed.add('double jump');if(seek&&p?.rope){release('right');seek=false;stopAt=clock+1;}if(stopAt&&clock>stopAt)clear();status.textContent=p?'Live input check: x='+p.x.toFixed(0)+' y='+p.y.toFixed(0)+' / '+(p.rope?'climbing':!p.onGround?'airborne':Math.abs(p.vx)>25?'running':'idle')+' / '+p.cls+' / '+p.name+' / '+JSON.stringify(p.look)+' / Observed: '+[...observed].join(', '):'Create a character to begin.';},30);
 }
 
 fit(); buildCards();
