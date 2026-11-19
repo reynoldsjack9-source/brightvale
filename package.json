@@ -1,0 +1,13 @@
+{
+  "name": "brightvale-art-tools",
+  "private": true,
+  "scripts": {
+    "build:creator": "node tools/build-creator-options.cjs",
+    "check:creator": "node tools/check-creator.cjs",
+    "check:options": "node tools/check-creator-options.cjs"
+  },
+  "devDependencies": {
+    "pngjs": "7.0.0",
+    "sharp": "0.35.5"
+  }
+}
