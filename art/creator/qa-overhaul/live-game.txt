@@ -1,0 +1,7 @@
+Live input check: x=230 y=820 / idle / mage / Mira / {"compactVersion":3,"gender":"female","skin":0,"hairColor":10,"eyeColor":5,"outfit":0,"hairStyle":2,"faceStyle":2} / Observed:
+Live input check: x=244 y=820 / running / mage / Mira / {"compactVersion":3,"gender":"female","skin":0,"hairColor":10,"eyeColor":5,"outfit":0,"hairStyle":2,"faceStyle":2} / Observed:
+Live input check: x=322 y=689 / airborne / mage / Mira / {"compactVersion":3,"gender":"female","skin":0,"hairColor":10,"eyeColor":5,"outfit":0,"hairStyle":2,"faceStyle":2} / Observed: double jump
+Live input check: x=230 y=820 / idle / archer / Juniper / {"compactVersion":2,"skin":0,"hairColor":0,"eyeColor":0,"outfit":0,"hairStyle":2,"faceStyle":2} / Observed: s
+Live input check: x=585 y=820 / running / archer / Juniper / {"compactVersion":2,"skin":0,"hairColor":0,"eyeColor":0,"outfit":0,"hairStyle":2,"faceStyle":2} / Observed: s
+Live input check: x=680 y=627 / climbing / archer / Juniper / {"compactVersion":2,"skin":0,"hairColor":0,"eyeColor":0,"outfit":0,"hairStyle":2,"faceStyle":2} / Observed: s, climbing
+Final Ranger build: Live input check: x=230 y=820 / idle / archer / Juniper / {"compactVersion":2,"skin":0,"hairColor":0,"eyeColor":0,"outfit":0,"hairStyle":2,"faceStyle":2} / Observed: s

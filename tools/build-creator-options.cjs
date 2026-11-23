@@ -4,7 +4,9 @@
 const fs = require('node:fs');
 const sharp = require('sharp');
 const {PNG} = require('pngjs');
-const {femaleBody} = require('./creator-body.cjs');
+const {femaleMap,warpBody} = require('./creator-body.cjs');
+const {makePlate,neckPaint,composeFrame} = require('./creator-plates.cjs');
+const {protectBow,releasedStringBehindArm} = require('./creator-bow.cjs');
 const ROOT = 'art/creator/compact-options';
 const OUT = ROOT + '/v3';
 const MASKS_ONLY=process.argv.includes('--masks-only');
@@ -188,7 +190,7 @@ function sourceData(p,cls,pose,f) {
   // Keep the Ranger's complete holding sleeve/hand silhouette stationary.
   if(cls==='ranger'&&pose==='idle')for(let y=119;y<210;y++)for(let x=151;x<189;x++)fg[y*N+x]=1;
   // Foreground silhouettes are copied exactly; face pixels are never restored.
-  return {chin,angle:rear?0:angle,scale:rear?1:scale,face:fb,raw:erase,erase,fg,body,cap,faceArea,rear,retired};
+  return {frame:f,chin,angle:rear?0:angle,scale:rear?1:scale,face:fb,raw:erase,erase,fg,body,cap,faceArea,rear,retired};
 }
 function headSemantic(p,style,rear,gender,faceIndex) {
   const w=p.width,h=p.height,r=(gender==='female'?REGIONS.female:REGIONS.heads)[style-1],sx=w/r.size[0],sy=h/r.size[1],face=r.face.map(([x,y])=>[x*sx,y*sy]),mask=new Uint8Array(w*h),faceRegion=new Uint8Array(w*h),eyes=(r.eyesByFace?.[faceIndex-1]||r.eyes).map(e=>[e[0]*sx,e[1]*sy,e[2]*sx,e[3]*sy]);
@@ -262,25 +264,30 @@ async function writeSheet(path,buffer){
   if(only&&!CLASSES.includes(only))throw Error('Unknown class: '+only);
   if(onlyPose&&!POSES.includes(onlyPose))throw Error('Unknown pose: '+onlyPose);
   for(const cls of CLASSES){if(only&&cls!==only)continue;if(!onlyPose||!manifest.classes[cls])manifest.classes[cls]={};for(const pose of POSES){if(onlyPose&&pose!==onlyPose)continue;
-    const original=PNG.sync.read(fs.readFileSync(`art/${cls}-compact-${pose}.png`)),count=original.width/N,src=[],base=[],foreground=[],meta=[],baseLabels=[],baseMask=new Uint8Array(original.width*N);
+    const original=PNG.sync.read(fs.readFileSync(`art/${cls}-compact-${pose}.png`));
+    const count=original.width/N,meta=[],plates={male:[],female:[]};
+    const baseMask=new Uint8Array(original.width*N);
     for(let f=0;f<count;f++){
-      const p=frame(original,f),m=sourceData(p,cls,pose,f),b=PNG.sync.read(PNG.sync.write(p)),fg=new PNG({width:N,height:N});meta.push(m);src.push(p);
-      for(let q=0;q<N*N;q++){if(m.erase[q])b.data[q*4+3]=0;if(m.fg[q]||!m.erase[q])p.data.copy(fg.data,q*4,q*4,q*4+4);}
-      // Body paint accidentally touched by an ink expansion is restored before
-      // the new face; equipment/quiver is restored again as the foreground.
-      for(let q=0;q<N*N;q++)if(m.body[q])p.data.copy(b.data,q*4,q*4,q*4+4);
-      base.push(PNG.sync.write(b));foreground.push(PNG.sync.write(fg));baseLabels.push(originalLabels(p,cls,m));
-      for(let q=0;q<N*N;q++)baseMask[Math.floor(q/N)*original.width+f*N+q%N]=baseLabels[f][q];
+      const source=frame(original,f),m=sourceData(source,cls,pose,f);
+      const labels=originalLabels(source,cls,m);
+      const neck=await neckPaint(m,cls,pose);
+      if(cls==='ranger')protectBow(source,m,pose);
+      const cleaned=cls==='ranger'?releasedStringBehindArm(source,pose,f):source;
+      const {plate,depth,pins}=makePlate(cleaned,m,cls,pose);
+      const map=femaleMap(m,cls,pose,pins),shaped=warpBody(plate,map);
+      const femaleDepth=new Uint8Array(N*N),femaleLabels=new Uint8Array(N*N);
+      for(let q=0;q<labels.length;q++){
+        baseMask[Math.floor(q/N)*original.width+f*N+q%N]=labels[q];
+        const sample=Math.round(map.y[q])*N+Math.round(map.x[q]);
+        femaleDepth[q]=depth[sample];
+        femaleLabels[q]=labels[sample];
+      }
+      meta.push(m);
+      plates.male.push({plate,depth,labels,neck});
+      plates.female.push({plate:shaped,depth:femaleDepth,labels:femaleLabels,neck});
     }
-    await sharp(maskPNG(baseMask,original.width,N)).png().toFile(`${OUT}/base-${cls}-${pose}-mask.png`);
+    await writeSheet(`${OUT}/base-${cls}-${pose}-mask.png`,maskPNG(baseMask,original.width,N));
     manifest.classes[cls][pose]={frames:count,landmarks:meta.map(m=>({chin:m.chin,angle:m.angle,scale:m.scale,face:m.face})),coverage:onlyGender?{...oldManifest?.classes?.[cls]?.[pose]?.coverage}:{}};
-    const female=src.map((p,f)=>femaleBody(p,meta[f],pose,cls)),femaleBase=[],femaleForeground=[],femaleLabels=[];
-    for(let f=0;f<count;f++){
-      const p=female[f],m=meta[f],b=PNG.sync.read(PNG.sync.write(p)),fg=new PNG({width:N,height:N});
-      for(let q=0;q<N*N;q++){if(m.erase[q])b.data[q*4+3]=0;if(m.fg[q]||!m.erase[q])p.data.copy(fg.data,q*4,q*4,q*4+4);}
-      for(let q=0;q<N*N;q++)if(m.body[q])p.data.copy(b.data,q*4,q*4,q*4+4);
-      femaleBase.push(PNG.sync.write(b));femaleForeground.push(PNG.sync.write(fg));femaleLabels.push(originalLabels(p,cls,m));
-    }
     for(const gender of manifest.genders)for(let hair=1;hair<=3;hair++)for(let face=1;face<=3;face++){
       if(onlyGender&&gender!==onlyGender)continue;
       if(process.argv.includes('--sample')&&(hair!==1||face!==1))continue;
@@ -290,19 +297,25 @@ async function writeSheet(path,buffer){
         const m=meta[f],head=heads[gender][pose==='climb'?9+hair-1:(hair-1)*3+face-1];
         let height=(pose==='climb'?{vanguard:90,arcanist:94,ranger:101}:{vanguard:110,arcanist:95,ranger:101})[cls]*m.scale;
         height=Math.min(height,m.chin[1]-5);const scale=height/head.p.height,rad=m.angle*Math.PI/180,cos=Math.cos(rad),sin=Math.sin(rad),uri=head.buffer.toString('base64');
-        // Match the original short-neck attachment; the original neck and
-        // shoulder contours are preserved behind this whole replacement head.
-        const joinY=m.chin[1]-(pose==='climb'?0:4)*m.scale;
+        // Leave the same short strip of visible neck as the compact originals.
+        const joinY=m.chin[1]-(pose==='climb'?0:3)*m.scale;
         const svg=Buffer.from(`<svg width="256" height="256" xmlns="http://www.w3.org/2000/svg"><g transform="translate(${m.chin[0]} ${joinY}) rotate(${m.angle}) scale(${scale})"><image href="data:image/png;base64,${uri}" x="${-head.anchor[0]}" y="${-head.anchor[1]}" width="${head.p.width}" height="${head.p.height}"/></g></svg>`),headLayer=await sharp(svg).png().toBuffer(),hp=PNG.sync.read(headLayer);
-        const bodyBase=gender==='female'?femaleBase:base,bodyForeground=gender==='female'?femaleForeground:foreground,bodySource=gender==='female'?female:src,bodyLabels=gender==='female'?femaleLabels:baseLabels;
-        const fp=existing?frame(existing,f):PNG.sync.read(await sharp(bodyBase[f]).composite([{input:headLayer},{input:bodyForeground[f]}]).png().toBuffer());
-        for(const a of parts(fp,(d,i,x,y)=>d[i+3]>8,1)){const b=box(a);if(a.length<24&&b.x1<m.face.x1+5&&b.y1<m.chin[1]+5&&!a.some(q=>m.fg[q]))for(const q of a)fp.data[q*4+3]=0;}
+        const {plate,depth,labels:bodyLabels,neck}=plates[gender][f];
+        const fp=existing?frame(existing,f):composeFrame(plate,depth,neck,hp);
+        for(const component of parts(fp,(pixels,i)=>pixels[i+3]>16,1)){
+          if(component.length>18)continue;
+          const bounds=box(component);
+          if(bounds.y1<m.chin[1]+12&&bounds.x1<m.chin[0]-25)
+            for(const q of component)fp.data[q*4+3]=0;
+        }
         PNG.bitblt(fp,out,0,0,N,N,f*N,0);
         for(let q=0;q<N*N;q++){
           const i=q*4,x=q%N,y=Math.floor(q/N),global=y*original.width+f*N+x;if(!fp.data[i+3])continue;
-          const originalVisible=(m.fg[q]||!m.erase[q]||m.body[q]&&hp.data[i+3]<30)&&bodySource[f].data[i+3]>20;
+          const originalVisible=plate.data[i+3]>30&&(depth[q]||hp.data[i+3]<100);
           if(originalVisible){labels[global]=bodyLabels[f][q]||255;continue;}
+          if(hp.data[i+3]<100&&neck.data[i+3]>30){labels[global]=isSkin(neck.data,i)?1:255;continue;}
           if(hp.data[i+3]>30){const dx=(x-m.chin[0])/scale,dy=(y-joinY)/scale,sx=Math.round(cos*dx+sin*dy+head.anchor[0]),sy=Math.round(-sin*dx+cos*dy+head.anchor[1]);if(sx>=0&&sx<head.p.width&&sy>=0&&sy<head.p.height){const kind=head.mask[sy*head.p.width+sx];labels[global]=kind||255;if(kind===1)coverage.skin++;if(kind===2)coverage.hair++;if(kind===3)coverage.iris++;}}
+          if(!labels[global])labels[global]=255;
         }
       }
       if(!MASKS_ONLY)await writeSheet(`${OUT}/${key}.png`,PNG.sync.write(out));

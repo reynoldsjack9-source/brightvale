@@ -1,0 +1,9 @@
+npm run check:options
+PASS: 324 sheets / 1188 frames, both genders and all nine face/hair combinations; 421,155 body, 3,744 bow/grip pixels unchanged; 90,565 iris pixels; ear/brow/mouth masks isolated.
+PASS: 79,704 source bow material pixels retained across all front poses and both genders
+
+node tools/check-creator.cjs --baseline
+PASS: inline JavaScript parses; index wrapper synchronized
+PASS: legacy, v2 and v3 appearance migration preserves colors and gender
+PASS: each gender has three distinct face and hairstyle choices
+PASS: simulation block unchanged

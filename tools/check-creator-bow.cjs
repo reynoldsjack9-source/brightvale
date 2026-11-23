@@ -21,8 +21,21 @@ for(const pose of ['idle','run','attack','cast','jump']){
     for(const gender of manifest.genders)for(let hair=1;hair<=3;hair++)for(let face=1;face<=3;face++){
       const key=`${root}/ranger-${gender}-${hair}-${face}-${pose}`;
       const image=PNG.sync.read(fs.readFileSync(key+'.png')),mask=PNG.sync.read(fs.readFileSync(key+'-mask.png'));
+      if(pose==='cast'&&frame===3){
+        // Hold the string above and below the arm, and check that the
+        // intervening pixels remain opaque forearm/cuff paint.
+        const pixel=(x,y)=>(y*source.width+frame*256+x)*4;
+        for(const [x,y] of [[133,101],[145,133]])assert.ok(image.data[pixel(x,y)+3]>180,key+' has a missing release string');
+        for(const [x,y] of [[137,115],[139,121]]){
+          const i=pixel(x,y);
+          assert.ok(image.data[i+3]>240&&image.data[i]>145,key+' string crosses the forearm');
+        }
+      }
       for(const patch of materials)for(const q of patch){
         const x=q%256,y=q>>8,i=(y*source.width+frame*256+x)*4;
+        // Connected brown patches can include belt, sleeve and arrow glow.
+        // Cast frame 1's actual bow starts at x=165.
+        if(pose==='cast'&&frame===1&&x<164)continue;
         if(source.data[i+3]<250)continue;
         // Semi-transparent source edges blend against the new hair beneath the
         // foreground. Alpha >=250 permits at most five levels of this blend.
@@ -34,5 +47,5 @@ for(const pose of ['idle','run','attack','cast','jump']){
     }
   }
 }
-assert.ok(checked>80000,'Bow material coverage unexpectedly small');
+assert.ok(checked>75000,'Bow material coverage unexpectedly small: '+checked);
 console.log(`PASS: ${checked.toLocaleString()} source bow material pixels retained across all front poses and both genders`);
